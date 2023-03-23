@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-'''
+"""
 'asc' is a simplified version of the AWS CLI.
-'''
+"""
 import argparse
 import boto3
-from services import ec2, rds, asg, redis, configure, common
+from services import ec2, rds, asg, redis, common
+
 
 def main():
     """
@@ -21,11 +22,11 @@ def main():
 
     subparsers = parser.add_subparsers(help='description', metavar='subcommand')
 
-    for service in [configure, ec2, rds, asg, redis]:
+    for service in [common, ec2, rds, asg, redis]:
         service.add_subparsers(subparsers)
 
     args = parser.parse_args()
-    
+
     # If a profile and/or region is specified, use it
     if args.profile:
         boto3.setup_default_session(profile_name=args.profile)
@@ -34,6 +35,7 @@ def main():
 
     # Run the function for the specified service
     args.func(args)
+
 
 if __name__ == "__main__":
     main()

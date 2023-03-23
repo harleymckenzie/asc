@@ -1,8 +1,15 @@
+"""
+Common functions for asc
+"""
 import tabulate
 import os
 import configparser
 
+
 def add_subparsers(subparsers):
+    """
+    Add subparsers for common commands
+    """
     config_parser = subparsers.add_parser('configure', help='Configure asc', description='Configure asc',
                                           epilog='''Example: asc configure''')
     config_parser.set_defaults(func=configure)
@@ -10,11 +17,13 @@ def add_subparsers(subparsers):
                                nargs='?',
                                help='AWS tag key used to identify environments')
 
+
 def print_as_table(items):
     """
     Print a list of dicts as a table
     """
     print(tabulate.tabulate(items, headers="keys"))
+
 
 def load_config():
     """
@@ -34,6 +43,7 @@ def load_config():
 
     # Return the config
     return config
+
 
 def generate_config(config, config_dir):
     """
