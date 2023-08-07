@@ -1,6 +1,9 @@
 """
 EC2 Service
+
+This module provides functionality for interacting with Amazon Elastic Compute Cloud (EC2) service.
 """
+
 import boto3
 from .common import print_as_table, load_config
 
@@ -22,6 +25,14 @@ def add_subparsers(subparsers):
 def list_ec2_instances(args):
     """
     List EC2 instances
+
+    This function retrieves a list of EC2 instances and prints them as a table.
+
+    Args:
+        args: The arguments passed to the command.
+
+    Returns:
+        None
     """
     instance_list = []
     config = load_config()
