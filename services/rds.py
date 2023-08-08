@@ -17,6 +17,7 @@ def add_subparsers(subparsers):
     # RDS list subcommand
     rds_list_parser = rds_subparsers.add_parser('ls', help='List RDS instances', description='List RDS instances',
                                                 epilog='''Example: asc rds ls''')
+    rds_list_parser.add_argument('--endpoint', '-e', help='Display endpoint in output.', action='store_true')
     rds_list_parser.set_defaults(func=list_rds_instances)
 
 
@@ -25,33 +26,37 @@ def list_rds_instances(args):
     List RDS instances
     """
     instance_list = []
-    config = load_config()
-    env_tag_key = config.get('asc', 'env_tag_key', fallback='Environment')
-    rds = boto3.client('rds')
-    response = rds.describe_db_instances()
+    displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
+    rds_client = args.session.client('rds')
+    response = rds_client.describe_db_instances()
 
     # Only call describe_db_clusters if there are Aurora instances
     if "aurora-mysql" in [db["Engine"] for db in response["DBInstances"]]:
-        cluster_response = rds.describe_db_clusters()
+        cluster_response = rds_client.describe_db_clusters()
 
     for db in response["DBInstances"]:
-        instance = {"Name": db["DBInstanceIdentifier"], "Endpoint": db["Endpoint"]["Address"],
-                    "Type": db["DBInstanceClass"], "State": db["DBInstanceStatus"]}
+        instance = {"Name": db["DBInstanceIdentifier"],
+                    "Type": db["DBInstanceClass"], 
+                    "State": db["DBInstanceStatus"]}
 
-        # Store the environment tag in the instance dict if it exists
-        if "TagList" in db:
-            # Store the stack name
-            for tag in db["TagList"]:
-                if tag["Key"] == env_tag_key:
-                    instance["Environment"] = tag["Value"]
+        # Add Endpoint if args.endpoint is set
+        if args.endpoint:
+            instance["Endpoint"] = db["Endpoint"]["Address"]
 
-        # Confirm whether the DB instance is a reader or writer
+        # Add tags to instance dict
+        for tag in db.get("TagList", []):
+            if tag["Key"] in displayed_tags_list:
+                instance[tag["Key"]] = tag["Value"]
+
+        # Confirm whether the DB instance is a reader or writer to display in output
         if "aurora-mysql" in db["Engine"]:
             for cluster in cluster_response["DBClusters"]:
                 for member in cluster["DBClusterMembers"]:
                     if member["DBInstanceIdentifier"] == db["DBInstanceIdentifier"]:
                         instance["Role"] = "Writer" if member["IsClusterWriter"] else "Reader"
-                        instance["Endpoint"] = cluster["Endpoint"] if member["IsClusterWriter"] else cluster["ReaderEndpoint"]
+                        # Add endpoint to instance dict only if --endpoint flag is set
+                        if args.endpoint:
+                            instance["Endpoint"] = cluster["Endpoint"] if member["IsClusterWriter"] else cluster["ReaderEndpoint"]
 
         instance_list.append(instance)
 
