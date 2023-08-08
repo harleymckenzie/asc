@@ -2,7 +2,7 @@
 RDS service
 """
 import boto3
-from .common import print_as_table, load_config
+from .common import print_as_table
 
 
 def add_subparsers(subparsers):
