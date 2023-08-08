@@ -2,7 +2,7 @@
 Redis service
 """
 import boto3
-from .common import print_as_table, load_config
+from .common import print_as_table
 
 
 def add_subparsers(subparsers):
@@ -20,13 +20,6 @@ def add_subparsers(subparsers):
                                                     epilog='''Example: asc redis ls''')
     redis_list_parser.add_argument('--endpoint', '-e', help='Display endpoint in output.', action='store_true')
     redis_list_parser.set_defaults(func=list_redis_instances)
-
-    # Redis tag subcommand
-    redis_tag_parser = redis_subparsers.add_parser('tag')
-    redis_tag_parser.add_argument('name', help='Redis instance name')
-    redis_tag_parser.add_argument('environment', help='Environment')
-    redis_tag_parser.set_defaults(func=tag_redis)
-
 
 def list_redis_instances(args):
     """
@@ -63,10 +56,3 @@ def list_redis_instances(args):
 
     instances = sorted(instance_list, key=lambda i: i['Name'])
     print_as_table(instances)
-
-
-def tag_redis(args):
-    """
-    Tag Redis instance
-    """
-    elasticache = boto3.client('elasticache')
