@@ -16,26 +16,45 @@ def main():
     parser = argparse.ArgumentParser(prog='asc', description='AWS Simple CLI (asc)',
                                      epilog='''Example: asc ec2 ls''')
     parser.set_defaults(func=lambda args: parser.print_help())
+    
     # Add optional arguments
-    parser.add_argument('--profile', nargs='?', help='AWS profile to use')
-    parser.add_argument('--region', nargs='?', help='AWS region to use')
-
+    parser.add_argument('--profile', nargs='?', help='AWS profile to use.')
+    parser.add_argument('--region', nargs='?', help='AWS region to use.')
+    # Specify additional tags to display in output. This will append to the displayed_tags list
+    parser.add_argument('--tags', '-t', help='Comma-separated tags to display in output.',
+                        type=str)
+    
     subparsers = parser.add_subparsers(help='description', metavar='subcommand')
-
     for service in [common, ec2, rds, asg, redis]:
         service.add_subparsers(subparsers)
 
     args = parser.parse_args()
 
-    # If a profile and/or region is specified, use it
+    # Load configuration
+    args.config = common.load_config()
+
+    # If tags are specified in the config file as well as the command line, append the command line tags
+    if args.config.get('asc', 'displayed_tags') and args.tags:
+        args.config.set('asc', 'displayed_tags', f"{args.config.get('asc', 'displayed_tags')},{args.tags}")
+
+    # Set up AWS session
+    session_params = {}
     if args.profile:
-        boto3.setup_default_session(profile_name=args.profile)
+        session_params['profile_name'] = args.profile
     if args.region:
-        boto3.setup_default_session(region_name=args.region)
+        session_params['region_name'] = args.region
 
-    # Run the function for the specified service
-    args.func(args)
+    try:
+        args.session = boto3.Session(**session_params)
+    except Exception as e:
+        print(f"Failed to create AWS session: {e}")
+        exit(1)
 
+    try:
+        args.func(args)
+    except Exception as e:
+        # Again, refine this catch based on known exceptions your service functions might raise.
+        print(f"Error executing function: {e}")
 
 if __name__ == "__main__":
     main()

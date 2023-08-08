@@ -18,6 +18,7 @@ def add_subparsers(subparsers):
     redis_list_parser = redis_subparsers.add_parser('ls', help='List Redis instances',
                                                     description='List Redis instances',
                                                     epilog='''Example: asc redis ls''')
+    redis_list_parser.add_argument('--endpoint', '-e', help='Display endpoint in output.', action='store_true')
     redis_list_parser.set_defaults(func=list_redis_instances)
 
     # Redis tag subcommand
@@ -32,24 +33,33 @@ def list_redis_instances(args):
     List Redis instances
     """
     instance_list = []
-    config = load_config()
-    env_tag_key = config.get('asc', 'env_tag_key', fallback='Environment')
-    elasticache = boto3.client('elasticache')
-    response = elasticache.describe_cache_clusters(ShowCacheNodeInfo=True)
+    displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
+    elasticache_client = args.session.client('elasticache')
+    response = elasticache_client.describe_cache_clusters(ShowCacheNodeInfo=True)
 
+    # Loop through clusters and nodes
     for cluster in response["CacheClusters"]:
-        resource_tags = elasticache.list_tags_for_resource(
-            ResourceName=cluster["ARN"])
+        # If tags are present in displayed_tags_list, retrieve them from the cluster
+        if displayed_tags_list:
+            cluster_tags = elasticache_client.list_tags_for_resource(ResourceName=cluster["ARN"])
+            cluster_instance_tags = {}
+            for tag in cluster_tags["TagList"]:
+                # Store tags in cluster dict
+                if tag["Key"] in displayed_tags_list:
+                    cluster_instance_tags[tag["Key"]] = tag["Value"]
 
-        instance = {"Name": cluster["CacheClusterId"], "Endpoint": cluster["CacheNodes"][0]["Endpoint"]["Address"],
-                    "Type": cluster["CacheNodeType"]}
+        # Loop through nodes in cluster, as there can be multiple nodes per cluster
+        # If there is a cluster dict, add tags to instance dict
+        for node in cluster["CacheNodes"]:
+            instance = {"Name": cluster["CacheClusterId"],
+                        "Type": cluster["CacheNodeType"],
+                        "Status": cluster["CacheClusterStatus"]}
+            instance.update(cluster_instance_tags)
+            if args.endpoint:
+                instance["Endpoint"] = node["Endpoint"]["Address"]
 
-        # Store the environment tag in the instance dict if it exists
-        for tag in resource_tags["TagList"]:
-            if tag["Key"] == env_tag_key:
-                instance["Environment"] = tag["Value"]
+            instance_list.append(instance)
 
-        instance_list.append(instance)
 
     instances = sorted(instance_list, key=lambda i: i['Name'])
     print_as_table(instances)

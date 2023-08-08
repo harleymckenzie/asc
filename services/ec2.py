@@ -5,7 +5,7 @@ This module provides functionality for interacting with Amazon Elastic Compute C
 """
 
 import boto3
-from .common import print_as_table, load_config
+from .common import print_as_table
 
 
 def add_subparsers(subparsers):
@@ -35,25 +35,22 @@ def list_ec2_instances(args):
         None
     """
     instance_list = []
-    config = load_config()
-    env_tag_key = config.get('asc', 'env_tag_key', fallback='Environment')
-    ec2 = boto3.client('ec2')
-    response = ec2.describe_instances()
+    displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
+    ec2_client = args.session.client('ec2')
+    response = ec2_client.describe_instances()
 
     for reservation in response["Reservations"]:
-        for ec2 in reservation["Instances"]:
-            instance = {"Public IP": ec2["PublicIpAddress"] if "PublicIpAddress" in ec2 else "",
-                        "Id": ec2["InstanceId"], "Type": ec2["InstanceType"], "State": ec2["State"]["Name"]}
-
-            # If the instance has a name or environment tag set in config, use it
-            if "Tags" in ec2:
-                for tag in ec2["Tags"]:
-                    if tag["Key"] == "Name":
-                        instance = {"Name": tag["Value"], **instance}
-                    if tag["Key"] == env_tag_key:
-                        instance["Environment"] = tag["Value"]
+        for ec2_instance in reservation["Instances"]:
+            instance = {"Public IP": ec2_instance.get("PublicIpAddress", ""),
+                        "Id": ec2_instance["InstanceId"],
+                        "Type": ec2_instance["InstanceType"],
+                        "State": ec2_instance["State"]["Name"]}
+            
+            # Add tags to instance dict
+            for tag in ec2_instance.get("Tags", []):
+                if tag["Key"] in displayed_tags_list:
+                    instance[tag["Key"]] = tag["Value"]
 
             instance_list.append(instance)
 
-    instances = sorted(instance_list, key=lambda i: i['Name'])
-    print_as_table(instances)
+    print_as_table(instance_list)
