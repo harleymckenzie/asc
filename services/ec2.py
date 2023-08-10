@@ -27,12 +27,6 @@ def list_ec2_instances(args):
     List EC2 instances
 
     This function retrieves a list of EC2 instances and prints them as a table.
-
-    Args:
-        args: The arguments passed to the command.
-
-    Returns:
-        None
     """
     instance_list = []
     displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
