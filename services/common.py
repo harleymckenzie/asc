@@ -21,6 +21,7 @@ def print_as_table(items):
     """
     Print a list of dicts as a table
     """
+    
     print(tabulate.tabulate(items, headers="keys"))
 
 

@@ -42,7 +42,12 @@ def list_ec2_instances(args):
             
             # Add tags to instance dict
             for tag in ec2_instance.get("Tags", []):
-                if tag["Key"] in displayed_tags_list:
+                # Append the "Name" tag to the beginning if it has been set in displayed_tags_list and on the instance
+                if "Name" in tag["Key"] and "Name" in displayed_tags_list:
+                    updated_instance = {tag["Key"]: tag["Value"]}
+                    updated_instance.update(instance)
+                    instance = updated_instance
+                elif tag["Key"] in displayed_tags_list:
                     instance[tag["Key"]] = tag["Value"]
 
             instance_list.append(instance)

@@ -5,14 +5,14 @@ from unittest.mock import patch, MagicMock
 from services.rds import list_rds_instances
 
 @pytest.mark.parametrize(
-    "displayed_tags, expected_tags",
+    "displayed_tags, display_endpoint",
     [
-        ("Name", ["Name"]),
-        ("Name,Environment", ["Name", "Environment"])
+        ("Name", True),
+        ("Name,Environment", False)
     ]
 )
 @mock_rds
-def test_list_rds_instances(displayed_tags, expected_tags):
+def test_list_rds_instances(displayed_tags, display_endpoint):
     # Create a mock RDS instance
     rds_client = boto3.client("rds", region_name="eu-west-1")
     rds_client.create_db_instance(DBInstanceIdentifier='test1', DBInstanceClass='db.t2.micro', Engine='mysql',
@@ -41,6 +41,7 @@ def test_list_rds_instances(displayed_tags, expected_tags):
     # Create an argparse.Namespace object to pass as an argument
     args = MagicMock()
     args.session = boto3.Session(region_name="eu-west-1")
+    args.endpoint = display_endpoint
     args.config.get.return_value = displayed_tags  # Mimic the behavior of ConfigParser's get() method for the given section and option
 
     # Print a newline directly to format pytest output
