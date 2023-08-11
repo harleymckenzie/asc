@@ -41,11 +41,15 @@ def load_config():
     # Read existing config if it exists, or create a new one with default values
     if os.path.exists(config_file):
         config.read(config_file)
+    # Create a new one with default values if it doesn't
     else:
         config.add_section('asc')
         config.set('asc', 'displayed_tags', 'Name')
         with open(config_file, 'w') as configfile:
             config.write(configfile)
+
+    if "displayed_tags" not in config["asc"]:
+        config.set('asc', 'displayed_tags')
 
     # Return the config
     return config

@@ -29,7 +29,14 @@ def list_ec2_instances(args):
     This function retrieves a list of EC2 instances and prints them as a table.
     """
     instance_list = []
-    displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
+    
+    # Store tags to display in the output if they've been set in the config
+    if "displayed_tags" in args.config["asc"]:
+        displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
+    # Set an empty list if the config hasn't been set
+    else:
+        displayed_tags_list = []
+
     ec2_client = args.session.client('ec2')
     response = ec2_client.describe_instances()
 

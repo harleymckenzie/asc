@@ -26,9 +26,15 @@ def list_rds_instances(args):
     List RDS instances
     """
     instance_list = []
-    displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
     rds_client = args.session.client('rds')
     response = rds_client.describe_db_instances()
+
+    # Store tags to display in the output if they've been set in the config
+    if "displayed_tags" in args.config["asc"]:
+        displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
+    # Set an empty list if the config hasn't been set
+    else:
+        displayed_tags_list = []
 
     # Only call describe_db_clusters if there are Aurora instances
     if "aurora-mysql" in [db["Engine"] for db in response["DBInstances"]]:

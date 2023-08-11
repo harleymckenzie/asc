@@ -34,7 +34,7 @@ def main():
     args.config = common.load_config()
 
     # If tags are specified in the config file as well as the command line, append the command line tags
-    if args.config.get('asc', 'displayed_tags') and args.tags:
+    if "displayed_tags" in args.config["asc"] and args.tags:
         args.config.set('asc', 'displayed_tags', f"{args.config.get('asc', 'displayed_tags')},{args.tags}")
 
     # Set up AWS session
