@@ -5,20 +5,22 @@ This module provides functionality for interacting with Amazon Elastic Compute C
 """
 
 import boto3
+import argparse
 from .common import print_as_table
 
 
-def add_subparsers(subparsers):
+def add_subparsers(subparsers, global_parser):
+    
     """
     Add subparsers for EC2 commands
     """
     ec2_parser = subparsers.add_parser('ec2', help='EC2 service', description='EC2 service',
-                                       epilog='''Example: asc ec2 ls''')
+                                        epilog='''Example: asc ec2 ls''', parents=[global_parser])
     ec2_parser.set_defaults(func=lambda args: ec2_parser.print_help())
     ec2_subparsers = ec2_parser.add_subparsers(help='Description:', dest='subcommand')
 
-    ec2_list_parser = ec2_subparsers.add_parser('ls', help='List EC2 instances',
-                                                description='List EC2 instances', epilog='''Example: asc ec2 ls''')
+    ec2_list_parser = ec2_subparsers.add_parser('ls', help='List EC2 instances', description='List EC2 instances',
+                                                 epilog='''Example: asc ec2 ls''', parents=[global_parser])
     ec2_list_parser.set_defaults(func=list_ec2_instances)
 
 

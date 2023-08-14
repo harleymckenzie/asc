@@ -11,22 +11,30 @@ def main():
     """
     Main function
     """
+    global_parser = argparse.ArgumentParser(add_help=False)
+    group = global_parser.add_argument_group('global arguments')
+    group.add_argument('--profile', nargs='?', help='AWS profile to use.', )
+    group.add_argument('--region', nargs='?', help='AWS region to use.')
+    
     # Parse command line arguments
     # If no arguments are specified, print help
     parser = argparse.ArgumentParser(prog='asc', description='AWS Simple CLI (asc)',
-                                     epilog='''Example: asc ec2 ls''')
+                                     epilog='''Example: asc ec2 ls''', parents=[global_parser])
     parser.set_defaults(func=lambda args: parser.print_help())
     
     # Add optional arguments
-    parser.add_argument('--profile', nargs='?', help='AWS profile to use.')
-    parser.add_argument('--region', nargs='?', help='AWS region to use.')
+    # parser.add_argument('--profile', nargs='?', help='AWS profile to use.')
+    # parser.add_argument('--region', nargs='?', help='AWS region to use.')
     # Specify additional tags to display in output. This will append to the displayed_tags list
     parser.add_argument('--tags', '-t', help='Comma-separated tags to display in output.',
                         type=str)
     
     subparsers = parser.add_subparsers(help='description', metavar='subcommand')
-    for service in [common, ec2, rds, asg, redis]:
+    for service in [common, rds, asg, redis]:
         service.add_subparsers(subparsers)
+
+    for service in [ec2]:
+        service.add_subparsers(subparsers, global_parser)
 
     args = parser.parse_args()
 
