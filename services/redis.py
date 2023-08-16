@@ -5,19 +5,19 @@ import boto3
 from .common import print_as_table
 
 
-def add_subparsers(subparsers):
+def add_subparsers(subparsers, global_parser):
     """
     Add subparsers for Redis commands
     """
     redis_parser = subparsers.add_parser('redis', help='Redis service', description='Redis service',
-                                         epilog='''Example: asc redis ls''')
+                                         epilog='''Example: asc redis ls''', parents=[global_parser])
     redis_parser.set_defaults(func=lambda args: redis_parser.print_help())
     redis_subparsers = redis_parser.add_subparsers(help='Description:', dest='subcommand')
 
     # Redis list subcommand
     redis_list_parser = redis_subparsers.add_parser('ls', help='List Redis instances',
                                                     description='List Redis instances',
-                                                    epilog='''Example: asc redis ls''')
+                                                    epilog='''Example: asc redis ls''', parents=[global_parser])
     redis_list_parser.add_argument('--endpoint', '-e', help='Display endpoint in output.', action='store_true')
     redis_list_parser.set_defaults(func=list_redis_instances)
 

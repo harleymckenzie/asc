@@ -6,12 +6,12 @@ import os
 import configparser
 
 
-def add_subparsers(subparsers):
+def add_subparsers(subparsers, global_parser):
     """
     Add subparsers for common commands
     """
     config_parser = subparsers.add_parser('configure', help='Configure asc', description='Configure asc',
-                                          epilog='''Example: asc configure''')
+                                          epilog='''Example: asc configure''', parents=[global_parser])
     config_parser.set_defaults(func=configure)
     config_parser.add_argument('--add-tag', nargs='?', help='Add a tag to the list of defined tags that are displayed')
     config_parser.add_argument('--remove-tag', '--rm-tag', nargs='?', help='Remove a tag from the list of defined tags that are displayed')

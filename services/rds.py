@@ -5,18 +5,18 @@ import boto3
 from .common import print_as_table
 
 
-def add_subparsers(subparsers):
+def add_subparsers(subparsers, global_parser):
     """
     Add subparsers for RDS commands
     """
     rds_parser = subparsers.add_parser('rds', help='RDS service', description='RDS service',
-                                       epilog='''Example: asc rds ls''')
+                                       epilog='''Example: asc rds ls''', parents=[global_parser])
     rds_parser.set_defaults(func=lambda args: rds_parser.print_help())
     rds_subparsers = rds_parser.add_subparsers(help='Description:', dest='subcommand')
 
     # RDS list subcommand
     rds_list_parser = rds_subparsers.add_parser('ls', help='List RDS instances', description='List RDS instances',
-                                                epilog='''Example: asc rds ls''')
+                                                epilog='''Example: asc rds ls''', parents=[global_parser])
     rds_list_parser.add_argument('--endpoint', '-e', help='Display endpoint in output.', action='store_true')
     rds_list_parser.set_defaults(func=list_rds_instances)
 
