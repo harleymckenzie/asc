@@ -1,4 +1,3 @@
-import boto3
 import pytz
 from .common import print_as_table
 
@@ -57,7 +56,7 @@ def list_autoscaling_groups(args):
     List Autoscaling Groups
     """
     instance_list = []
-    asg = boto3.client('autoscaling')
+    asg = args.session.client('autoscaling')
     response = asg.describe_auto_scaling_groups()
 
     for asg in response["AutoScalingGroups"]:
@@ -77,7 +76,7 @@ def list_autoscaling_schedules(args):
     List ASG Schedules
     """
     instance_list = []
-    asg = boto3.client('autoscaling')
+    asg = args.session.client('autoscaling')
     response = asg.describe_scheduled_actions()
 
     for schedule in response["ScheduledUpdateGroupActions"]:
@@ -113,7 +112,7 @@ def add_autoscaling_schedule(args):
     """
     Add ASG Schedule
     """
-    asg = boto3.client('autoscaling')
+    asg = args.session.client('autoscaling')
 
     print("Available ASGs:")
     asg_response = asg.describe_auto_scaling_groups()
@@ -166,7 +165,7 @@ def rm_autoscaling_schedule(args):
     """
     Remove ASG Schedule
     """
-    asg = boto3.client('autoscaling')
+    asg = args.session.client('autoscaling')
 
     # Get the parameters from user input if not provided
     asg_name = args.asg if args.asg else input("ASG Name: ")

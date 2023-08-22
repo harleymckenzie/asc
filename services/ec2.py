@@ -4,8 +4,6 @@ EC2 Service
 This module provides functionality for interacting with Amazon Elastic Compute Cloud (EC2) service.
 """
 
-import boto3
-import argparse
 from .common import print_as_table
 
 

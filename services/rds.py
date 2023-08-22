@@ -1,7 +1,6 @@
 """
 RDS service
 """
-import boto3
 from .common import print_as_table
 
 
