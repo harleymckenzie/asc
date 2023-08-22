@@ -34,7 +34,6 @@ def main():
         service.add_subparsers(subparsers, global_parser)
 
     args = parser.parse_args()
-    print(args)
 
     # Load configuration
     args.config = common.load_config()
@@ -44,16 +43,7 @@ def main():
         args.config.set('asc', 'displayed_tags', f"{args.config.get('asc', 'displayed_tags')},{args.tags}")
 
     # Set up AWS session
-    # If a profile or region is specified in the main and global parsers, use the global parser's values
-    session_params = {}
-    if args.global_profile:
-        session_params["profile_name"] = args.global_profile
-    elif args.profile:
-        session_params["profile_name"] = args.profile
-    if args.global_region:
-        session_params["region_name"] = args.global_region
-    elif args.region:
-        session_params["region_name"] = args.region
+    session_params = setup_session(args)    
 
     try:
         args.session = boto3.Session(**session_params)
@@ -62,6 +52,24 @@ def main():
         exit(1)
 
     args.func(args)
+
+def setup_session(args):
+    """
+    Set up AWS session
+    """
+    session_params = {}
+
+    if args.global_profile:
+        session_params["profile_name"] = args.global_profile
+    elif args.profile:
+        session_params["profile_name"] = args.profile
+
+    if args.global_region:
+        session_params["region_name"] = args.global_region
+    elif args.region:
+        session_params["region_name"] = args.region
+
+    return session_params
 
 if __name__ == "__main__":
     main()
