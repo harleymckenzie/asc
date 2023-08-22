@@ -11,38 +11,39 @@ def main():
     """
     Main function
     """
-    # Parse command line arguments
+    # Main parser
     # If no arguments are specified, print help
     parser = argparse.ArgumentParser(prog='asc', description='AWS Simple CLI (asc)',
                                      epilog='''Example: asc ec2 ls''')
     parser.set_defaults(func=lambda args: parser.print_help())
-    
-    # Add optional arguments
-    parser.add_argument('--profile', nargs='?', help='AWS profile to use.')
-    parser.add_argument('--region', nargs='?', help='AWS region to use.')
-    # Specify additional tags to display in output. This will append to the displayed_tags list
     parser.add_argument('--tags', '-t', help='Comma-separated tags to display in output.',
                         type=str)
+    parser.add_argument('--profile', '-p', nargs='?', help='AWS profile to use.', dest='profile')
+    parser.add_argument('--region', nargs='?', help='AWS region to use.', dest='region')
     
-    subparsers = parser.add_subparsers(help='description', metavar='subcommand')
+    subparsers = parser.add_subparsers(help='description', metavar='subcommand', dest='subcommand')
+
+    # Global parser
+    # This parser will be used by all subparsers
+    global_parser = argparse.ArgumentParser(add_help=False)
+    group = global_parser.add_argument_group('global arguments')
+    group.add_argument('--profile', '-p', nargs='?', help='AWS profile to use.', dest='global_profile')
+    group.add_argument('--region', nargs='?', help='AWS region to use.', dest='global_region')
+    
     for service in [common, ec2, rds, asg, redis]:
-        service.add_subparsers(subparsers)
+        service.add_subparsers(subparsers, global_parser)
 
     args = parser.parse_args()
 
     # Load configuration
     args.config = common.load_config()
 
-    # If tags are specified in the config file as well as the command line, append the command line tags
-    if args.config.get('asc', 'displayed_tags') and args.tags:
+    # Combine tags from the config and command line
+    if "displayed_tags" in args.config["asc"] and args.tags:
         args.config.set('asc', 'displayed_tags', f"{args.config.get('asc', 'displayed_tags')},{args.tags}")
 
     # Set up AWS session
-    session_params = {}
-    if args.profile:
-        session_params['profile_name'] = args.profile
-    if args.region:
-        session_params['region_name'] = args.region
+    session_params = setup_session(args)    
 
     try:
         args.session = boto3.Session(**session_params)
@@ -50,11 +51,25 @@ def main():
         print(f"Failed to create AWS session: {e}")
         exit(1)
 
-    try:
-        args.func(args)
-    except Exception as e:
-        # Again, refine this catch based on known exceptions your service functions might raise.
-        print(f"Error executing function: {e}")
+    args.func(args)
+
+def setup_session(args):
+    """
+    Set up AWS session
+    """
+    session_params = {}
+
+    if args.global_profile:
+        session_params["profile_name"] = args.global_profile
+    elif args.profile:
+        session_params["profile_name"] = args.profile
+
+    if args.global_region:
+        session_params["region_name"] = args.global_region
+    elif args.region:
+        session_params["region_name"] = args.region
+
+    return session_params
 
 if __name__ == "__main__":
     main()

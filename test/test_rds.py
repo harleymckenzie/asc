@@ -3,12 +3,14 @@ from moto import mock_rds
 import pytest
 from unittest.mock import patch, MagicMock
 from services.rds import list_rds_instances
+import configparser
 
 @pytest.mark.parametrize(
     "displayed_tags, display_endpoint",
     [
         ("Name", True),
-        ("Name,Environment", False)
+        ("Name,Environment", False),
+        (None, True)
     ]
 )
 @mock_rds
@@ -41,11 +43,11 @@ def test_list_rds_instances(displayed_tags, display_endpoint):
     # Create an argparse.Namespace object to pass as an argument
     args = MagicMock()
     args.session = boto3.Session(region_name="eu-west-1")
+    args.config = configparser.RawConfigParser()
+    args.config.add_section('asc')
+    if displayed_tags:
+        args.config.set('asc', 'displayed_tags', displayed_tags)
     args.endpoint = display_endpoint
-    args.config.get.return_value = displayed_tags  # Mimic the behavior of ConfigParser's get() method for the given section and option
-
-    # Print a newline directly to format pytest output
-    print()
 
     # Capture the print output
     output_captured = []
@@ -55,8 +57,10 @@ def test_list_rds_instances(displayed_tags, display_endpoint):
         list_rds_instances(args)
 
     output_string = "\n".join(output_captured)
-    for tag in displayed_tags.split(','):
-        assert tag in output_string
+    
+    if displayed_tags:
+        for tag in displayed_tags.split(','):
+            assert tag in output_string
 
     # Print the captured output for manual verification
-    print(output_string)
+    print('\n' + output_string)

@@ -1,37 +1,39 @@
-import boto3
 import pytz
 from .common import print_as_table
 
 
-def add_subparsers(subparsers):
+def add_subparsers(subparsers, global_parser):
     asg_parser = subparsers.add_parser('asg', help='Autoscaling service', description='Autoscaling service',
-                                       epilog='''Example: asc asg ls''')
+                                       epilog='''Example: asc asg ls''', parents=[global_parser])
     asg_parser.set_defaults(func=lambda args: asg_parser.print_help())
     asg_subparsers = asg_parser.add_subparsers(help='Description:', dest='subcommand')
 
     # ASG specific subcommands
     asg_list_parser = asg_subparsers.add_parser('ls', help='List autoscaling groups',
-                                                description='List autoscaling groups', epilog='''Example: asc asg ls''')
+                                                description='List autoscaling groups', epilog='''Example: asc asg ls''',
+                                                parents=[global_parser])
     asg_list_parser.set_defaults(func=list_autoscaling_groups)
 
     # ASG schedule subcommands
     schedule_parser = asg_subparsers.add_parser('schedule', help='Autoscaling schedule subcommands',
                                                 description='Autoscaling schedule subcommands',
-                                                epilog='''Example: asc asg schedule ls''')
+                                                epilog='''Example: asc asg schedule ls''', parents=[global_parser])
     schedule_parser.set_defaults(func=lambda args: schedule_parser.print_help())
     schedule_subparsers = schedule_parser.add_subparsers(help='Description:', dest='subcommand')
 
     # ASG schedule list subcommand
     schedule_list_parser = schedule_subparsers.add_parser('ls', help='List autoscaling schedules',
                                                           description='List autoscaling schedules',
-                                                          epilog='''Example: asc asg schedule ls''')
+                                                          epilog='''Example: asc asg schedule ls''',
+                                                          parents=[global_parser])
     schedule_list_parser.set_defaults(func=list_autoscaling_schedules)
 
     # ASG schedule add subcommand
     schedule_add_parser = schedule_subparsers.add_parser('add', help='Add autoscaling schedule',
                                                          description='Add autoscaling schedule',
                                                          epilog='''Example: asc asg schedule add --asg my-asg 
-                                                            --name my-schedule --min 1 --start 2017-01-01T00:00:00Z''')
+                                                            --name my-schedule --min 1 --start 2017-01-01T00:00:00Z''',
+                                                         parents=[global_parser])
 
     schedule_add_parser.add_argument('--asg', help='Name of the ASG')
     schedule_add_parser.add_argument('--name', help='Name of the schedule')
@@ -42,7 +44,8 @@ def add_subparsers(subparsers):
     # ASG schedule rm subcommand
     schedule_rm_parser = schedule_subparsers.add_parser('rm', help='Remove autoscaling schedule',
                                                         description='Remove autoscaling schedule',
-                                                        epilog='''Example: asc asg schedule rm my-schedule my-asg''')
+                                                        epilog='''Example: asc asg schedule rm my-schedule my-asg''',
+                                                        parents=[global_parser])
     schedule_rm_parser.add_argument('--name', help='Name of the schedule')
     schedule_rm_parser.add_argument('--asg', help='Name of the ASG')
     schedule_rm_parser.set_defaults(func=rm_autoscaling_schedule)
@@ -53,7 +56,7 @@ def list_autoscaling_groups(args):
     List Autoscaling Groups
     """
     instance_list = []
-    asg = boto3.client('autoscaling')
+    asg = args.session.client('autoscaling')
     response = asg.describe_auto_scaling_groups()
 
     for asg in response["AutoScalingGroups"]:
@@ -73,7 +76,7 @@ def list_autoscaling_schedules(args):
     List ASG Schedules
     """
     instance_list = []
-    asg = boto3.client('autoscaling')
+    asg = args.session.client('autoscaling')
     response = asg.describe_scheduled_actions()
 
     for schedule in response["ScheduledUpdateGroupActions"]:
@@ -109,7 +112,7 @@ def add_autoscaling_schedule(args):
     """
     Add ASG Schedule
     """
-    asg = boto3.client('autoscaling')
+    asg = args.session.client('autoscaling')
 
     print("Available ASGs:")
     asg_response = asg.describe_auto_scaling_groups()
@@ -162,7 +165,7 @@ def rm_autoscaling_schedule(args):
     """
     Remove ASG Schedule
     """
-    asg = boto3.client('autoscaling')
+    asg = args.session.client('autoscaling')
 
     # Get the parameters from user input if not provided
     asg_name = args.asg if args.asg else input("ASG Name: ")
