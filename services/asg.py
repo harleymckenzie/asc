@@ -1,8 +1,29 @@
+"""
+This module contains functions to interact with the Autoscaling service.
+It provides functionality to list autoscaling groups, list autoscaling
+schedules, add autoscaling schedules and remove autoscaling schedules.
+
+Functions:
+- add_subparsers(subparsers, global_parser) -> None
+- list_autoscaling_groups(args)
+- list_autoscaling_schedules(args)
+- add_autoscaling_schedule(args)
+"""
 import pytz
 from .common import print_as_table
 
 
 def add_subparsers(subparsers, global_parser) -> None:
+    """
+    Adds subparsers to the given subparsers object for the autoscaling service.
+
+    Args:
+        subparsers: The subparsers object to add the subcommands to.
+        global_parser: The global parser object to inherit options from.
+
+    Returns:
+        None
+    """
     asg_parser = subparsers.add_parser(
         "asg",
         help="Autoscaling service",
@@ -82,7 +103,13 @@ def add_subparsers(subparsers, global_parser) -> None:
 
 def list_autoscaling_groups(args):
     """
-    List ASGs
+    Lists all the autoscaling groups and their details.
+
+    Args:
+        args: An object containing the session information.
+
+    Returns:
+        None
     """
     instance_list = []
     asg = args.session.client("autoscaling")
@@ -101,9 +128,6 @@ def list_autoscaling_groups(args):
 
 
 def list_autoscaling_schedules(args):
-    """
-    List ASG Schedules
-    """
     instance_list = []
     asg = args.session.client("autoscaling")
     response = asg.describe_scheduled_actions()
