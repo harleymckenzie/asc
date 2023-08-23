@@ -1,7 +1,23 @@
+"""
+EC2 service.
+
+This module contains the functions for the EC2 service.
+
+Functions:
+- add_subparsers(subparsers, global_parser): Adds subparsers for EC2 commands.
+- list_ec2_instances(args): Lists EC2 instances.
+"""
 from .common import print_as_table
 
 
 def add_subparsers(subparsers, global_parser) -> None:
+    """
+    Adds subparsers to the given subparsers object for the ec2 service.
+
+    Args:
+        subparsers: The subparsers object to add the subcommands to.
+        global_parser: The global parser object to inherit options from.
+    """
     ec2_parser = subparsers.add_parser(
         "ec2",
         help="EC2 service",
@@ -26,6 +42,16 @@ def add_subparsers(subparsers, global_parser) -> None:
 
 
 def list_ec2_instances(args):
+    """
+    List EC2 instances.
+
+    Args:
+        args: Arguments passed by the user, including configuration details
+              and options such as displaying endpoints.
+
+    Prints:
+        A table displaying the details of all EC2 instances.
+    """
     instance_list = []
 
     # Store tags to display in the output if they've been set in the config
