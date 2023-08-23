@@ -68,7 +68,7 @@ def main():
     session_params = setup_session(args)
 
     try:
-        boto3.Session(**session_params)
+        args.session = boto3.Session(**session_params)
     except Exception as e:
         print(f"Failed to create AWS session: {e}")
         exit(1)
