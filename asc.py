@@ -43,7 +43,7 @@ def main():
     group.add_argument(
         '--profile', '-p', nargs='?',
         help='AWS profile to use.',
-        help='AWS profile to use.', dest='global_profile'
+        dest='global_profile'
     )
     group.add_argument(
         '--region', nargs='?', help='AWS region to use.', dest='global_region'
