@@ -1,22 +1,21 @@
 """
 RDS service
 """
-import boto3
 from .common import print_as_table
 
 
-def add_subparsers(subparsers):
+def add_subparsers(subparsers, global_parser):
     """
     Add subparsers for RDS commands
     """
     rds_parser = subparsers.add_parser('rds', help='RDS service', description='RDS service',
-                                       epilog='''Example: asc rds ls''')
+                                       epilog='''Example: asc rds ls''', parents=[global_parser])
     rds_parser.set_defaults(func=lambda args: rds_parser.print_help())
     rds_subparsers = rds_parser.add_subparsers(help='Description:', dest='subcommand')
 
     # RDS list subcommand
     rds_list_parser = rds_subparsers.add_parser('ls', help='List RDS instances', description='List RDS instances',
-                                                epilog='''Example: asc rds ls''')
+                                                epilog='''Example: asc rds ls''', parents=[global_parser])
     rds_list_parser.add_argument('--endpoint', '-e', help='Display endpoint in output.', action='store_true')
     rds_list_parser.set_defaults(func=list_rds_instances)
 
@@ -26,9 +25,15 @@ def list_rds_instances(args):
     List RDS instances
     """
     instance_list = []
-    displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
     rds_client = args.session.client('rds')
     response = rds_client.describe_db_instances()
+
+    # Store tags to display in the output if they've been set in the config
+    if "displayed_tags" in args.config["asc"]:
+        displayed_tags_list = args.config.get('asc', 'displayed_tags').split(',')
+    # Set an empty list if the config hasn't been set
+    else:
+        displayed_tags_list = []
 
     # Only call describe_db_clusters if there are Aurora instances
     if "aurora-mysql" in [db["Engine"] for db in response["DBInstances"]]:
