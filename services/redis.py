@@ -1,10 +1,13 @@
-import boto3
 from .common import print_as_table
 
 
 def add_subparsers(subparsers, global_parser):
     """
-    Add subparsers for Redis commands
+    Add subparsers for common commands.
+
+    Args:
+        subparsers: The subparsers object from the main parser.
+        global_parser: The global parser containing common arguments.
     """
     redis_parser = subparsers.add_parser(
         "redis",
@@ -36,9 +39,16 @@ def add_subparsers(subparsers, global_parser):
 
 def list_redis_instances(args):
     """
-    List Redis instances
+    Lists Redis instances based on given arguments.
+
+    Args:
+        args: The arguments received from the command-line input.
+
+    Prints:
+        A table displaying the details of all Redis instances.
     """
     instance_list = []
+    cluster_instance_tags = {}
     displayed_tags_list = args.config.get("asc", "displayed_tags").split(",")
     ec_client = args.session.client("elasticache")
     response = ec_client.describe_cache_clusters(ShowCacheNodeInfo=True)
@@ -48,7 +58,6 @@ def list_redis_instances(args):
             cluster_tags = ec_client.list_tags_for_resource(
                 ResourceName=cluster["ARN"]
             )
-            cluster_instance_tags = {}
             for tag in cluster_tags["TagList"]:
                 # Store tags in cluster dict
                 if tag["Key"] in displayed_tags_list:

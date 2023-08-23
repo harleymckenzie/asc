@@ -1,9 +1,20 @@
+"""
+This module contains functions to interact with Amazon RDS service.
+
+Functions:
+- add_subparsers(subparsers, global_parser): Adds subparsers for RDS commands.
+- list_rds_instances(args): Lists RDS instances.
+"""
 from .common import print_as_table
 
 
 def add_subparsers(subparsers, global_parser):
     """
-    Add subparsers for RDS commands
+    Adds subparsers for RDS commands to the main parser.
+
+    Args:
+        subparsers: The subparsers object from the main parser.
+        global_parser: The global parser containing common arguments.
     """
     rds_parser = subparsers.add_parser(
         "rds",
@@ -34,6 +45,15 @@ def add_subparsers(subparsers, global_parser):
 
 
 def list_rds_instances(args):
+    """
+    Lists RDS instances based on given arguments.
+
+    Args:
+        args: The arguments received from the command-line input.
+
+    Prints:
+        A table displaying the details of all RDS instances.
+    """
     instance_list = []
     rds_client = args.session.client("rds")
     response = rds_client.describe_db_instances()

@@ -103,13 +103,13 @@ def add_subparsers(subparsers, global_parser) -> None:
 
 def list_autoscaling_groups(args):
     """
-    Lists all the autoscaling groups and their details.
+    List all autoscaling groups.
 
     Args:
-        args: An object containing the session information.
+        args: Arguments passed by the user.
 
-    Returns:
-        None
+    Prints:
+        A table displaying the details of all autoscaling groups.
     """
     instance_list = []
     asg = args.session.client("autoscaling")
@@ -128,6 +128,15 @@ def list_autoscaling_groups(args):
 
 
 def list_autoscaling_schedules(args):
+    """
+    List all autoscaling schedules.
+
+    Args:
+        args: Arguments passed by the user.
+
+    Prints:
+        A table displaying the details of all autoscaling schedules.
+    """
     instance_list = []
     asg = args.session.client("autoscaling")
     response = asg.describe_scheduled_actions()
@@ -167,7 +176,13 @@ def list_autoscaling_schedules(args):
 
 def add_autoscaling_schedule(args):
     """
-    Add ASG Schedule
+    Add a new autoscaling schedule.
+
+    Args:
+        args: Arguments including ASG Name, Schedule Name, Min Size, etc.
+
+    Prints:
+        Confirmation message upon successful creation, or error if failure.
     """
     asg = args.session.client("autoscaling")
 
@@ -219,7 +234,13 @@ def add_autoscaling_schedule(args):
 
 def rm_autoscaling_schedule(args):
     """
-    Remove ASG Schedule
+    Remove an autoscaling schedule.
+
+    Args:
+        args: Arguments including ASG Name and Schedule Name.
+
+    Prints:
+        Confirmation message upon successful removal, or error if failure.
     """
     asg = args.session.client("autoscaling")
 

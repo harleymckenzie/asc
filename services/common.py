@@ -1,14 +1,18 @@
 """
 Common functions for asc
 """
-import tabulate
 import os
 import configparser
+import tabulate
 
 
 def add_subparsers(subparsers, global_parser):
     """
-    Add subparsers for common commands
+    Add subparsers for common commands.
+
+    Args:
+        subparsers: The subparsers object from the main parser.
+        global_parser: The global parser containing common arguments.
     """
     config_parser = subparsers.add_parser(
         "configure",
@@ -33,7 +37,13 @@ def add_subparsers(subparsers, global_parser):
 
 def print_as_table(items):
     """
-    Print a list of dicts as a table
+    Print a list of dicts as a table.
+
+    Args:
+        items: List of dictionaries containing the data to print.
+
+    Prints:
+        A table representation of the provided data.
     """
 
     print(tabulate.tabulate(items, headers="keys"))
@@ -41,8 +51,10 @@ def print_as_table(items):
 
 def load_config():
     """
-    Load configuration from ~/.asc/config if it exists
-    and create it if it doesn't
+    Load configuration from ~/.asc/config if it exists and create it if it doesn't.
+
+    Returns:
+        A configparser object with the loaded configuration.
     """
     config = configparser.RawConfigParser()
     config_dir = os.path.expanduser("~/.asc")
@@ -70,7 +82,13 @@ def load_config():
 
 def configure(args):
     """
-    Configure asc
+    Configure asc based on the given arguments.
+
+    Args:
+        args: The arguments received from the command-line input.
+
+    Prints:
+        A confirmation message indicating the configuration has been saved.
     """
     config = load_config()
     config_dir = os.path.expanduser("~/.asc")
