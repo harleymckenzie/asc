@@ -1,6 +1,7 @@
-from .common import print_as_table
+from ..common import subparser_register, print_as_table
 
 
+@subparser_register('redis')
 def add_subparsers(subparsers, global_parser):
     """
     Add subparsers for common commands.

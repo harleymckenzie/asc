@@ -2,7 +2,7 @@ import boto3
 from moto import mock_rds
 import pytest
 from unittest.mock import patch, MagicMock
-from services.rds import list_rds_instances
+from asc.services import rds
 import configparser
 
 
@@ -79,7 +79,7 @@ def test_list_rds_instances(displayed_tags, display_endpoint):
         "builtins.print",
         side_effect=lambda *args: output_captured.append(" ".join(map(str, args))),
     ) as mocked_print:
-        list_rds_instances(args)
+        rds.list_rds_instances(args)
 
     output_string = "\n".join(output_captured)
 

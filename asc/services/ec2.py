@@ -7,9 +7,10 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for EC2 commands.
 - list_ec2_instances(args): Lists EC2 instances.
 """
-from .common import print_as_table
+from ..common import subparser_register, print_as_table
 
 
+@subparser_register('ec2')
 def add_subparsers(subparsers, global_parser) -> None:
     """
     Adds subparsers to the given subparsers object for the ec2 service.

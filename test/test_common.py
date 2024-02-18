@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from services.common import print_as_table
+from asc.common import print_as_table
 
 
 def test_print_as_table():

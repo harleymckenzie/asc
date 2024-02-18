@@ -10,9 +10,10 @@ Functions:
 - add_autoscaling_schedule(args)
 """
 import pytz
-from .common import print_as_table
+from ..common import subparser_register, print_as_table
 
 
+@subparser_register('asg')
 def add_subparsers(subparsers, global_parser) -> None:
     """
     Adds subparsers to the given subparsers object for the autoscaling service.

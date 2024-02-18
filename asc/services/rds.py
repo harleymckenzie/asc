@@ -5,9 +5,10 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for RDS commands.
 - list_rds_instances(args): Lists RDS instances.
 """
-from .common import print_as_table
+from ..common import subparser_register, print_as_table
 
 
+@subparser_register('rds')
 def add_subparsers(subparsers, global_parser):
     """
     Adds subparsers for RDS commands to the main parser.

@@ -6,6 +6,20 @@ import configparser
 import tabulate
 
 
+SUBPARSER_REGISTRY = {}
+
+def subparser_register(name):
+    """
+    Decorator for registering subparser functions.
+
+    Args:
+        name: The name of the command that the subparser will handle.
+    """
+    def decorator(func):
+        SUBPARSER_REGISTRY[name] = func
+        return func
+    return decorator
+
 def add_subparsers(subparsers, global_parser):
     """
     Add subparsers for common commands.

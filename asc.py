@@ -4,7 +4,8 @@
 """
 import argparse
 import boto3
-from services import ec2, rds, asg, redis, common
+from asc.common import SUBPARSER_REGISTRY, load_config
+from asc.services import asg, ec2, rds, redis
 
 
 def main():
@@ -49,13 +50,13 @@ def main():
         '--region', nargs='?', help='AWS region to use.', dest='global_region'
     )
 
-    for service in [common, ec2, rds, asg, redis]:
-        service.add_subparsers(subparsers, global_parser)
+    for name, add_subparser_func in SUBPARSER_REGISTRY.items():
+        add_subparser_func(subparsers, global_parser)
 
     args = parser.parse_args()
 
     # Load configuration
-    args.config = common.load_config()
+    args.config = load_config()
 
     # Combine tags from the config and command line
     if "displayed_tags" in args.config["asc"] and args.tags:

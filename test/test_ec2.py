@@ -2,7 +2,7 @@ import boto3
 from moto import mock_ec2
 import pytest
 from unittest.mock import patch, MagicMock
-from services.ec2 import list_ec2_instances
+from asc.services import ec2
 import configparser
 
 
@@ -46,7 +46,7 @@ def test_list_ec2_instances(displayed_tags):
         "builtins.print",
         side_effect=lambda *args: output_captured.append(" ".join(map(str, args))),
     ) as mocked_print:
-        list_ec2_instances(args)
+        ec2.list_ec2_instances(args)
 
     output_string = "\n".join(output_captured)
 
