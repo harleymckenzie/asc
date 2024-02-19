@@ -5,21 +5,12 @@ Functions:
 - test_list_rds_instances: Test the list_rds_instances function.
 """
 import pytest
-from moto import mock_rds
-import boto3
 from asc.services import rds
-from .test_utils import setup_args, run_and_capture_output
+from .test_utils import setup_args, run_and_capture_output, mock_rds_client
 
-@pytest.fixture
-def mock_rds_client():
-    """
-    Create a mock RDS client.
-    """
-    with mock_rds():
-        yield boto3.client("rds", region_name="eu-west-1")
 
 @pytest.mark.parametrize("displayed_tags", [("Name"), ("Name,Environment"), (None)])
-def test_list_rds_instances(displayed_tags):
+def test_list_rds_instances(mock_rds_client, displayed_tags):
     """
     Test the list_rds_instances function.
     """
@@ -38,6 +29,9 @@ def test_list_rds_instances(displayed_tags):
 
     args = setup_args(displayed_tags)
     output = run_and_capture_output(rds.list_rds_instances, args)
+
+    # Print output for debugging
+    print("\n" + output[0])
 
     # Check for expected headers
     expected_headers = ["Identifier", "Type", "State"]

@@ -5,21 +5,12 @@ Functions:
 - test_list_ec2_instances: Test the list_ec2_instances function.
 """
 import pytest
-from moto import mock_ec2
-import boto3
 from asc.services import ec2
-from .test_utils import setup_args, run_and_capture_output
+from .test_utils import setup_args, run_and_capture_output, mock_ec2_client
 
-@pytest.fixture
-def mock_ec2_client():
-    """
-    Create a mock EC2 client.
-    """
-    with mock_ec2():
-        yield boto3.client("ec2", region_name="eu-west-1")
 
 @pytest.mark.parametrize("displayed_tags", [("Name"), ("Name,Environment"), (None)])
-def test_list_ec2_instances(displayed_tags):
+def test_list_ec2_instances(mock_ec2_client, displayed_tags):
     """
     Test the list_ec2_instances function.
     """
@@ -42,6 +33,9 @@ def test_list_ec2_instances(displayed_tags):
 
     args = setup_args(displayed_tags)
     output = run_and_capture_output(ec2.list_ec2_instances, args)
+
+    # Print output for debugging
+    print("\n" + output[0])
 
     # Check for expected headers
     expected_headers = ["Public IP", "Id", "Type", "State"]
