@@ -23,8 +23,10 @@ def test_list_ec2_instances(displayed_tags):
     """
     Test the list_ec2_instances function.
     """
+    image_response = mock_ec2_client.describe_images()
+    image_id = image_response['Images'][0]['ImageId']
     mock_ec2_client.run_instances(
-        ImageId="ami-12345678",
+        ImageId=image_id,
         MinCount=1,
         MaxCount=1,
         TagSpecifications=[
