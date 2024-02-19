@@ -5,7 +5,7 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for RDS commands.
 - list_rds_instances(args): Lists RDS instances.
 """
-from ..common import subparser_register, print_as_table
+from ..common import subparser_register, print_as_table, apply_tags
 
 
 @subparser_register('rds')
@@ -57,40 +57,36 @@ def list_rds_instances(args):
     """
     instance_list = []
     rds_client = args.session.client("rds")
-    response = rds_client.describe_db_instances()
+    displayed_tags_list = args.config.get(
+        "asc", "displayed_tags", fallback="").split(",")
 
-    # Store tags to display in the output if they've been set in the config
-    if "displayed_tags" in args.config["asc"]:
-        displayed_tags_list = args.config["asc"]["displayed_tags"].split(",")
-    # Set an empty list if the config hasn't been set
-    else:
-        displayed_tags_list = []
+    try:
+        response = rds_client.describe_db_instances()
+    except Exception as e:
+        print(f"Failed to list RDS instances: {e}")
+        exit(1)
 
     # Only call describe_db_clusters if there are Aurora instances
     if "aurora-mysql" in [db["Engine"] for db in response["DBInstances"]]:
         cluster_response = rds_client.describe_db_clusters()
 
-    for db in response["DBInstances"]:
+    for instance_data in response["DBInstances"]:
         instance = {
-            "Name": db["DBInstanceIdentifier"],
-            "Type": db["DBInstanceClass"],
-            "State": db["DBInstanceStatus"],
+            "Identifier": instance_data["DBInstanceIdentifier"],
+            "Type": instance_data["DBInstanceClass"],
+            "State": instance_data["DBInstanceStatus"],
         }
 
         # Add Endpoint if args.endpoint is set
         if args.endpoint:
-            instance["Endpoint"] = db["Endpoint"]["Address"]
+            instance["Endpoint"] = instance_data["Endpoint"]["Address"]
 
-        # Add tags to instance dict
-        for tag in db.get("TagList", []):
-            if tag["Key"] in displayed_tags_list:
-                instance[tag["Key"]] = tag["Value"]
 
         # Confirm whether the DB instance is a reader or writer
-        if "aurora-mysql" in db["Engine"]:
+        if "aurora-mysql" in instance_data["Engine"]:
             for cluster in cluster_response["DBClusters"]:
                 for member in cluster["DBClusterMembers"]:
-                    if member["DBInstanceIdentifier"] == db["DBInstanceIdentifier"]:
+                    if member["DBInstanceIdentifier"] == instance_data["DBInstanceIdentifier"]:
                         instance["Role"] = (
                             "Writer" if member["IsClusterWriter"] else "Reader"
                         )
@@ -102,7 +98,8 @@ def list_rds_instances(args):
                                 else cluster["ReaderEndpoint"]
                             )
 
+        instance = apply_tags(instance, instance_data, displayed_tags_list)
         instance_list.append(instance)
 
-    instances = sorted(instance_list, key=lambda i: i["Name"])
+    instances = sorted(instance_list, key=lambda i: i["Identifier"])
     print_as_table(instances)

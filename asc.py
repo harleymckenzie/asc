@@ -2,18 +2,17 @@
 """
 'asc' is a simplified version of the AWS CLI.
 """
+import logging
 import argparse
 import boto3
-from asc.common import SUBPARSER_REGISTRY, load_config
+from asc import common
 from asc.services import asg, ec2, rds, redis
 
 
-def main():
+def arg_parser():
     """
-    Main function
+    Create the main parser
     """
-    # Main parser
-    # If no arguments are specified, print help
     parser = argparse.ArgumentParser(
         prog='asc',
         description='AWS Simple CLI (asc)',
@@ -32,9 +31,11 @@ def main():
     parser.add_argument(
         '--region', nargs='?', help='AWS region to use.', dest='region'
     )
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+                        help='Increase verbosity level. Use -v for INFO level and -vv for DEBUG level.')
 
     subparsers = parser.add_subparsers(
-        help='description', metavar='subcommand', dest='subcommand'
+        help='', metavar='subcommand', dest='subcommand'
     )
 
     # Global parser
@@ -50,13 +51,24 @@ def main():
         '--region', nargs='?', help='AWS region to use.', dest='global_region'
     )
 
-    for name, add_subparser_func in SUBPARSER_REGISTRY.items():
+    return parser, subparsers, global_parser
+
+
+def main():
+    """
+    Main function
+    """
+    # Main parser
+    # If no arguments are specified, print help
+    parser, subparsers, global_parser = arg_parser()
+
+    for _, add_subparser_func in common.SUBPARSER_REGISTRY.items():
         add_subparser_func(subparsers, global_parser)
 
     args = parser.parse_args()
 
     # Load configuration
-    args.config = load_config()
+    args.config = common.init_config()
 
     # Combine tags from the config and command line
     if "displayed_tags" in args.config["asc"] and args.tags:
@@ -66,13 +78,7 @@ def main():
         )
 
     # Set up AWS session
-    session_params = setup_session(args)
-
-    try:
-        args.session = boto3.Session(**session_params)
-    except Exception as e:
-        print(f"Failed to create AWS session: {e}")
-        exit(1)
+    args.session = setup_session(args)
 
     args.func(args)
 
@@ -83,6 +89,7 @@ def setup_session(args):
     """
     session_params = {}
 
+    # Handle profile and region arguments on both the regular and global parsers
     if args.global_profile:
         session_params["profile_name"] = args.global_profile
     elif args.profile:
@@ -93,8 +100,18 @@ def setup_session(args):
     elif args.region:
         session_params["region_name"] = args.region
 
-    return session_params
+    try:
+        args.session = boto3.Session(**session_params)
+        sts = args.session.client("sts")
+        logging.debug("Using AWS profile: %s", args.session.profile_name)
+        user_id = sts.get_caller_identity().get("UserId")
+        logging.debug("Using AWS account: %s", user_id)
+    except Exception as e:
+        print(f"Failed to create AWS session: {e}")
+        exit(1)
+    return args.session
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
     main()

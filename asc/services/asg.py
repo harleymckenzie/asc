@@ -9,8 +9,7 @@ Functions:
 - list_autoscaling_schedules(args)
 - add_autoscaling_schedule(args)
 """
-import pytz
-from ..common import subparser_register, print_as_table
+from ..common import subparser_register, print_as_table, apply_tags
 
 
 @subparser_register('asg')
@@ -112,16 +111,26 @@ def list_autoscaling_groups(args):
     Prints:
         A table displaying the details of all autoscaling groups.
     """
+    asg_client = args.session.client("autoscaling")
     instance_list = []
-    asg = args.session.client("autoscaling")
-    response = asg.describe_auto_scaling_groups()
+    displayed_tags_list = args.config.get(
+        "asc", "displayed_tags", fallback="").split(",")
+    
+    try:
+        response = asg_client.describe_auto_scaling_groups()
+    except Exception as e:
+        print(f"Failed to list Auto Scaling Groups: {e}")
+        exit(1)
 
-    for asg in response["AutoScalingGroups"]:
-        instance = {}
-        instance["Name"] = asg["AutoScalingGroupName"]
-        instance["Min"] = asg["MinSize"]
-        instance["Max"] = asg["MaxSize"]
-        instance["Desired"] = asg["DesiredCapacity"]
+    for instance_data in response["AutoScalingGroups"]:
+        instance = {
+            "ASG Name": instance_data["AutoScalingGroupName"],
+            "Min": instance_data["MinSize"],
+            "Max": instance_data["MaxSize"],
+            "Desired": instance_data["DesiredCapacity"]
+        }
+        
+        instance = apply_tags(instance, instance_data, displayed_tags_list)
         instance_list.append(instance)
 
     instances = sorted(instance_list, key=lambda i: i["Name"])
@@ -139,39 +148,32 @@ def list_autoscaling_schedules(args):
         A table displaying the details of all autoscaling schedules.
     """
     instance_list = []
-    asg = args.session.client("autoscaling")
-    response = asg.describe_scheduled_actions()
+    asg_client = args.session.client("autoscaling")
+    
+    try:
+        response = asg_client.describe_scheduled_actions()
+    except Exception as e:
+        print(f"Failed to list Auto Scaling Groups: {e}")
+        exit(1)
 
-    for schedule in response["ScheduledUpdateGroupActions"]:
-        asg_response = asg.describe_auto_scaling_groups(
-            AutoScalingGroupNames=[schedule["AutoScalingGroupName"]]
-        )
+    for instance_data in response["ScheduledUpdateGroupActions"]:
+        instance = {
+            "ASG Name": instance_data["AutoScalingGroupName"],
+            "Name": instance_data["ScheduledActionName"],
+            "Start Time (UTC)": instance_data["StartTime"],
+        }
+        
+        # Only include the following fields if they're present
+        for key, new_key in [("Recurrence", "Recurrence"), 
+                         ("DesiredCapacity", "Desired"), 
+                         ("MinSize", "Min"), 
+                         ("MaxSize", "Max")]:
+            if key in instance_data:
+                instance[new_key] = instance_data[key]
 
-        # Store the name of the ASG for each scheduled action
-        for tag in asg_response["AutoScalingGroups"][0]["Tags"]:
-            if tag["Key"] == "Name":
-                asg_name = tag["Value"]
-
-        # Create a dict for each scheduled action
-        instance = {}
-        instance["Name"] = schedule["ScheduledActionName"]
-        instance["ASG"] = asg_name
-        instance["Start Time"] = (
-            schedule["StartTime"]
-            .astimezone(pytz.timezone("Europe/London"))
-            .strftime("%Y-%m-%d %H:%M:%S %Z")
-        )
-        if "Recurrence" in schedule:
-            instance["Recurrence"] = schedule["Recurrence"]
-        if "DesiredCapacity" in schedule:
-            instance["Desired"] = schedule["DesiredCapacity"]
-        if "MinSize" in schedule:
-            instance["Min"] = schedule["MinSize"]
-        if "MaxSize" in schedule:
-            instance["Max"] = schedule["MaxSize"]
         instance_list.append(instance)
 
-    instances = sorted(instance_list, key=lambda i: i["Start Time"])
+    instances = sorted(instance_list, key=lambda i: i["Start Time (UTC)"])
     print_as_table(instances)
 
 

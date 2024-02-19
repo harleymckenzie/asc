@@ -7,7 +7,6 @@ import tabulate
 
 
 SUBPARSER_REGISTRY = {}
-
 def subparser_register(name):
     """
     Decorator for registering subparser functions.
@@ -20,6 +19,8 @@ def subparser_register(name):
         return func
     return decorator
 
+
+@subparser_register('common')
 def add_subparsers(subparsers, global_parser):
     """
     Add subparsers for common commands.
@@ -35,7 +36,7 @@ def add_subparsers(subparsers, global_parser):
         epilog="""Example: asc configure""",
         parents=[global_parser],
     )
-    config_parser.set_defaults(func=configure)
+    config_parser.set_defaults(func=setup_config)
     config_parser.add_argument(
         "--add-tag",
         nargs="?",
@@ -47,6 +48,44 @@ def add_subparsers(subparsers, global_parser):
         nargs="?",
         help="Remove a tag from the list of defined tags that are displayed",
     )
+
+
+def setup_config(config):
+    """
+    Run initial configuration setup for the application.
+    If called for the first time, it sets default values.
+    If called via 'configure' command, it allows updating existing values.
+    """
+    print("Configuration Setup:")
+
+    current_tags = config.get('asc', 'displayed_tags', fallback="Name")
+    new_tags = input(
+        f"Enter displayed tags (current: {current_tags}, leave blank to keep): "
+        ).strip()
+    config.set('asc', 'displayed_tags', new_tags if new_tags else current_tags)
+
+    return config
+
+
+def init_config():
+    """Load the configuration or initialize it if it doesn't exist."""
+    config_dir = os.path.expanduser("~/.asc")
+    config_file = os.path.join(config_dir, "config")
+    config = configparser.ConfigParser()
+
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+
+    if not os.path.exists(config_file):
+        config.add_section("asc")
+        config = setup_config(config)
+        with open(config_file, "w") as configfile:
+            config.write(configfile)
+        print("Initial configuration saved.")
+    else:
+        config.read(config_file)
+
+    return config
 
 
 def print_as_table(items):
@@ -63,60 +102,31 @@ def print_as_table(items):
     print(tabulate.tabulate(items, headers="keys"))
 
 
-def load_config():
+def apply_tags(instance, instance_data, displayed_tags_list):
     """
-    Load configuration from ~/.asc/config if it exists and create it if it doesn't.
-
-    Returns:
-        A configparser object with the loaded configuration.
-    """
-    config = configparser.RawConfigParser()
-    config_dir = os.path.expanduser("~/.asc")
-    config_file = os.path.join(config_dir, "config")
-
-    # Ensure directory exists
-    if not os.path.exists(config_dir):
-        os.makedirs(config_dir)
-
-    # Create a new config if it doesn't exist
-    if os.path.exists(config_file):
-        config.read(config_file)
-    else:
-        config.add_section("asc")
-        config.set("asc", "displayed_tags", "Name")
-        with open(config_file, "w") as configfile:
-            config.write(configfile)
-
-    if "displayed_tags" not in config["asc"]:
-        config.set("asc", "displayed_tags")
-
-    # Return the config
-    return config
-
-
-def configure(args):
-    """
-    Configure asc based on the given arguments.
+    Check to see if items in displayed tags list are in the instance data
+    The "Name" tag should automatically be displayed
 
     Args:
-        args: The arguments received from the command-line input.
+        instance: The instance to apply tags to.
+        instance_data: The data for the instance.
+        displayed_tags_list: The list of tags to display.
 
-    Prints:
-        A confirmation message indicating the configuration has been saved.
+    Returns:
+        The instance with the tags applied.
     """
-    config = load_config()
-    config_dir = os.path.expanduser("~/.asc")
+    # Determine whether to use 'Tags' or 'TagList'
+    tags_key = 'Tags' if 'Tags' in instance_data else 'TagList'
 
-    displayed_tags = config.get("asc", "displayed_tags", fallback="").split(",")
+    for tag_dict in instance_data.get(tags_key, []):
+        tag_key = tag_dict.get("Key")
+        tag_value = tag_dict.get("Value")
 
-    if args.add_tag and args.add_tag not in displayed_tags:
-        displayed_tags.append(args.add_tag)
-    if args.remove_tag and args.remove_tag in displayed_tags:
-        displayed_tags.remove(args.remove_tag)
-
-    config.set("asc", "displayed_tags", ",".join(displayed_tags))
-
-    with open(os.path.join(config_dir, "config"), "w") as configfile:
-        config.write(configfile)
-
-    print("Configuration saved to ~/.asc/config")
+        if tag_key in displayed_tags_list:
+            # Special handling for "Name" tag to prepend it
+            if tag_key == "Name":
+                instance = {tag_key: tag_value, **instance}
+            else:
+                instance[tag_key] = tag_value
+        
+    return instance

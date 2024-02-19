@@ -1,4 +1,4 @@
-from ..common import subparser_register, print_as_table
+from ..common import subparser_register, print_as_table, apply_tags
 
 
 @subparser_register('redis')
@@ -48,32 +48,34 @@ def list_redis_instances(args):
     Prints:
         A table displaying the details of all Redis instances.
     """
-    instance_list = []
-    cluster_instance_tags = {}
-    displayed_tags_list = args.config.get("asc", "displayed_tags").split(",")
     ec_client = args.session.client("elasticache")
-    response = ec_client.describe_cache_clusters(ShowCacheNodeInfo=True)
+    instance_list = []
+    displayed_tags_list = args.config.get("asc", "displayed_tags").split(",")
 
+
+    try:
+        response = ec_client.describe_cache_clusters(ShowCacheNodeInfo=True)
+    except Exception as e:
+        print(f"Failed to list Redis instances: {e}")
+        exit(1)
+
+    # Cluster tags aren't returned in the response, so we need to fetch them separately
     for cluster in response["CacheClusters"]:
-        if displayed_tags_list:
-            cluster_tags = ec_client.list_tags_for_resource(
-                ResourceName=cluster["ARN"]
-            )
-            for tag in cluster_tags["TagList"]:
-                # Store tags in cluster dict
-                if tag["Key"] in displayed_tags_list:
-                    cluster_instance_tags[tag["Key"]] = tag["Value"]
+        cluster["tag_response"] = ec_client.list_tags_for_resource(
+            ResourceName=cluster["ARN"]
+        )
 
-        for node in cluster["CacheNodes"]:
+        for instance_data in cluster["CacheNodes"]:
+            instance_data["TagList"] = cluster["tag_response"]["TagList"]
             instance = {
                 "Name": cluster["CacheClusterId"],
                 "Type": cluster["CacheNodeType"],
                 "Status": cluster["CacheClusterStatus"],
             }
-            instance.update(cluster_instance_tags)
             if args.endpoint:
-                instance["Endpoint"] = node["Endpoint"]["Address"]
+                instance["Endpoint"] = instance_data["Endpoint"]["Address"]
 
+            instance = apply_tags(instance, instance_data, displayed_tags_list)
             instance_list.append(instance)
 
     instances = sorted(instance_list, key=lambda i: i["Name"])

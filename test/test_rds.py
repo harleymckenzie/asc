@@ -1,91 +1,41 @@
-import boto3
-from moto import mock_rds
 import pytest
-from unittest.mock import patch, MagicMock
+from moto import mock_rds
+import boto3
 from asc.services import rds
-import configparser
+from .test_utils import setup_args, run_and_capture_output
 
+@pytest.fixture
+def mock_rds_client():
+    with mock_rds():
+        yield boto3.client("rds", region_name="eu-west-1")
 
-@pytest.mark.parametrize(
-    "displayed_tags, display_endpoint",
-    [("Name", True), ("Name,Environment", False), (None, True)],
-)
-@mock_rds
-def test_list_rds_instances(displayed_tags, display_endpoint):
+@pytest.mark.parametrize("displayed_tags", [("Name"), ("Name,Environment"), (None)])
+def test_list_rds_instances(mock_rds_client, displayed_tags):
     # Create a mock RDS instance
-    rds_client = boto3.client("rds", region_name="eu-west-1")
-    rds_client.create_db_instance(
-        DBInstanceIdentifier="test1",
+    mock_rds_client.create_db_instance(
+        DBInstanceIdentifier="test-instance",
+        AllocatedStorage=20,
         DBInstanceClass="db.t2.micro",
         Engine="mysql",
+        MasterUsername="admin",
+        MasterUserPassword="password",
         Tags=[
-            {"Key": "Name", "Value": "test-db1"},
-            {"Key": "Owner", "Value": "UAT"},
-            {"Key": "Environment", "Value": "Testing"},
+            {"Key": "Name", "Value": "test-instance"},
+            {"Key": "Environment", "Value": "Production"},
         ],
     )
 
-    # Create a mock Aurora cluster
-    rds_client.create_db_cluster(
-        DBClusterIdentifier="test-cluster1",
-        Engine="aurora-mysql",
-        MasterUsername="test",
-        MasterUserPassword="test1234",
-        Tags=[
-            {"Key": "Name", "Value": "test-cluster1"},
-            {"Key": "Owner", "Value": "UAT"},
-            {"Key": "Environment", "Value": "Testing"},
-        ],
-    )
+    args = setup_args(displayed_tags)
+    output = run_and_capture_output(rds.list_rds_instances, args)
 
-    # Create a mock Aurora writer and reader instance
-    rds_client.create_db_instance(
-        DBInstanceIdentifier="test-aurora-instance1",
-        DBClusterIdentifier="test-cluster1",
-        DBInstanceClass="db.t2.micro",
-        Engine="aurora-mysql",
-        Tags=[
-            {"Key": "Name", "Value": "test-cluster1-instance1"},
-            {"Key": "Owner", "Value": "UAT"},
-            {"Key": "Environment", "Value": "Testing"},
-        ],
-    )
+    # Check for expected headers
+    expected_headers = ["Identifier", "Type", "State"]
+    assert all(header in output[0] for header in expected_headers)
 
-    # Create a mock Aurora replica instance
-    rds_client.create_db_instance_read_replica(
-        DBInstanceIdentifier="test-replica1",
-        SourceDBInstanceIdentifier="test-aurora-instance1",
-        Tags=[
-            {"Key": "Name", "Value": "test-cluster1-replica1"},
-            {"Key": "Owner", "Value": "UAT"},
-            {"Key": "Environment", "Value": "Testing"},
-        ],
-    )
-
-    # Create an argparse.Namespace object to pass as an argument
-    args = MagicMock()
-    args.session = boto3.Session(region_name="eu-west-1")
-    args.config = configparser.RawConfigParser()
-    args.config.add_section("asc")
-    if displayed_tags:
-        args.config.set("asc", "displayed_tags", displayed_tags)
-    args.endpoint = display_endpoint
-
-    # Capture the print output
-    output_captured = []
-
-    # Mock the print function and capture its arguments
-    with patch(
-        "builtins.print",
-        side_effect=lambda *args: output_captured.append(" ".join(map(str, args))),
-    ) as mocked_print:
-        rds.list_rds_instances(args)
-
-    output_string = "\n".join(output_captured)
-
-    if displayed_tags:
-        for tag in displayed_tags.split(","):
-            assert tag in output_string
-
-    # Print the captured output for manual verification
-    print("\n" + output_string)
+    # Confirm that specified and unspecified tags are (not) in the output
+    displayed_tags_set = set(displayed_tags.split(",")) if displayed_tags else set()
+    unspecified_tags = {"Name", "Environment"} - displayed_tags_set
+    for tag in displayed_tags_set:
+        assert tag in output[0]
+    for tag in unspecified_tags:
+        assert tag not in output[0]

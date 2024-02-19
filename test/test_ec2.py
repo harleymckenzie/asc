@@ -1,20 +1,20 @@
-import boto3
-from moto import mock_ec2
+# test_ec2.py
+
 import pytest
-from unittest.mock import patch, MagicMock
+from moto import mock_ec2
+import boto3
 from asc.services import ec2
-import configparser
+from .test_utils import setup_args, run_and_capture_output
 
+@pytest.fixture
+def mock_ec2_client():
+    with mock_ec2():
+        yield boto3.client("ec2", region_name="eu-west-1")
 
-@pytest.mark.parametrize(
-        "displayed_tags",
-        [("Name"), ("Name,Environment"), (None)]
-)
-@mock_ec2
-def test_list_ec2_instances(displayed_tags):
+@pytest.mark.parametrize("displayed_tags", [("Name"), ("Name,Environment"), (None)])
+def test_list_ec2_instances(mock_ec2_client, displayed_tags):
     # Create a mock EC2 instance
-    ec2_client = boto3.client("ec2", region_name="eu-west-1")
-    ec2_client.run_instances(
+    mock_ec2_client.run_instances(
         ImageId="ami-12345678",
         MinCount=1,
         MaxCount=1,
@@ -22,38 +22,24 @@ def test_list_ec2_instances(displayed_tags):
             {
                 "ResourceType": "instance",
                 "Tags": [
-                    {"Key": "Name", "Value": "test1"},
-                    {"Key": "Owner", "Value": "UAT"},
-                    {"Key": "Environment", "Value": "Testing"},
+                    {"Key": "Name", "Value": "test-instance"},
+                    {"Key": "Environment", "Value": "Production"},
                 ],
             }
         ],
     )
 
-    # Create an argparse.Namespace object to pass as an argument
-    args = MagicMock()
-    args.session = boto3.Session(region_name="eu-west-1")
-    args.config = configparser.RawConfigParser()
-    args.config.add_section("asc")
-    if displayed_tags:
-        args.config.set("asc", "displayed_tags", displayed_tags)
+    args = setup_args(displayed_tags)
+    output = run_and_capture_output(ec2.list_ec2_instances, args)
 
-    # Capture the print output
-    output_captured = []
+    # Check for expected headers
+    expected_headers = ["Public IP", "Id", "Type", "State"]
+    assert all(header in output[0] for header in expected_headers)
 
-    # Mock the print function and capture its arguments
-    with patch(
-        "builtins.print",
-        side_effect=lambda *args: output_captured.append(" ".join(map(str, args))),
-    ) as mocked_print:
-        ec2.list_ec2_instances(args)
-
-    output_string = "\n".join(output_captured)
-
-    # Confirm that tags specified in displayed_tags is in the output
-    if displayed_tags:
-        for tag in displayed_tags.split(","):
-            assert tag in output_string
-
-    # Print the captured output for manual verification
-    print("\n" + output_string)
+    # Confirm that specified and unspecified tags are (not) in the output
+    displayed_tags_set = set(displayed_tags.split(",")) if displayed_tags else set()
+    unspecified_tags = {"Name", "Environment"} - displayed_tags_set
+    for tag in displayed_tags_set:
+        assert tag in output[0]
+    for tag in unspecified_tags:
+        assert tag not in output[0]

@@ -7,7 +7,7 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for EC2 commands.
 - list_ec2_instances(args): Lists EC2 instances.
 """
-from ..common import subparser_register, print_as_table
+from ..common import subparser_register, print_as_table, apply_tags
 
 
 @subparser_register('ec2')
@@ -24,6 +24,7 @@ def add_subparsers(subparsers, global_parser) -> None:
         help="EC2 service",
         description="EC2 service",
         epilog="""Example: asc ec2 ls""",
+
         parents=[global_parser],
     )
     ec2_parser.set_defaults(func=lambda args: ec2_parser.print_help())
@@ -53,35 +54,28 @@ def list_ec2_instances(args):
     Prints:
         A table displaying the details of all EC2 instances.
     """
-    instance_list = []
-
-    # Store tags to display in the output if they've been set in the config
-    if "displayed_tags" in args.config["asc"]:
-        displayed_tags_list = args.config["asc"]["displayed_tags"].split(",")
-    # Set an empty list if the config hasn't been set
-    else:
-        displayed_tags_list = []
-
     ec2_client = args.session.client("ec2")
-    response = ec2_client.describe_instances()
+    instance_list = []
+    displayed_tags_list = args.config.get(
+        "asc", "displayed_tags", fallback="").split(",")
+
+    
+    try:
+        response = ec2_client.describe_instances()
+    except Exception as e:
+        print(f"Failed to list EC2 instances: {e}")
+        exit(1)
 
     for reservation in response["Reservations"]:
-        for ec2_instance in reservation["Instances"]:
+        for instance_data in reservation["Instances"]:
             instance = {
-                "Public IP": ec2_instance.get("PublicIpAddress", ""),
-                "Id": ec2_instance["InstanceId"],
-                "Type": ec2_instance["InstanceType"],
-                "State": ec2_instance["State"]["Name"],
+                "Public IP": instance_data.get("PublicIpAddress", ""),
+                "Id": instance_data["InstanceId"],
+                "Type": instance_data["InstanceType"],
+                "State": instance_data["State"]["Name"]
             }
-
-            # Add tags to instance dict
-            for tag in ec2_instance.get("Tags", []):
-                if tag["Key"] in displayed_tags_list:
-                    if "Name" == tag["Key"]:
-                        instance = {tag["Key"]: tag["Value"], **instance}
-                    else:
-                        instance[tag["Key"]] = tag["Value"]
-
+            
+            instance = apply_tags(instance, instance_data, displayed_tags_list)
             instance_list.append(instance)
 
     print_as_table(instance_list)
