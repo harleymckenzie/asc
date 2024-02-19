@@ -1,5 +1,9 @@
-# test_ec2.py
+"""
+Unit tests for the EC2 service module.
 
+Functions:
+- test_list_ec2_instances: Test the list_ec2_instances function.
+"""
 import pytest
 from moto import mock_ec2
 import boto3
@@ -8,12 +12,17 @@ from .test_utils import setup_args, run_and_capture_output
 
 @pytest.fixture
 def mock_ec2_client():
+    """
+    Create a mock EC2 client.
+    """
     with mock_ec2():
         yield boto3.client("ec2", region_name="eu-west-1")
 
 @pytest.mark.parametrize("displayed_tags", [("Name"), ("Name,Environment"), (None)])
-def test_list_ec2_instances(mock_ec2_client, displayed_tags):
-    # Create a mock EC2 instance
+def test_list_ec2_instances(displayed_tags):
+    """
+    Test the list_ec2_instances function.
+    """
     mock_ec2_client.run_instances(
         ImageId="ami-12345678",
         MinCount=1,

@@ -1,9 +1,17 @@
+"""
+Unit tests for the common module.
+
+Functions:
+- test_print_as_table: Test the print_as_table function.
+"""
 from unittest.mock import patch
 from asc.common import print_as_table
 
 
 def test_print_as_table():
-    # Sample data to test
+    """
+    Test the print_as_table function.
+    """
     items = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
 
     # Expected output string

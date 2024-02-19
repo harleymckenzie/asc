@@ -1,3 +1,9 @@
+"""
+Unit tests for the RDS service module.
+
+Functions:
+- test_list_rds_instances: Test the list_rds_instances function.
+"""
 import pytest
 from moto import mock_rds
 import boto3
@@ -6,12 +12,17 @@ from .test_utils import setup_args, run_and_capture_output
 
 @pytest.fixture
 def mock_rds_client():
+    """
+    Create a mock RDS client.
+    """
     with mock_rds():
         yield boto3.client("rds", region_name="eu-west-1")
 
 @pytest.mark.parametrize("displayed_tags", [("Name"), ("Name,Environment"), (None)])
-def test_list_rds_instances(mock_rds_client, displayed_tags):
-    # Create a mock RDS instance
+def test_list_rds_instances(displayed_tags):
+    """
+    Test the list_rds_instances function.
+    """
     mock_rds_client.create_db_instance(
         DBInstanceIdentifier="test-instance",
         AllocatedStorage=20,
