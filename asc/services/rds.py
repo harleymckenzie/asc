@@ -1,4 +1,6 @@
 """
+RDS service.
+
 This module contains functions to interact with Amazon RDS service.
 
 Functions:

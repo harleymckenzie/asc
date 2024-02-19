@@ -1,5 +1,15 @@
 """
 Common functions for asc
+
+This module contains common functions and decorators used across the application.
+
+Functions:
+- subparser_register: Decorator for registering subparser functions.
+- add_subparsers: Add subparsers for common commands.
+- init_config: Load the configuration or initialize it if it doesn't exist.
+- setup_config: Run initial configuration setup for the application.
+- print_as_table: Print a list of dicts as a table.
+- apply_tags: Apply tags to an instance.
 """
 import os
 import configparser

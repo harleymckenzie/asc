@@ -1,5 +1,8 @@
 """
+ASG service.
+
 This module contains functions to interact with the Autoscaling service.
+
 It provides functionality to list autoscaling groups, list autoscaling
 schedules, add autoscaling schedules and remove autoscaling schedules.
 

@@ -1,3 +1,12 @@
+"""
+Elasticache Redis service.
+
+This module contains the functions for the Redis service.
+
+Functions:
+- add_subparsers(subparsers, global_parser) -> None
+- list_redis_instances(args)
+"""
 from ..common import subparser_register, print_as_table, apply_tags
 
 
