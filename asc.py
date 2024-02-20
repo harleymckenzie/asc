@@ -90,22 +90,18 @@ def setup_session(args):
     session_params = {}
 
     # Handle profile and region arguments on both the regular and global parsers
-    if args.global_profile:
-        session_params["profile_name"] = args.global_profile
-    elif args.profile:
-        session_params["profile_name"] = args.profile
+    profile = getattr(args, 'global_profile', None) or getattr(args, 'profile', None)
+    region = getattr(args, 'global_region', None) or getattr(args, 'region', None)
 
-    if args.global_region:
-        session_params["region_name"] = args.global_region
-    elif args.region:
-        session_params["region_name"] = args.region
+    if profile:
+        session_params["profile_name"] = profile
+
+    if region:
+        session_params["region_name"] = region
 
     try:
         args.session = boto3.Session(**session_params)
-        sts = args.session.client("sts")
         logging.debug("Using AWS profile: %s", args.session.profile_name)
-        user_id = sts.get_caller_identity().get("UserId")
-        logging.debug("Using AWS account: %s", user_id)
     except Exception as e:
         print(f"Failed to create AWS session: {e}")
         exit(1)
