@@ -74,11 +74,11 @@ def process_args(args):
     """
     Process the arguments and global arguments
     """
-    if args.global_profile:
+    if hasattr(args, 'global_profile') and args.global_profile:
         args.profile = args.global_profile
-    if args.global_region:
+    if hasattr(args, 'global_region') and args.global_region:
         args.region = args.global_region
-    if args.global_verbose:
+    if hasattr(args, 'global_verbose') and args.global_verbose:
         args.verbose = args.global_verbose
 
     return args
