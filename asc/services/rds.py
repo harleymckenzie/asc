@@ -7,7 +7,7 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for RDS commands.
 - list_rds_instances(args): Lists RDS instances.
 """
-from ..common import subparser_register, print_as_table, apply_tags
+from ..common import subparser_register, create_boto_session, print_as_table, apply_tags
 
 
 @subparser_register('rds')
@@ -58,10 +58,11 @@ def list_rds_instances(args):
     Prints:
         A table displaying the details of all RDS instances.
     """
-    instance_list = []
-    rds_client = args.session.client("rds")
+    session = create_boto_session(profile=args.profile, region=args.region)
+    rds_client = session.client("rds")
     displayed_tags_list = args.config.get(
         "asc", "displayed_tags", fallback="").split(",")
+    instance_list = []
 
     try:
         response = rds_client.describe_db_instances()

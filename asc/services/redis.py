@@ -7,7 +7,7 @@ Functions:
 - add_subparsers(subparsers, global_parser) -> None
 - list_redis_instances(args)
 """
-from ..common import subparser_register, print_as_table, apply_tags
+from ..common import subparser_register, create_boto_session, print_as_table, apply_tags
 
 
 @subparser_register('redis')
@@ -59,7 +59,8 @@ def list_redis_instances(args):
     Prints:
         A table displaying the details of all Redis instances.
     """
-    ec_client = args.session.client("elasticache")
+    session = create_boto_session(profile=args.profile, region=args.region)
+    ec_client = session.client("elasticache")
     instance_list = []
     displayed_tags_list = args.config.get("asc", "displayed_tags").split(",")
 

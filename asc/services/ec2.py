@@ -55,8 +55,8 @@ def list_ec2_instances(args):
     Prints:
         A table displaying the details of all EC2 instances.
     """
-    # session = create_boto_session()
-    ec2_client = args.session.client("ec2")
+    session = create_boto_session(profile=args.profile, region=args.region)
+    ec2_client = session.client("ec2")
     instance_list = []
     displayed_tags_list = args.config.get(
         "asc", "displayed_tags", fallback="").split(",")

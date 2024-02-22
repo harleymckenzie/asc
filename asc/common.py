@@ -63,12 +63,11 @@ def add_subparsers(subparsers, global_parser):
     )
 
 
-def logger(args):
+def logger(verbose_level):
     """
     Set up logging for the application
     """
-    verbose_level = args.global_verbose if args.global_verbose is not None else args.verbose
-    
+
     if verbose_level == 1:
         log_level = "INFO"
         boto_log_level = "WARNING"
@@ -89,7 +88,7 @@ def logger(args):
     logging.getLogger("botocore").setLevel(boto_log_level)
 
 
-def create_boto_session(profile, region):
+def create_boto_session(profile=None, region=None):
     """
     Set up AWS session.
 

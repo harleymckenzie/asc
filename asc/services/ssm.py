@@ -8,7 +8,7 @@ import signal
 import contextlib
 import errno
 import subprocess
-from ..common import subparser_register, print_as_table
+from ..common import subparser_register, create_boto_session, print_as_table
 
 @subparser_register('ssm')
 def add_subparsers(subparsers, global_parser):
@@ -135,7 +135,8 @@ def list_ssm_parameters(args):
     Prints:
         A table displaying the details of all parameters in the Parameter Store.
     """
-    ssm_client = args.session.client("ssm")
+    session = create_boto_session(profile=args.profile, region=args.region)
+    ssm_client = session.client("ssm")
     parameter_list = []
 
     try:
@@ -171,7 +172,8 @@ def get_ssm_parameters(args, parameter_list):
     Returns:
         List of parameters with values.
     """
-    ssm_client = args.session.client("ssm")
+    session = create_boto_session(profile=args.profile, region=args.region)
+    ssm_client = session.client("ssm")
 
     try:
         response = ssm_client.get_parameters(
@@ -203,7 +205,8 @@ def add_or_update_parameter(args):
     Args:
         args: Arguments passed by the user, including parameter details.
     """
-    ssm_client = args.session.client("ssm")
+    session = create_boto_session(profile=args.profile, region=args.region)
+    ssm_client = session.client("ssm")
 
     try:
         ssm_client.put_parameter(
@@ -228,7 +231,8 @@ def remove_ssm_parameter(args):
     Args:
         args: Arguments passed by the user, including the name of the parameter to remove.
     """
-    ssm_client = args.session.client("ssm")
+    session = create_boto_session(profile=args.profile, region=args.region)
+    ssm_client = session.client("ssm")
 
     try:
         ssm_client.delete_parameter(Name=args.name)
@@ -265,7 +269,7 @@ def connect_to_instance(args):
     Prints:
         The command to connect to the instance using Session Manager or SSH.
     """
-    session = args.session
+    session = create_boto_session(profile=args.profile, region=args.region)
     ssm_client = session.client("ssm")
     instance_id = args.instance_id
     response = ssm_client.start_session(Target=instance_id)
