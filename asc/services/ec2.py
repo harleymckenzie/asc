@@ -29,8 +29,9 @@ def add_subparsers(subparsers, global_parser) -> None:
     )
     ec2_parser.set_defaults(func=lambda args: ec2_parser.print_help())
     ec2_subparsers = ec2_parser.add_subparsers(
-        help="Description:",
-        dest="subcommand"
+        help='',
+        metavar='subcommand',
+        dest='subcommand'
     )
 
     ec2_list_parser = ec2_subparsers.add_parser(

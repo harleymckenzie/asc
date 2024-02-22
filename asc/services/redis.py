@@ -28,7 +28,9 @@ def add_subparsers(subparsers, global_parser):
     )
     redis_parser.set_defaults(func=lambda args: redis_parser.print_help())
     redis_subparsers = redis_parser.add_subparsers(
-        help="Description:", dest="subcommand"
+        help='',
+        metavar='subcommand',
+        dest='subcommand'
     )
 
     # Redis list subcommand
@@ -70,9 +72,15 @@ def list_redis_instances(args):
 
     # Cluster tags aren't returned in the response, so we need to fetch them separately
     for cluster in response["CacheClusters"]:
-        cluster["tag_response"] = ec_client.list_tags_for_resource(
+        try:
+            cluster["tag_response"] = ec_client.list_tags_for_resource(
             ResourceName=cluster["ARN"]
-        )
+            )
+        except ec_client.exceptions.CacheClusterNotFoundFault:
+            # Catch CacheClusterNotFoundFault exceptions if creation is in progress
+            cluster["tag_response"] = {"TagList": []}
+        except Exception as e:
+            print(f"Error while listing tags for {cluster['CacheClusterId']}: {e}")
 
         for instance_data in cluster["CacheNodes"]:
             instance_data["TagList"] = cluster["tag_response"]["TagList"]

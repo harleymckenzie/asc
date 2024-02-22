@@ -6,7 +6,7 @@ import logging
 import argparse
 import boto3
 from asc import common
-from asc.services import asg, ec2, rds, redis
+from asc.services import asg, ec2, rds, redis, ssm
 
 
 def arg_parser():

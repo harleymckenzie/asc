@@ -28,8 +28,9 @@ def add_subparsers(subparsers, global_parser):
     )
     rds_parser.set_defaults(func=lambda args: rds_parser.print_help())
     rds_subparsers = rds_parser.add_subparsers(
-        help="Description:",
-        dest="subcommand"
+        help='',
+        metavar='subcommand',
+        dest='subcommand'
     )
 
     rds_list_parser = rds_subparsers.add_parser(

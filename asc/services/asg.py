@@ -36,8 +36,9 @@ def add_subparsers(subparsers, global_parser) -> None:
     )
     asg_parser.set_defaults(func=lambda args: asg_parser.print_help())
     asg_subparsers = asg_parser.add_subparsers(
-      help="Description:",
-      dest="subcommand"
+        help='',
+        metavar='subcommand',
+        dest='subcommand'
     )
 
     # ASG specific subcommands
@@ -62,7 +63,9 @@ def add_subparsers(subparsers, global_parser) -> None:
       func=lambda args: schedule_parser.print_help()
     )
     schedule_subparsers = schedule_parser.add_subparsers(
-        help="Description:", dest="subcommand"
+        help='',
+        metavar='subcommand',
+        dest='subcommand'
     )
 
     # ASG schedule list subcommand

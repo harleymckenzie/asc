@@ -13,7 +13,7 @@ Functions:
 from unittest.mock import MagicMock, patch
 import configparser
 import boto3
-from moto import mock_ec2, mock_rds
+from moto import mock_ec2, mock_rds, mock_ssm
 import pytest
 
 def setup_args(displayed_tags=None):
@@ -60,3 +60,11 @@ def mock_rds_client():
     """
     with mock_rds():
         yield boto3.client("rds", region_name="eu-west-1")
+
+@pytest.fixture
+def mock_ssm_client():
+    """
+    Provide a mocked SSM client using Moto.
+    """
+    with mock_ssm():
+        yield boto3.client("ssm", region_name="eu-west-1")
