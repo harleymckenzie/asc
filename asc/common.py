@@ -12,8 +12,11 @@ Functions:
 - apply_tags: Apply tags to an instance.
 """
 import os
+import logging
 import configparser
 import tabulate
+from botocore.exceptions import SSOTokenLoadError
+from boto3 import Session
 
 
 SUBPARSER_REGISTRY = {}
@@ -58,6 +61,63 @@ def add_subparsers(subparsers, global_parser):
         nargs="?",
         help="Remove a tag from the list of defined tags that are displayed",
     )
+
+
+def logger(args):
+    """
+    Set up logging for the application
+    """
+    verbose_level = args.global_verbose if args.global_verbose is not None else args.verbose
+    
+    if verbose_level == 1:
+        log_level = "INFO"
+        boto_log_level = "WARNING"
+    elif verbose_level == 2:
+        log_level = "DEBUG"
+        boto_log_level = "INFO"
+    elif verbose_level > 2:
+        log_level = "DEBUG"
+        boto_log_level = "DEBUG"
+    else:
+        log_level = "WARNING"
+        boto_log_level = "ERROR"
+
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    logging.getLogger("botocore").setLevel(boto_log_level)
+
+
+def create_boto_session(profile, region):
+    """
+    Set up AWS session.
+
+    Args:
+        args: The arguments passed to the application.
+
+    Returns:
+        The AWS session.
+    """
+    session_params = {}
+
+    if profile:
+        session_params["profile_name"] = profile
+    if region:
+        session_params["region_name"] = region
+
+    try:
+        session = Session(**session_params)
+        session.client('sts').get_caller_identity()
+        return session
+    except SSOTokenLoadError as sso_err:
+        # Handling SSOTokenLoadError specifically to suppress the stack trace
+        print(f"SSO Token Load Error: {sso_err}")
+        exit(1)
+    except Exception as e:
+        # For all other exceptions, print the stack trace
+        print(f"Error: {e}")
+        exit(1)
 
 
 def setup_config(config):
