@@ -14,7 +14,7 @@ Functions:
 import os
 import logging
 import configparser
-import tabulate
+from tabulate import tabulate
 from botocore.exceptions import SSOTokenLoadError
 from boto3 import Session
 
@@ -167,8 +167,8 @@ def print_as_table(items):
     Prints:
         A table representation of the provided data.
     """
-
-    print(tabulate.tabulate(items, headers="keys"))
+    table = tabulate(items, headers="keys")
+    print(table)
 
 
 def apply_tags(instance, instance_data, displayed_tags_list):
