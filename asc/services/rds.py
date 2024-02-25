@@ -72,7 +72,11 @@ def list_rds_instances(args):
 
     # Only call describe_db_clusters if there are Aurora instances
     if "aurora-mysql" in [db["Engine"] for db in response["DBInstances"]]:
-        cluster_response = rds_client.describe_db_clusters()
+        try:
+            cluster_response = rds_client.describe_db_clusters()
+        except Exception as e:
+            print(f"Failed to list RDS clusters: {e}")
+            exit(1)
 
     for instance_data in response["DBInstances"]:
         instance = {
