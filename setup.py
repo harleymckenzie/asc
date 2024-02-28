@@ -11,7 +11,7 @@ setup(
         'boto3',
         'botocore',
         'configparser',
-        'tabulate==0.9.0'
+        'tabulate'
     ],
     author='Harley McKenzie',
     author_email='mckenzie.harley@gmail.com',
