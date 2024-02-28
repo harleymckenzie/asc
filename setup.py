@@ -11,7 +11,7 @@ setup(
         'boto3',
         'botocore',
         'configparser',
-        'tabulate'
+        'tabulate==0.9.0'
     ],
     author='Harley McKenzie',
     author_email='mckenzie.harley@gmail.com',
@@ -25,5 +25,5 @@ setup(
         'Operating System :: OS Independent',
         'Development Status :: 3 - Alpha'
     ],
-    python_requires='>=3.6'
+    python_requires='>=3.11'
 )
