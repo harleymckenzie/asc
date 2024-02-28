@@ -4,8 +4,8 @@
 'asc' is a simplified version of the AWS CLI.
 """
 import argparse
-from asc import common
-from asc.services import asg, ec2, rds, redis, ssm
+from core import common
+from core.services import asg, ec2, rds, redis, ssm
 
 
 def arg_parser():
