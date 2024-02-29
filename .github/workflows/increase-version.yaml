@@ -28,7 +28,7 @@ jobs:
         run: pip install bump2version
 
       - name: Bump version
-        run: bump2version --new-version ${{ steps.create_tag.outputs.tag }} ${{ steps.create_tag.outputs.part }} --commmit
+        run: bump2version --new-version ${{ steps.create_tag.outputs.tag }} ${{ steps.create_tag.outputs.part }} --commit
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
