@@ -27,6 +27,11 @@ jobs:
       - name: Install bump2version
         run: pip install bump2version
 
+      - name: Configure git
+        run: |
+          git config --local user.email "mckenzie.harley@gmail.com"
+          git config --local user.name "increase-version-workflow"
+
       - name: Bump version
         run: bump2version --new-version ${{ steps.create_tag.outputs.tag }} ${{ steps.create_tag.outputs.part }} --commit
 
