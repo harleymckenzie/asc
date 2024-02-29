@@ -1,9 +1,9 @@
 name: Release Workflow
 concurrency: automated-release
 on:
-    push:
-      branches:
-        - dev
+  push:
+    branches:
+      - dev
 jobs:
   create_release:
     runs-on: ubuntu-latest
@@ -24,16 +24,15 @@ jobs:
           WITH_V: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install bump2version
-        run: pip install bump2version
-
-      - name: Configure git
+      - name: Update setup.py version
         run: |
-          git config --local user.email "mckenzie.harley@gmail.com"
-          git config --local user.name "increase-version-workflow"
-
-      - name: Bump version
-        run: bump2version --new-version ${{ steps.create_tag.outputs.tag }} ${{ steps.create_tag.outputs.part }} setup.py --commit
+          NEW_VERSION=${{ steps.create_tag.outputs.new_tag }} 
+          sed -i "s/version='.*'/version='${NEW_VERSION}'/" setup.py
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add setup.py
+          git commit -m "Update setup.py version to ${NEW_VERSION}"
+          git push
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
