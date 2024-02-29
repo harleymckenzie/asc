@@ -33,7 +33,7 @@ jobs:
           git config --local user.name "increase-version-workflow"
 
       - name: Bump version
-        run: bump2version --new-version ${{ steps.create_tag.outputs.tag }} ${{ steps.create_tag.outputs.part }} --commit
+        run: bump2version --new-version ${{ steps.create_tag.outputs.tag }} ${{ steps.create_tag.outputs.part }} setup.cfg --commit
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
