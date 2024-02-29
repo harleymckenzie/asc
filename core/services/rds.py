@@ -7,7 +7,12 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for RDS commands.
 - list_rds_instances(args): Lists RDS instances.
 """
-from ..common import subparser_register, create_boto_session, print_as_table, apply_tags
+from ..common import (
+    subparser_register,
+    create_boto_session,
+    print_as_table,
+    apply_tags
+)
 
 
 @subparser_register('rds')
@@ -66,17 +71,10 @@ def list_rds_instances(args):
 
     try:
         response = rds_client.describe_db_instances()
+        cluster_response = rds_client.describe_db_clusters()
     except Exception as e:
         print(f"Failed to list RDS instances: {e}")
         exit(1)
-
-    # Only call describe_db_clusters if there are Aurora instances
-    if "aurora-mysql" in [db["Engine"] for db in response["DBInstances"]]:
-        try:
-            cluster_response = rds_client.describe_db_clusters()
-        except Exception as e:
-            print(f"Failed to list RDS clusters: {e}")
-            exit(1)
 
     for instance_data in response["DBInstances"]:
         instance = {
@@ -85,29 +83,46 @@ def list_rds_instances(args):
             "State": instance_data["DBInstanceStatus"],
         }
 
-        # Add Endpoint if args.endpoint is set
-        if args.endpoint:
-            instance["Endpoint"] = instance_data["Endpoint"]["Address"]
-
-
-        # Confirm whether the DB instance is a reader or writer
         if "aurora-mysql" in instance_data["Engine"]:
-            for cluster in cluster_response["DBClusters"]:
-                for member in cluster["DBClusterMembers"]:
-                    if member["DBInstanceIdentifier"] == instance_data["DBInstanceIdentifier"]:
-                        instance["Role"] = (
-                            "Writer" if member["IsClusterWriter"] else "Reader"
-                        )
-                        # Only add Endpoint if args.endpoint is set
-                        if args.endpoint:
-                            instance["Endpoint"] = (
-                                cluster["Endpoint"]
-                                if member["IsClusterWriter"]
-                                else cluster["ReaderEndpoint"]
-                            )
+            instance = get_aurora_instance(
+                instance, instance_data, cluster_response, args
+            )
+        else:
+            if args.endpoint:
+                instance["Endpoint"] = instance_data["Endpoint"]["Address"]
 
         instance = apply_tags(instance, instance_data, displayed_tags_list)
         instance_list.append(instance)
 
     instances = sorted(instance_list, key=lambda i: i["Identifier"])
     print_as_table(instances)
+
+
+def get_aurora_instance(instance, instance_data, cluster_response, args):
+    """
+    Get details of an Aurora instance.
+
+    Args:
+        instance: The instance dictionary to be updated.
+        instance_data: The instance data received from RDS.
+        cluster_response: The response from describe_db_clusters.
+        args: The arguments received from the command-line input.
+
+    Returns:
+        The updated instance dictionary.
+    """
+    for cluster in cluster_response["DBClusters"]:
+        for member in cluster["DBClusterMembers"]:
+            if member["DBInstanceIdentifier"] == instance_data["DBInstanceIdentifier"]:
+                # Only add Endpoint if args.endpoint is set
+                if args.endpoint:
+                    instance["Endpoint"] = (
+                        cluster["Endpoint"]
+                        if member["IsClusterWriter"]
+                        else cluster["ReaderEndpoint"]
+                    )
+                instance["Role"] = (
+                    "Writer" if member["IsClusterWriter"] else "Reader"
+                )
+
+    return instance

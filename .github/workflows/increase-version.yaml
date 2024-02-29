@@ -1,0 +1,38 @@
+name: Release Workflow
+concurrency: automated-release
+on:
+    push:
+      branches:
+        - dev
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump version and push tag
+        id: create_tag
+        uses: anothrNick/github-tag-action@1.64.0
+        env:
+          WITH_V: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install bump2version
+        run: pip install bump2version
+
+      - name: Bump version
+        run: bump2version --new-version ${{ steps.create_tag.outputs.tag }} ${{ steps.create_tag.outputs.part }} --commmit
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          automatic_release_tag: ${{ steps.create_tag.outputs.tag }}
+          title: "Release ${{ steps.create_tag.outputs.tag }}"

@@ -12,7 +12,12 @@ Functions:
 - list_autoscaling_schedules(args)
 - add_autoscaling_schedule(args)
 """
-from ..common import subparser_register, create_boto_session, print_as_table, apply_tags
+from ..common import (
+    subparser_register,
+    create_boto_session,
+    print_as_table,
+    apply_tags
+)
 
 
 @subparser_register('asg')
@@ -67,7 +72,7 @@ def add_scheduler_parser(asg_subparsers, global_parser):
         parents=[global_parser],
     )
     schedule_parser.set_defaults(
-      func=lambda args: schedule_parser.print_help()
+        func=lambda args: schedule_parser.print_help()
     )
     schedule_subparsers = schedule_parser.add_subparsers(
         help='',
@@ -129,7 +134,7 @@ def list_autoscaling_groups(args):
     displayed_tags_list = args.config.get(
         "asc", "displayed_tags", fallback="").split(",")
     instance_list = []
-    
+
     try:
         response = asg_client.describe_auto_scaling_groups()
     except Exception as e:
@@ -143,7 +148,7 @@ def list_autoscaling_groups(args):
             "Max": instance_data["MaxSize"],
             "Desired": instance_data["DesiredCapacity"]
         }
-        
+
         instance = apply_tags(instance, instance_data, displayed_tags_list)
         instance_list.append(instance)
 
@@ -164,7 +169,7 @@ def list_autoscaling_schedules(args):
     session = create_boto_session(profile=args.profile, region=args.region)
     asg_client = session.client("autoscaling")
     instance_list = []
-    
+
     try:
         response = asg_client.describe_scheduled_actions()
     except Exception as e:
@@ -177,12 +182,12 @@ def list_autoscaling_schedules(args):
             "Name": instance_data["ScheduledActionName"],
             "Start Time (UTC)": instance_data["StartTime"],
         }
-        
+
         # Only include the following fields if they're present
-        for key, new_key in [("Recurrence", "Recurrence"), 
-                         ("DesiredCapacity", "Desired"), 
-                         ("MinSize", "Min"), 
-                         ("MaxSize", "Max")]:
+        for key, new_key in [("Recurrence", "Recurrence"),
+                             ("DesiredCapacity", "Desired"),
+                             ("MinSize", "Min"),
+                             ("MaxSize", "Max")]:
             if key in instance_data:
                 instance[new_key] = instance_data[key]
 
@@ -204,7 +209,7 @@ def add_autoscaling_schedule(args):
     """
     session = create_boto_session(profile=args.profile, region=args.region)
     asg_client = session.client("autoscaling")
-    
+
     # Display the list of ASGs for the user to choose from
     if not args.asg:
         print("Listing existing Auto Scaling Groups")
@@ -213,7 +218,9 @@ def add_autoscaling_schedule(args):
     schedule_parameters = ask_schedule_params(args)
 
     try:
-        response = asg_client.put_scheduled_update_group_action(**schedule_parameters)
+        response = asg_client.put_scheduled_update_group_action(
+            **schedule_parameters
+        )
     except Exception as e:
         print(f"Failed to create schedule: {e}")
         exit(1)
@@ -250,6 +257,7 @@ def ask_schedule_params(args):
         parameters["Recurrence"] = args.recurrence
 
     return parameters
+
 
 def rm_autoscaling_schedule(args):
     """

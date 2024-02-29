@@ -4,13 +4,13 @@ Test cases for the EC2 service
 This module contains the test cases for the EC2 service.
 
 """
-import pytest
 from unittest.mock import patch
-from asc.services import ec2
+import pytest
+from core.services import ec2
 from .test_utils import setup_args
 
 
-@patch('asc.services.ec2.create_boto_session')
+@patch('core.services.ec2.create_boto_session')
 @pytest.mark.parametrize("displayed_tags", [("Name"), ("Name,Environment"), (None)])
 def test_list_ec2_instances(create_boto_session, displayed_tags, capsys):
     """

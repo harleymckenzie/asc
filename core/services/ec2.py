@@ -7,7 +7,12 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for EC2 commands.
 - list_ec2_instances(args): Lists EC2 instances.
 """
-from ..common import subparser_register, create_boto_session, print_as_table, apply_tags
+from ..common import (
+    subparser_register,
+    create_boto_session,
+    print_as_table,
+    apply_tags
+)
 
 
 @subparser_register('ec2')
@@ -61,7 +66,6 @@ def list_ec2_instances(args):
     displayed_tags_list = args.config.get(
         "asc", "displayed_tags", fallback="").split(",")
 
-    
     try:
         response = ec2_client.describe_instances()
     except Exception as e:
@@ -76,7 +80,7 @@ def list_ec2_instances(args):
                 "Type": instance_data["InstanceType"],
                 "State": instance_data["State"]["Name"]
             }
-            
+
             instance = apply_tags(instance, instance_data, displayed_tags_list)
             instance_list.append(instance)
 
