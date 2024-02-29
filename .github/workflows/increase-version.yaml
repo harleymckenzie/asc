@@ -26,7 +26,9 @@ jobs:
 
       - name: Update setup.py version
         run: |
-          NEW_VERSION=${{ steps.create_tag.outputs.new_tag }} 
+          NEW_VERSION=${{ steps.create_tag.outputs.tag }} # This will include the 'v' at the start
+          # Strip the 'v' from the version
+          NEW_VERSION=${NEW_VERSION#v}
           sed -i "s/version='.*'/version='${NEW_VERSION}'/" setup.py
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
