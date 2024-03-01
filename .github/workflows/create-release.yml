@@ -12,7 +12,12 @@ jobs:
     # Set release tag to the tag name
     name: "Create Release"
     runs-on: "ubuntu-latest"
+    permissions:
+      contents: "write"
+      pull-requests: "write"
+      repository-projects: "write"
     steps:
+      - run: echo "Creating release for tag ${{ github.ref }}"
       - name: Create release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
