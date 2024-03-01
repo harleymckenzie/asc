@@ -76,7 +76,7 @@ jobs:
           # URL encode newlines to %0A for GitHub Actions output compatibility
           COMMIT_MESSAGES="${COMMIT_MESSAGES//$'\n'/%0A}"
           # Prepend header to the commit messages, URL encoding the newlines
-          COMMIT_MESSAGES="Whats changed since last release%0A%0A${COMMIT_MESSAGES}"
+          COMMIT_MESSAGES="Commits since last release%0A%0A${COMMIT_MESSAGES}"
           echo "Commit messages: ${COMMIT_MESSAGES//%0A/$'\n'}"
           echo "commit_messages<<EOF" >> $GITHUB_OUTPUT
           echo -e "${COMMIT_MESSAGES//%0A/$'\n'}" >> $GITHUB_OUTPUT
