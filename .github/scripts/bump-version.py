@@ -28,8 +28,7 @@ def get_commit_messages_since_last_tag(last_tag):
             if '#patch' in line or '#minor' in line or '#major' in line:
                 processed_messages.append(message)
                 break  # Stop checking this message if a tag is found
-    
-    print(processed_messages)
+
     return processed_messages
 
 
