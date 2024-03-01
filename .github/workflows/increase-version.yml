@@ -64,12 +64,16 @@ jobs:
         id: generate_commit_message_list
         run: |
           # Get commit messages since last release in bullet point format
-          COMMIT_MESSAGES=$(git log --pretty=format:"%s" "${{ steps.get_current_tag.outputs.current_tag }}..HEAD" | grep -vE "#patch|#minor|#major" | sed 's/^/- /')
-          # Add 'Whats changed since last release' to the commit messages
-          COMMIT_MESSAGES=$(echo -e "Whats changed since last release\n\n${COMMIT_MESSAGES}")
-          echo "Commit messages: ${COMMIT_MESSAGES}"
-          echo "commit_messages=${COMMIT_MESSAGES}" >> $GITHUB_OUTPUT
-
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" "${{ steps.get_current_tag.outputs.current_tag }}..HEAD" | grep -vE "#patch|#minor|#major")
+          # URL encode newlines to %0A for GitHub Actions output compatibility
+          COMMIT_MESSAGES="${COMMIT_MESSAGES//$'\n'/%0A}"
+          # Prepend header to the commit messages, URL encoding the newlines
+          COMMIT_MESSAGES="Whats changed since last release%0A%0A${COMMIT_MESSAGES}"
+          echo "Commit messages: ${COMMIT_MESSAGES//%0A/$'\n'}"
+          echo "commit_messages<<EOF" >> $GITHUB_OUTPUT
+          echo -e "${COMMIT_MESSAGES//%0A/$'\n'}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        
       - name: Create release
         uses: actions/create-release@v1
         id: create_release
