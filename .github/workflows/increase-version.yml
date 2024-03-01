@@ -83,6 +83,5 @@ jobs:
         with:
           tag_name: "v${{ steps.generate_version.outputs.new_version }}"
           release_name: Release ${{ steps.create_tag.outputs.new_tag }}
-          body: ${{ steps.generate_commit_message_list.outputs.commit_messages }}
           draft: false
           prerelease: false
