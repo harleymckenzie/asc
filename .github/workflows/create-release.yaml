@@ -1,9 +1,9 @@
-name: Release Workflow
+name: Release workflow
 
 on:
-  repository_dispatch:
-    types: [trigger-release-workflow]
-  workflow_dispatch:
+  push:
+    branches:
+      - dev
 
 jobs:
   create-release:
