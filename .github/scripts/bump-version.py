@@ -13,9 +13,24 @@ def get_last_tag():
 
 
 def get_commit_messages_since_last_tag(last_tag):
-    # Retrieve commit messages since the last tag
-    commit_messages = subprocess.check_output(["git", "log", f"{last_tag}..HEAD", "--pretty=format:%s"]).decode().split('\n')
-    return commit_messages
+    # Retrieve full commit messages since the last tag
+    # Using %B to get the full commit message (subject and body)
+    git_log_command = ["git", "log", f"{last_tag}..HEAD", "--pretty=format:%B"]
+    full_commit_messages = subprocess.check_output(git_log_command).decode()
+    
+    # Splitting commit messages by the delimiter which separates commits in the log
+    commit_messages = full_commit_messages.split('\n\n')
+    
+    # Further splitting and filtering to check each line for tags
+    processed_messages = []
+    for message in commit_messages:
+        for line in message.split('\n'):
+            if '#patch' in line or '#minor' in line or '#major' in line:
+                processed_messages.append(message)
+                break  # Stop checking this message if a tag is found
+    
+    print(processed_messages)
+    return processed_messages
 
 
 def determine_bump_level(commit_messages, default_bump="minor"):
