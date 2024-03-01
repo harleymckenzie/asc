@@ -94,3 +94,11 @@ jobs:
           body: ${{ steps.generate_commit_message_list.outputs.commit_messages }}
           draft: false
           prerelease: false
+
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.AUTH_TOKEN }}
+          repository: harleymckenzie/homebrew-asc
+          event-type: update-formula
+          client-payload: '{"version": "${{ steps.generate_version.outputs.new_version }}"}'
