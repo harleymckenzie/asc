@@ -2,9 +2,7 @@ name: Create Release
 
 on:
   push:
-    branches:    
-      - dev
-    tags:        
+    tags:
       - v*
 
 jobs:
@@ -17,11 +15,15 @@ jobs:
       pull-requests: "write"
       repository-projects: "write"
     steps:
+      - name: GitHub Tag Name example
+        run: |
+          echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
+          echo "Tag name from github.ref_name: ${{  github.ref_name }}"
       - run: echo "Creating release for tag ${{ github.ref }}"
       - name: Create release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          automatic_release_tag: "${{ github.ref }}"
-          title: "Release ${{ github.ref }}"
+          automatic_release_tag: "${{ github.ref_name }}"
+          title: "Release ${{ github.ref_name }}"
