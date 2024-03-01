@@ -38,7 +38,6 @@ jobs:
 
       - name: Generate new version
         id: generate_version
-        # Outputs a new version number in the format of 'new_version=1.0.0'
         run: |
           NEW_VERSION=$(python ./.github/scripts/bump-version.py)
           echo "New version: ${NEW_VERSION}"
