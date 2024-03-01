@@ -2,9 +2,10 @@ name: Create Release
 
 on:
   push:
-    tags:
-    - '*'
-  workflow_dispatch:
+    branches:    
+      - dev
+    tags:        
+      - v*
 
 jobs:
   create-release:
