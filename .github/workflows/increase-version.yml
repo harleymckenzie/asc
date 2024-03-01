@@ -1,0 +1,53 @@
+name: Increment Version
+concurrency: automated-release
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  update-version-and-setup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+        
+      - name: Install dependencies
+        run: python -m pip install packaging
+
+      - name: Generate new version
+        id: generate_version
+        # Outputs a new version number in the format of 'new_version=1.0.0'
+        run: |
+          NEW_VERSION=$(python ./.github/scripts/bump-version.py)
+          echo "New version: ${NEW_VERSION}"
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Update setup.py version
+        run: |
+          NEW_VERSION=${{ steps.generate_version.outputs.new_version }}
+          sed -i "s/version='.*'/version='${NEW_VERSION}'/" setup.py
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add setup.py
+          git commit -m "Update setup.py version to ${NEW_VERSION}"
+
+      - name: Create Tag
+        id: create_tag
+        run: |
+          NEW_TAG="v${{ steps.generate_version.outputs.new_version }}"
+          git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG}"
+          git push origin "${NEW_TAG}"
