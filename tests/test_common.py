@@ -3,7 +3,7 @@ Test case for the common functions module.
 """
 from unittest.mock import patch
 import pytest
-from asc import common
+from core import common
 
 
 def test_print_as_table(capsys):
@@ -35,7 +35,7 @@ def test_print_as_table(capsys):
     )
 
 
-@patch('asc.common.Session')
+@patch('core.common.Session')
 @pytest.mark.parametrize("profile, region", [("my-profile", "us-west-2"), (None, "us-west-2"), ("my-profile", None)])
 def test_create_boto_session(mock_session, profile, region):
     """

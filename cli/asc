@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+# asc
+"""
+'asc' is a simplified version of the AWS CLI.
+"""
+import core.clidriver
+
+
+def main():
+    """
+    Main function
+    """
+    core.clidriver.main()
+
+
+if __name__ == "__main__":
+    core.clidriver.main()
