@@ -3,11 +3,12 @@ name: Create Release
 on:
   push:
     tags:
-      - "v*.*.*"
+    - '*'
   workflow_dispatch:
 
 jobs:
   create-release:
+    # Set release tag to the tag name
     name: "Create Release"
     runs-on: "ubuntu-latest"
     steps:
@@ -16,5 +17,5 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          automatic_release_tag: "v${{ github.ref }}"
-          title: "Release v${{ github.ref }}"
+          automatic_release_tag: "${{ github.ref }}"
+          title: "Release ${{ github.ref }}"
