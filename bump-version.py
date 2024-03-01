@@ -16,7 +16,6 @@ def get_last_tag():
 def get_commit_messages_since_last_tag(last_tag):
     # Retrieve commit messages since the last tag
     commit_messages = subprocess.check_output(["git", "log", f"{last_tag}..HEAD", "--pretty=format:%s"]).decode().split('\n')
-    print('commit_messages:', commit_messages)
     return commit_messages
 
 
@@ -50,18 +49,13 @@ def calculate_new_version(last_tag, bump_level):
     # Calculate the new version based on the last tag and the determined bump level
     if bump_level == "none":
         return last_tag
-        print('Detected no bump')
     version = Version(last_tag)
     if bump_level == "major":
         new_version = Version(f"{version.major + 1}.0.0")
-        print('Detected major bump')
     elif bump_level == "minor":
         new_version = Version(f"{version.major}.{version.minor + 1}.0")
-        print('Detected minor bump')
     elif bump_level == "patch":
         new_version = Version(f"{version.major}.{version.minor}.{version.micro + 1}")
-        print('Detected patch bump')
-    print('new_version:', new_version)
     return str(new_version)
 
 
@@ -70,7 +64,7 @@ def main():
     commit_messages = get_commit_messages_since_last_tag(last_tag)
     bump_level = determine_bump_level(commit_messages)
     new_version = calculate_new_version(last_tag, bump_level)
-    print(f"New version: {new_version}")
+    print(f"new_version={new_version}")
 
 
 if __name__ == "__main__":
