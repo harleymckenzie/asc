@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import re
 import subprocess
 from packaging.version import Version
 
@@ -64,7 +63,7 @@ def main():
     commit_messages = get_commit_messages_since_last_tag(last_tag)
     bump_level = determine_bump_level(commit_messages)
     new_version = calculate_new_version(last_tag, bump_level)
-    print(f"new_version={new_version}")
+    print(new_version)
 
 
 if __name__ == "__main__":

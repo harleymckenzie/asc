@@ -28,7 +28,10 @@ jobs:
       - name: Generate new version
         id: generate_version
         # Outputs a new version number in the format of 'new_version=1.0.0'
-        run: python ./.github/scripts/bump-version.py  >> "$GITHUB_OUTPUT"
+        run: |
+          NEW_VERSION=$(python ./.github/scripts/bump-version.py)
+          echo "New version: ${NEW_VERSION}"
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Update setup.py version
         run: |
@@ -52,6 +55,6 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          automatic_release_tag: "v${{ steps.create_tag.outputs.new_version }}"
-          title: "Release v${{ steps.create_tag.outputs.new_version }}"
+          automatic_release_tag: "v${{ steps.generate_version.outputs.new_version }}"
+          title: "Release v${{ steps.generate_version.outputs.new_version }}"
   
