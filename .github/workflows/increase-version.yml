@@ -38,6 +38,7 @@ jobs:
 
       - name: Generate new version
         id: generate_version
+        # Outputs a new version number in the format of 'new_version=1.0.0'
         run: |
           NEW_VERSION=$(python ./.github/scripts/bump-version.py)
           echo "New version: ${NEW_VERSION}"
@@ -58,7 +59,20 @@ jobs:
           NEW_TAG="v${{ steps.generate_version.outputs.new_version }}"
           git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG}"
           git push origin "${NEW_TAG}"
-          git push
+
+      - name: Generate commit message list
+        id: generate_commit_message_list
+        run: |
+          # Get commit messages since last release in bullet point format
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" "${{ steps.get_current_tag.outputs.current_tag }}..HEAD" | grep -vE "#patch|#minor|#major")
+          # URL encode newlines to %0A for GitHub Actions output compatibility
+          COMMIT_MESSAGES="${COMMIT_MESSAGES//$'\n'/%0A}"
+          # Prepend header to the commit messages, URL encoding the newlines
+          COMMIT_MESSAGES="Whats changed since last release%0A%0A${COMMIT_MESSAGES}"
+          echo "Commit messages: ${COMMIT_MESSAGES//%0A/$'\n'}"
+          echo "commit_messages<<EOF" >> $GITHUB_OUTPUT
+          echo -e "${COMMIT_MESSAGES//%0A/$'\n'}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
         
       - name: Create release
         uses: actions/create-release@v1
@@ -68,5 +82,6 @@ jobs:
         with:
           tag_name: "v${{ steps.generate_version.outputs.new_version }}"
           release_name: Release ${{ steps.create_tag.outputs.new_tag }}
+          body: ${{ steps.generate_commit_message_list.outputs.commit_messages }}
           draft: false
           prerelease: false
