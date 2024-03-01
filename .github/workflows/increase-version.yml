@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-version-and-setup:
+  increment_version:
     runs-on: ubuntu-latest
     permissions:
       contents: write
