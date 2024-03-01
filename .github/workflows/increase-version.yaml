@@ -36,6 +36,16 @@ jobs:
           git commit -m "Update setup.py version to ${NEW_VERSION}"
           git push
 
+      - name: Remove the original tag
+        run: |
+          git tag -d ${{ steps.create_tag.outputs.tag }}
+          git push origin :${{ steps.create_tag.outputs.tag }}
+
+      - name: Recreate the tag
+        run: |
+          git tag ${{ steps.create_tag.outputs.tag }} HEAD
+          git push origin ${{ steps.create_tag.outputs.tag }}
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
