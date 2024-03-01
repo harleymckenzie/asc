@@ -1,4 +1,4 @@
-name: Release Workflow
+name: Increment Version
 concurrency: automated-release
 on:
   push:
@@ -36,19 +36,10 @@ jobs:
           git commit -m "Update setup.py version to ${NEW_VERSION}"
           git push
 
-      - name: Remove the original tag
+      - name: Trigger Release Workflow
         run: |
-          git tag -d ${{ steps.create_tag.outputs.tag }}
-          git push origin :${{ steps.create_tag.outputs.tag }}
-
-      - name: Recreate the tag
-        run: |
-          git tag ${{ steps.create_tag.outputs.tag }} HEAD
-          git push origin ${{ steps.create_tag.outputs.tag }}
-
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          automatic_release_tag: ${{ steps.create_tag.outputs.tag }}
-          title: "Release ${{ steps.create_tag.outputs.tag }}"
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/harleymckenzie/asc/dispatches \
+          -d '{"event_type": "trigger-release-workflow", "client_payload": {"version": "${{ steps.create_tag.outputs.tag }}"}}'
