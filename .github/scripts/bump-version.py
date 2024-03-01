@@ -6,7 +6,7 @@ from packaging.version import Version
 def get_last_tag():
     # Retrieve the last semver tag from the git history
     try:
-        last_tag = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"]).decode().strip()
+        last_tag = subprocess.check_output(["git", "tag", "--sort=-v:refname", "--sort=-creatordate"]).decode().split('\n')[0]
     except subprocess.CalledProcessError:
         last_tag = "0.0.0"
     return last_tag
