@@ -16,35 +16,52 @@ def get_last_tag():
 def get_commit_messages_since_last_tag(last_tag):
     # Retrieve commit messages since the last tag
     commit_messages = subprocess.check_output(["git", "log", f"{last_tag}..HEAD", "--pretty=format:%s"]).decode().split('\n')
+    print('commit_messages:', commit_messages)
     return commit_messages
 
 
 def determine_bump_level(commit_messages, default_bump="minor"):
+    # Initialize bump levels found
+    found_levels = {"#major": False, "#minor": False, "#patch": False}
+    
     # Determine version bump based on commit messages
-    bump_level = default_bump
     for message in commit_messages:
         if "#major" in message:
-            return "major"
-        elif "#minor" in message and bump_level != "major":
-            bump_level = "minor"
-        elif "#patch" in message and bump_level not in ["major", "minor"]:
-            bump_level = "patch"
+            found_levels["#major"] = True
+        elif "#minor" in message:
+            found_levels["#minor"] = True
+        elif "#patch" in message:
+            found_levels["#patch"] = True
         elif "#none" in message:
             return "none"
-    return bump_level
+    
+    # Determine the bump level based on what was found
+    if found_levels["#major"]:
+        return "major"
+    elif found_levels["#minor"]:
+        return "minor"
+    elif found_levels["#patch"]:
+        return "patch"
+    else:
+        return default_bump
 
 
 def calculate_new_version(last_tag, bump_level):
     # Calculate the new version based on the last tag and the determined bump level
     if bump_level == "none":
         return last_tag
+        print('Detected no bump')
     version = Version(last_tag)
     if bump_level == "major":
         new_version = Version(f"{version.major + 1}.0.0")
+        print('Detected major bump')
     elif bump_level == "minor":
         new_version = Version(f"{version.major}.{version.minor + 1}.0")
+        print('Detected minor bump')
     elif bump_level == "patch":
         new_version = Version(f"{version.major}.{version.minor}.{version.micro + 1}")
+        print('Detected patch bump')
+    print('new_version:', new_version)
     return str(new_version)
 
 
