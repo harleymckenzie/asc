@@ -28,6 +28,14 @@ jobs:
       - name: Install dependencies
         run: python -m pip install packaging
 
+
+      - name: Get current tag
+        id: get_current_tag
+        run: |
+          CURRENT_TAG=$(git tag --sort=-creatordate | head -n 1)
+          echo "Current tag: ${CURRENT_TAG}"
+          echo "current_tag=${CURRENT_TAG}" >> $GITHUB_OUTPUT
+
       - name: Generate new version
         id: generate_version
         # Outputs a new version number in the format of 'new_version=1.0.0'
@@ -51,3 +59,25 @@ jobs:
           NEW_TAG="v${{ steps.generate_version.outputs.new_version }}"
           git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG}"
           git push origin "${NEW_TAG}"
+
+      - name: Generate commit message list
+        id: generate_commit_message_list
+        run: |
+          # Get commit messages since last release in bullet point format
+          COMMIT_MESSAGES=$(git log --pretty=format:"%s" "${{ steps.get_current_tag.outputs.current_tag }}..HEAD" | grep -vE "#patch|#minor|#major" | sed 's/^/- /')
+          # Add 'Whats changed since last release' to the commit messages
+          COMMIT_MESSAGES=$(echo -e "Whats changed since last release\n\n${COMMIT_MESSAGES}")
+          echo "Commit messages: ${COMMIT_MESSAGES}"
+          echo "commit_messages=${COMMIT_MESSAGES}" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create_tag.outputs.new_tag }}
+          release_name: Release ${{ steps.create_tag.outputs.new_tag }}
+          body: ${{ steps.generate_commit_message_list.outputs.commit_messages }}
+          draft: false
+          prerelease: false
