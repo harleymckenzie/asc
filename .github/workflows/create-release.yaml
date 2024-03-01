@@ -1,7 +1,9 @@
 name: Release Workflow
+
 on:
   repository_dispatch:
     types: [trigger-release-workflow]
+  workflow_dispatch:
 
 jobs:
   create-release:
