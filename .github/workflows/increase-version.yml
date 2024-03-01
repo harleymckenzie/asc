@@ -2,10 +2,11 @@ name: Increment Version
 concurrency: automated-release
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
-      - dev
-  workflow_dispatch:
+      - main
 
 jobs:
   increment_version:
