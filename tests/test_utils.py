@@ -3,10 +3,8 @@ Testing utilities
 
 This module contains utility functions for testing.
 """
-import argparse
+from argparse import Namespace
 import configparser
-import pytest
-from unittest.mock import patch
 
 
 def setup_args(displayed_tags=None, profile=None, region=None):
@@ -19,7 +17,7 @@ def setup_args(displayed_tags=None, profile=None, region=None):
     if displayed_tags:
         config.set('asc', 'displayed_tags', displayed_tags)
 
-    args = argparse.Namespace(
+    args = Namespace(
         profile=profile,
         region=region,
         config=config,

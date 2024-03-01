@@ -3,13 +3,13 @@ Test case for the Elasticache Redis module.
 
 This module contains the test cases for the Elasticache Redis module.
 """
-import pytest
 from unittest.mock import patch
-from asc.services import redis
+import pytest
+from core.services import redis
 from .test_utils import setup_args
 
 
-@patch('asc.services.redis.create_boto_session')
+@patch('core.services.redis.create_boto_session')
 @pytest.mark.parametrize("displayed_tags, endpoint", [("Name", True), ("Name,Environment", False), (None, False)])
 def test_list_redis_instances(create_boto_session, displayed_tags, endpoint, capsys):
     """

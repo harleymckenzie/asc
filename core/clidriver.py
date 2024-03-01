@@ -1,36 +1,37 @@
-#!/usr/bin/env python
-"""
-'asc' is a simplified version of the AWS CLI.
-"""
-import argparse
-from asc import common
-from asc.services import asg, ec2, rds, redis, ssm
+from argparse import ArgumentParser
+from importlib.metadata import version
+from core import common
+from core.services import asg, ec2, rds, redis, ssm
 
 
 def arg_parser():
     """
     Create the main parser
     """
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         prog='asc',
         description='AWS Simple CLI (asc)',
         epilog='Example: asc ec2 ls'
     )
     parser.set_defaults(func=lambda args: parser.print_help())
+    parser.add_argument(
+        '--version', action='version', version=version('asc')
+    )
     group = parser.add_argument_group('global arguments')
     group.add_argument(
         '--tags', '-t', help='Comma-separated tags to display in output.',
         type=str
     )
     group.add_argument(
-        '--profile', '-p', nargs='?', 
+        '--profile', '-p', nargs='?',
         help='AWS profile to use.',
         dest='profile'
     )
     group.add_argument(
         '--region', nargs='?', help='AWS region to use.', dest='region'
     )
-    group.add_argument('-v', action='count', default=0,
+    group.add_argument(
+        '-v', action='count', default=0,
         help='Increase verbosity of output.', dest='verbose'
     )
 
@@ -51,7 +52,7 @@ def setup_global_parser():
     """
     # Global parser
     # This parser will be used by all subparsers
-    global_parser = argparse.ArgumentParser(add_help=False)
+    global_parser = ArgumentParser(add_help=False)
     group = global_parser.add_argument_group('global arguments')
     group.add_argument(
         '--profile', '-p', nargs='?',

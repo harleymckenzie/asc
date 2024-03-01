@@ -3,15 +3,20 @@ Test cases for the RDS module.
 
 This module contains the test cases for the RDS module.
 """
-import pytest
 from unittest.mock import patch
-from asc.services import rds
+import pytest
+from core.services import rds
 from .test_utils import setup_args
 
 
-@patch('asc.services.rds.create_boto_session')
-@pytest.mark.parametrize("displayed_tags, endpoint", [("Name", True), ("Name,Environment", False), (None, False)])
-def test_list_rds_instances(create_boto_session, displayed_tags, endpoint, capsys):
+@patch('core.services.rds.create_boto_session')
+@pytest.mark.parametrize(
+    "displayed_tags, endpoint",
+    [("Name", True), ("Name,Environment", False), (None, False)],
+)
+def test_list_rds_instances(
+    create_boto_session, displayed_tags, endpoint, capsys
+):
     """
     Test case for the list_rds_instances function.
 
@@ -107,7 +112,7 @@ def test_list_rds_instances(create_boto_session, displayed_tags, endpoint, capsy
                 "Engine": "aurora-mysql",
                 "Status": "available",
                 "EngineVersion": "5.7.mysql_aurora.2.03.2",
-                "ReaderEndpoint": "db-cluster-1.us-east-1.rds.amazonaws.com",
+                "ReaderEndpoint": "db-cluster-1-ro.us-east-1.rds.amazonaws.com",
                 "TagList": [
                     {"Key": "Name", "Value": "db-cluster-1"},
                     {"Key": "Environment", "Value": "production"},
@@ -125,7 +130,7 @@ def test_list_rds_instances(create_boto_session, displayed_tags, endpoint, capsy
         assert out == (
             "Name                       Identifier                 Type         State      Endpoint                                       Role\n"
             "-------------------------  -------------------------  -----------  ---------  ---------------------------------------------  ------\n"
-            "db-instance-aurora-reader  db-instance-aurora-reader  db.t2.micro  available  db-cluster-1.us-east-1.rds.amazonaws.com       Reader\n"
+            "db-instance-aurora-reader  db-instance-aurora-reader  db.t2.micro  available  db-cluster-1-ro.us-east-1.rds.amazonaws.com    Reader\n"
             "db-instance-aurora-writer  db-instance-aurora-writer  db.t2.micro  available  db-cluster-1.us-east-1.rds.amazonaws.com       Writer\n"
             "db-instance-mysql          db-instance-mysql          db.t2.micro  available  db-instance-mysql.us-east-1.rds.amazonaws.com\n"
         )

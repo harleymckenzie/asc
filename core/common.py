@@ -15,11 +15,12 @@ import os
 import logging
 import configparser
 from tabulate import tabulate
-from botocore.exceptions import SSOTokenLoadError
+from botocore.exceptions import UnauthorizedSSOTokenError
 from boto3 import Session
 
-
 SUBPARSER_REGISTRY = {}
+
+
 def subparser_register(name):
     """
     Decorator for registering subparser functions.
@@ -27,9 +28,11 @@ def subparser_register(name):
     Args:
         name: The name of the command that the subparser will handle.
     """
+
     def decorator(func):
         SUBPARSER_REGISTRY[name] = func
         return func
+
     return decorator
 
 
@@ -93,7 +96,8 @@ def create_boto_session(profile=None, region=None):
     Set up AWS session.
 
     Args:
-        args: The arguments passed to the application.
+        profile: The profile to use for the session.
+        region: The region to use for the session.
 
     Returns:
         The AWS session.
@@ -109,8 +113,7 @@ def create_boto_session(profile=None, region=None):
         session = Session(**session_params)
         session.client('sts').get_caller_identity()
         return session
-    except SSOTokenLoadError as sso_err:
-        # Handling SSOTokenLoadError specifically to suppress the stack trace
+    except UnauthorizedSSOTokenError as sso_err:
         print(f"SSO Token Load Error: {sso_err}")
         exit(1)
     except Exception as e:
@@ -130,7 +133,7 @@ def setup_config(config):
     current_tags = config.get('asc', 'displayed_tags', fallback="Name")
     new_tags = input(
         f"Enter displayed tags (current: {current_tags}, leave blank to keep): "
-        ).strip()
+    ).strip()
     config.set('asc', 'displayed_tags', new_tags if new_tags else current_tags)
 
     return config
@@ -197,5 +200,5 @@ def apply_tags(instance, instance_data, displayed_tags_list):
                 instance = {tag_key: tag_value, **instance}
             else:
                 instance[tag_key] = tag_value
-        
+
     return instance
