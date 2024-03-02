@@ -32,7 +32,7 @@ def get_commit_messages_since_last_tag(last_tag):
     return processed_messages
 
 
-def determine_bump_level(commit_messages, default_bump="minor"):
+def determine_bump_level(commit_messages, default_bump="patch"):
     # Initialize bump levels found
     found_levels = {"#major": False, "#minor": False, "#patch": False}
     
