@@ -3,6 +3,7 @@ This module contains functions to interact with the Systems Manager service.
 It provides functionality to list and connect to managed instances, and to
 list and execute commands on managed instances.
 """
+
 import json
 import signal
 import contextlib
@@ -10,7 +11,8 @@ import errno
 import subprocess
 from ..common import subparser_register, create_boto_session, print_as_table
 
-@subparser_register('ssm')
+
+@subparser_register("ssm")
 def add_subparsers(subparsers, global_parser):
     """
     Adds subparsers for the SSM service.
@@ -23,9 +25,7 @@ def add_subparsers(subparsers, global_parser):
     )
     ssm_parser.set_defaults(func=lambda args: ssm_parser.print_help())
     ssm_subparsers = ssm_parser.add_subparsers(
-        help='',
-        metavar='subcommand',
-        dest='subcommand'
+        help="", metavar="subcommand", dest="subcommand"
     )
 
     # Parameter Store Subparser
@@ -38,7 +38,8 @@ def add_parameter_store_parser(ssm_subparsers, global_parser):
     Adds a subparser for Parameter Store related commands.
     """
     ssm_parameter_parser = ssm_subparsers.add_parser(
-        "parameter", aliases=["param"],
+        "parameter",
+        aliases=["param"],
         help="Systems Manager Parameter Store subcommands",
         description="Systems Manager Parameter Store subcommands",
         epilog="""Example: asc ssm parameter ls""",
@@ -48,9 +49,7 @@ def add_parameter_store_parser(ssm_subparsers, global_parser):
         func=lambda args: ssm_parameter_parser.print_help()
     )
     ssm_parameter_subparsers = ssm_parameter_parser.add_subparsers(
-        help='',
-        metavar='subcommand',
-        dest='subcommand'
+        help="", metavar="subcommand", dest="subcommand"
     )
 
     # List Parameters Subcommand
@@ -69,7 +68,6 @@ def add_parameter_store_parser(ssm_subparsers, global_parser):
         "--decrypt", action="store_true", help="Decrypt secure string parameters"
     )
 
-
     ssm_parameter_add_parser = ssm_parameter_subparsers.add_parser(
         "add",
         help="Add or update a parameter",
@@ -78,20 +76,17 @@ def add_parameter_store_parser(ssm_subparsers, global_parser):
         parents=[global_parser],
     )
     ssm_parameter_add_parser.set_defaults(func=add_or_update_parameter)
+    ssm_parameter_add_parser.add_argument("name", help="Name of the parameter to add")
+    ssm_parameter_add_parser.add_argument("value", help="Value of the parameter to add")
     ssm_parameter_add_parser.add_argument(
-        "name", help="Name of the parameter to add"
-    )
-    ssm_parameter_add_parser.add_argument(
-        "value", help="Value of the parameter to add"
-    )
-    ssm_parameter_add_parser.add_argument(
-        "--type", default="String", help="Type of the parameter to add", 
-        choices=["String", "SecureString"]
+        "--type",
+        default="String",
+        help="Type of the parameter to add",
+        choices=["String", "SecureString"],
     )
     ssm_parameter_add_parser.add_argument(
         "--overwrite", action="store_true", help="Overwrite existing parameter"
     )
-
 
     ssm_parameter_remove_parser = ssm_parameter_subparsers.add_parser(
         "rm",
@@ -112,10 +107,11 @@ def add_session_manager_parser(ssm_subparsers, global_parser):
     Adds a subparser for Session Manager related commands.
     """
     ssm_session_parser = ssm_subparsers.add_parser(
-        "session", aliases=["connect"],
+        "session",
+        aliases=["connect"],
         help="Connect to a managed instance",
         description="Connect to a managed instance using Session Manager",
-        epilog='''Example: asc ssm session i-1234567890abcdef0''',
+        epilog="""Example: asc ssm session i-1234567890abcdef0""",
         parents=[global_parser],
     )
     ssm_session_parser.set_defaults(func=connect_to_instance)
@@ -149,9 +145,9 @@ def list_ssm_parameters(args):
         instance = {
             "Name": instance["Name"],
             "Type": instance["Type"],
-            "Last Modified": instance["LastModifiedDate"]
+            "Last Modified": instance["LastModifiedDate"],
         }
-        
+
         parameter_list.append(instance)
 
     if args.values:
@@ -178,14 +174,15 @@ def get_ssm_parameters(args, parameter_list):
     try:
         response = ssm_client.get_parameters(
             Names=[parameter["Name"] for parameter in parameter_list],
-            WithDecryption=args.decrypt
+            WithDecryption=args.decrypt,
         )
     except Exception as e:
         print(f"Error getting parameter values: {e}")
         exit(1)
 
     # Update the parameter list with the parameter values
-    # Set value to '*****' for SecureString parameters if --decrypt is not specified
+    # Set value to '*****' for SecureString parameters
+    # if --decrypt is not specified
     for parameter in parameter_list:
         for parameter_data in response["Parameters"]:
             if parameter["Name"] == parameter_data["Name"]:
@@ -275,19 +272,22 @@ def connect_to_instance(args):
     response = ssm_client.start_session(Target=instance_id)
     session_id = response["SessionId"]
     region_name = session.region_name
-    profile_name = session.profile_name \
-        if session.profile_name else ''
+    profile_name = session.profile_name if session.profile_name else ""
     endpoint_url = ssm_client.meta.endpoint_url
 
     try:
         with ignore_user_entered_signals():
-            subprocess.check_call(["session-manager-plugin",
-                        json.dumps(response),
-                        region_name,
-                        'StartSession',
-                        profile_name,
-                        json.dumps(dict(Target=instance_id)),
-                        endpoint_url])
+            subprocess.check_call(
+                [
+                    "session-manager-plugin",
+                    json.dumps(response),
+                    region_name,
+                    "StartSession",
+                    profile_name,
+                    json.dumps(dict(Target=instance_id)),
+                    endpoint_url,
+                ]
+            )
         return 0
     except OSError as ex:
         if ex.errno == errno.ENOENT:
@@ -302,7 +302,9 @@ def is_plugin_installed():
     try:
         subprocess.check_call(
             ["session-manager-plugin"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False

@@ -1,7 +1,8 @@
 """
 Common functions for asc
 
-This module contains common functions and decorators used across the application.
+This module contains common functions and decorators used across the
+application.
 
 Functions:
 - subparser_register: Decorator for registering subparser functions.
@@ -132,7 +133,8 @@ def setup_config(config):
 
     current_tags = config.get('asc', 'displayed_tags', fallback="Name")
     new_tags = input(
-        f"Enter displayed tags (current: {current_tags}, leave blank to keep): "
+        "Enter displayed tags (current: {}, leave blank to keep): "
+        .format(current_tags)
     ).strip()
     config.set('asc', 'displayed_tags', new_tags if new_tags else current_tags)
 
