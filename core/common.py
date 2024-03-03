@@ -1,19 +1,18 @@
 """
 Common functions for asc
 
-This module contains common functions and decorators used across the application.
+This module contains common functions and decorators used across the
+application.
 
 Functions:
 - subparser_register: Decorator for registering subparser functions.
 - add_subparsers: Add subparsers for common commands.
 - init_config: Load the configuration or initialize it if it doesn't exist.
-- setup_config: Run initial configuration setup for the application.
 - print_as_table: Print a list of dicts as a table.
 - apply_tags: Apply tags to an instance.
 """
 import os
 import logging
-import configparser
 from tabulate import tabulate
 from botocore.exceptions import UnauthorizedSSOTokenError
 from boto3 import Session
@@ -34,36 +33,6 @@ def subparser_register(name):
         return func
 
     return decorator
-
-
-@subparser_register('common')
-def add_subparsers(subparsers, global_parser):
-    """
-    Add subparsers for common commands.
-
-    Args:
-        subparsers: The subparsers object from the main parser.
-        global_parser: The global parser containing common arguments.
-    """
-    config_parser = subparsers.add_parser(
-        "configure",
-        help="Configure asc",
-        description="Configure asc",
-        epilog="""Example: asc configure""",
-        parents=[global_parser],
-    )
-    config_parser.set_defaults(func=setup_config)
-    config_parser.add_argument(
-        "--add-tag",
-        nargs="?",
-        help="Add a tag to the list of defined tags that are displayed",
-    )
-    config_parser.add_argument(
-        "--remove-tag",
-        "--rm-tag",
-        nargs="?",
-        help="Remove a tag from the list of defined tags that are displayed",
-    )
 
 
 def logger(verbose_level):
@@ -120,44 +89,6 @@ def create_boto_session(profile=None, region=None):
         # For all other exceptions, print the stack trace
         print(f"Error: {e}")
         exit(1)
-
-
-def setup_config(config):
-    """
-    Run initial configuration setup for the application.
-    If called for the first time, it sets default values.
-    If called via 'configure' command, it allows updating existing values.
-    """
-    print("Configuration Setup:")
-
-    current_tags = config.get('asc', 'displayed_tags', fallback="Name")
-    new_tags = input(
-        f"Enter displayed tags (current: {current_tags}, leave blank to keep): "
-    ).strip()
-    config.set('asc', 'displayed_tags', new_tags if new_tags else current_tags)
-
-    return config
-
-
-def init_config():
-    """Load the configuration or initialize it if it doesn't exist."""
-    config_dir = os.path.expanduser("~/.asc")
-    config_file = os.path.join(config_dir, "config")
-    config = configparser.ConfigParser()
-
-    if not os.path.exists(config_dir):
-        os.makedirs(config_dir)
-
-    if not os.path.exists(config_file):
-        config.add_section("asc")
-        config = setup_config(config)
-        with open(config_file, "w") as configfile:
-            config.write(configfile)
-        print("Initial configuration saved.")
-    else:
-        config.read(config_file)
-
-    return config
 
 
 def print_as_table(items):

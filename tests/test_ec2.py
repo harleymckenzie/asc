@@ -2,7 +2,6 @@
 Test cases for the EC2 service
 
 This module contains the test cases for the EC2 service.
-
 """
 from unittest.mock import patch
 import pytest

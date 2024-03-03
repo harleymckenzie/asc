@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from importlib.metadata import version
-from core import common
+from core import common, configdriver
 from core.services import asg, ec2, rds, redis, ssm
 
 
@@ -85,19 +85,6 @@ def process_args(args):
     return args
 
 
-def process_tags(config, tags):
-    """
-    Process the tags
-    """
-    if "displayed_tags" in config["asc"] and tags:
-        config.set(
-            'asc', 'displayed_tags',
-            f"{config.get('asc', 'displayed_tags')},{tags}"
-        )
-
-    return config
-
-
 def main():
     """
     Main function
@@ -115,8 +102,7 @@ def main():
     common.logger(args.verbose)
 
     # Load configuration
-    args.config = common.init_config()
-    args.config = process_tags(args.config, args.tags)
+    args.config = configdriver.initialise_config(args.tags)
 
     args.func(args)
 
