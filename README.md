@@ -3,65 +3,99 @@
 
 The purpose of this project is to provide a simple interface to the AWS CLI.
 
-## Usage
-```
-usage: asc [-h] [--profile [PROFILE]] [--region [REGION]] subcommand ...
+# AWS Simple CLI (`asc`)
 
-positional arguments:
-  subcommand           description
-    configure          Configure asc
-    ec2                EC2 service
-    rds                RDS service
-    asg                Autoscaling service
-    redis              Redis service
-    
-options:
-  -h, --help           show this help message and exit
-  --profile [PROFILE]  AWS profile to use
-  --region [REGION]    AWS region to use
-```
+The AWS Simple CLI (`asc`) is a command-line interface for managing AWS services with ease. It supports various AWS services, including EC2, RDS, Autoscaling, Redis, and Systems Manager.
 
-## Examples
-### EC2
-List EC2 instances
+This project was created as a way for me to learn about building CLIs in Python and to provide a simple interface to the AWS CLI. It is not meant to replace the AWS CLI, but to provide a simpler way to interact with AWS services.
+
+## Installation
+
+To install `asc` using Homebrew, run:
+
 ```shell
+brew tap harleymckenzie/asc
+brew install asc
+```
+
+## Usage
+
+To use `asc`, run:
+
+```
+asc [global options] subcommand [subcommand options] [arguments...]
+```
+
+### Subcommands
+
+- `configure`: Configure `asc` settings.
+- `asg`: Interact with the Autoscaling service.
+- `ec2`: Manage EC2 instances.
+- `rds`: Work with RDS databases.
+- `redis`: Manage Redis instances.
+- `ssm`: Use AWS Systems Manager functionalities.
+
+### Global Options
+
+- `-h, --help`: Show help message and exit.
+- `--version`: Show the program's version number and exit.
+- `--tags TAGS, -t TAGS`: Comma-separated tags to display in output.
+- `--profile [PROFILE], -p [PROFILE]`: Specify the AWS profile to use.
+- `--region [REGION]`: Define the AWS region to operate in.
+- `-v`: Increase verbosity of output.
+
+### Examples
+
+- List EC2 instances:
+
+```
 asc ec2 ls
 ```
 
-### RDS
-List RDS instances
-```shell
-asc rds ls
-```
+- List Autoscaling groups:
 
-### Autoscaling
-List Autoscaling groups
-```shell
+```
 asc asg ls
 ```
 
-List Autoscaling scheduled actions
-```shell
-asc asg schedule ls
+- Connect to an instance via Session Manager:
+
+```
+asc ssm session i-1234567890abcdef0
 ```
 
-Add Autoscaling scheduled action (parameters are optional)
-```shell
-asc asg schedule add --asg my-asg --name my-schedule --min 1 --start 2017-01-01T00:00:00Z```
-```
+### Service-Specific Subcommands
 
-Remove Autoscaling scheduled action (as above)
-```shell
-asc asg schedule rm --asg my-asg --name my-schedule
-```
+#### Autoscaling (`asg`)
 
-### Redis
-List Redis clusters
-```shell
-asc redis ls
-```
+- `ls`: List autoscaling groups.
+- `schedule`: Manage autoscaling schedules.
 
-Tag Redis cluster
-```shell
-asc redis tag --cluster my-cluster --key my-key --value my-value
-```
+##### Schedule Subcommands
+
+- `ls`: List autoscaling schedules.
+- `add`: Add a new schedule.
+- `rm`: Remove an existing schedule.
+
+#### EC2 Service (`ec2`)
+
+- `ls`: List EC2 instances.
+
+#### RDS Service (`rds`)
+
+- `ls`: List RDS instances.
+
+#### Redis Service (`redis`)
+
+- `ls`: List Redis instances.
+
+#### Systems Manager Service (`ssm`)
+
+- `parameter (param)`: Interact with the Parameter Store.
+- `session (connect)`: Connect to a managed instance using Session Manager.
+
+##### Parameter Store Subcommands
+
+- `ls`: List parameters.
+- `add`: Add or update a parameter.
+- `rm`: Remove a parameter.

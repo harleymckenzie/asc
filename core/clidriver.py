@@ -57,10 +57,14 @@ def setup_global_parser():
     group.add_argument(
         '--profile', '-p', nargs='?',
         help='AWS profile to use.',
-        dest='global_profile'
+        dest='global_profile',
+        metavar='profile'
     )
     group.add_argument(
-        '--region', nargs='?', help='AWS region to use.', dest='global_region'
+        '--region', nargs='?',
+        help='AWS region to use.',
+        dest='global_region',
+        metavar='region'
     )
     group.add_argument(
         '-v', action='count',
