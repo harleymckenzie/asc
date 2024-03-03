@@ -14,7 +14,7 @@ Functions:
 """
 import os
 import logging
-import configparser
+from core.configdriver import setup as setup_config
 from tabulate import tabulate
 from botocore.exceptions import UnauthorizedSSOTokenError
 from boto3 import Session
@@ -121,45 +121,6 @@ def create_boto_session(profile=None, region=None):
         # For all other exceptions, print the stack trace
         print(f"Error: {e}")
         exit(1)
-
-
-def setup_config(config):
-    """
-    Run initial configuration setup for the application.
-    If called for the first time, it sets default values.
-    If called via 'configure' command, it allows updating existing values.
-    """
-    print("Configuration Setup:")
-
-    current_tags = config.get('asc', 'displayed_tags', fallback="Name")
-    new_tags = input(
-        "Enter displayed tags (current: {}, leave blank to keep): "
-        .format(current_tags)
-    ).strip()
-    config.set('asc', 'displayed_tags', new_tags if new_tags else current_tags)
-
-    return config
-
-
-def init_config():
-    """Load the configuration or initialize it if it doesn't exist."""
-    config_dir = os.path.expanduser("~/.asc")
-    config_file = os.path.join(config_dir, "config")
-    config = configparser.ConfigParser()
-
-    if not os.path.exists(config_dir):
-        os.makedirs(config_dir)
-
-    if not os.path.exists(config_file):
-        config.add_section("asc")
-        config = setup_config(config)
-        with open(config_file, "w") as configfile:
-            config.write(configfile)
-        print("Initial configuration saved.")
-    else:
-        config.read(config_file)
-
-    return config
 
 
 def print_as_table(items):
