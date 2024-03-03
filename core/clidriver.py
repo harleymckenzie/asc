@@ -102,7 +102,7 @@ def main():
     common.logger(args.verbose)
 
     # Load configuration
-    args.config = configdriver.initialise(args.tags)
+    args.config = configdriver.initialise_config(args.tags)
 
     args.func(args)
 

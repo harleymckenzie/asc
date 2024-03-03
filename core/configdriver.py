@@ -9,11 +9,31 @@ Functions:
 """
 import os
 import configparser
+from core.common import subparser_register
 
 config_path = os.path.expanduser("~/.asc/config")
 
 
-def initialise(tags=None):
+@subparser_register("configuration")
+def add_subparsers(subparsers, global_parser):
+    """
+    Add subparsers for common commands.
+
+    Args:
+        subparsers: The subparsers object from the main parser.
+        global_parser: The global parser containing common arguments.
+    """
+    config_parser = subparsers.add_parser(
+        "configure",
+        help="Configure asc",
+        description="Configure asc",
+        epilog="""Example: asc configure""",
+        parents=[global_parser],
+    )
+    config_parser.set_defaults(func=update_config)
+
+
+def initialise_config(tags=None):
     """
     Checks to see if the configuration file exists:
     If it does not exist, the setup function is called.
@@ -26,14 +46,15 @@ def initialise(tags=None):
         The configuration object.
     """
     config = configparser.ConfigParser()
+
     if not os.path.exists(config_path):
-        setup(config, initial_setup=True)
-    config = load(config, tags)
+        setup_config(config, initial_setup=True)
+    config = load_config(config, tags)
 
     return config
 
 
-def load(config, tags=None):
+def load_config(config, tags=None):
     """
     Load the configuration file and return the configuration object.
     If tags are provided, they are added to the displayed tags.
@@ -47,13 +68,28 @@ def load(config, tags=None):
     """
     config.read(config_path)
     if tags:
-        displayed_tags = config.get('asc', 'displayed_tags')
-        config.set('asc', 'displayed_tags', f"{displayed_tags},{tags}")
+        displayed_tags = config.get("asc", "displayed_tags")
+        config.set("asc", "displayed_tags", f"{displayed_tags},{tags}")
 
     return config
 
 
-def setup(config, initial_setup=False):
+def update_config(args):
+    """
+    Re-runs the configuration setup, priving the args.config configparser
+    object.
+
+    Args:
+        args: The argparse args object.
+
+    Returns:
+        None
+    """
+    config = args.config
+    setup_config(config)
+
+
+def setup_config(config, initial_setup=False):
     """
     Run initial configuration setup for the application.
     If called for the first time, provided input + 'Name' is set.
@@ -66,23 +102,33 @@ def setup(config, initial_setup=False):
     Returns:
         The configuration object.
     """
-    print("Configuration Setup:")
+    print("\nConfiguration Setup\n" "-------------------")
+
     if initial_setup:
-        tags_input = input("Enter any tags you would like to displayed in "
-                           "resource outputs, as comma separated values "
-                           "(automatically includes 'Name'): ").strip()
-        tags = "Name" if not tags_input else f"Name,{tags_input}"
-        config['asc'] = {'displayed_tags': tags}
+        tags_input = input(
+            "Provide a comma separated list of tags to display [Name]:"
+        ).strip()
+        if not tags_input:
+            tags_input = "Name"
     else:
-        current_tags = config['asc']['displayed_tags']
-        print(f"Current displayed tags: {current_tags}")
-        tags_input = input("Enter new displayed tags as comma separated values "
-                           "or press enter to keep existing: ").strip()
-        if tags_input:
-            config['asc']['displayed_tags'] = tags_input
+        current_tags = config["asc"]["displayed_tags"]
+        tags_input = input(
+            "Provide a comma separated list of tags to display [" +
+            f"{current_tags}]:"
+        ).strip()
+        if not tags_input:
+            tags_input = current_tags
+
+    # If tags_input doens't contain 'Name', display a warning
+    if "Name" not in tags_input:
+        print(
+            "WARNING: 'Name' is not included in the displayed tags. "
+            "This may make it difficult to identify resources."
+        )
+    config["asc"] = {"displayed_tags": tags_input}
 
     try:
-        with open(config_path, 'w') as configfile:
+        with open(config_path, "w") as configfile:
             config.write(configfile)
         print("Configuration saved.")
     except Exception as e:

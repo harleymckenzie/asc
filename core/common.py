@@ -8,13 +8,11 @@ Functions:
 - subparser_register: Decorator for registering subparser functions.
 - add_subparsers: Add subparsers for common commands.
 - init_config: Load the configuration or initialize it if it doesn't exist.
-- setup_config: Run initial configuration setup for the application.
 - print_as_table: Print a list of dicts as a table.
 - apply_tags: Apply tags to an instance.
 """
 import os
 import logging
-from core.configdriver import setup as setup_config
 from tabulate import tabulate
 from botocore.exceptions import UnauthorizedSSOTokenError
 from boto3 import Session
@@ -35,36 +33,6 @@ def subparser_register(name):
         return func
 
     return decorator
-
-
-@subparser_register('common')
-def add_subparsers(subparsers, global_parser):
-    """
-    Add subparsers for common commands.
-
-    Args:
-        subparsers: The subparsers object from the main parser.
-        global_parser: The global parser containing common arguments.
-    """
-    config_parser = subparsers.add_parser(
-        "configure",
-        help="Configure asc",
-        description="Configure asc",
-        epilog="""Example: asc configure""",
-        parents=[global_parser],
-    )
-    config_parser.set_defaults(func=setup_config)
-    config_parser.add_argument(
-        "--add-tag",
-        nargs="?",
-        help="Add a tag to the list of defined tags that are displayed",
-    )
-    config_parser.add_argument(
-        "--remove-tag",
-        "--rm-tag",
-        nargs="?",
-        help="Remove a tag from the list of defined tags that are displayed",
-    )
 
 
 def logger(verbose_level):
