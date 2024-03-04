@@ -8,6 +8,7 @@ Functions:
 - setup: Run initial configuration setup for the application.
 """
 import os
+import sys
 import configparser
 from core.common import subparser_register
 
@@ -104,20 +105,16 @@ def setup_config(config, initial_setup=False):
     """
     print("\nConfiguration Setup\n" "-------------------")
 
-    if initial_setup:
-        tags_input = input(
-            "Provide a comma separated list of tags to display [Name]:"
-        ).strip()
-        if not tags_input:
-            tags_input = "Name"
-    else:
-        current_tags = config["asc"]["displayed_tags"]
+    default_tags = "Name" if initial_setup else config["asc"]["displayed_tags"]
+
+    try:
         tags_input = input(
             "Provide a comma separated list of tags to display [" +
-            f"{current_tags}]:"
-        ).strip()
-        if not tags_input:
-            tags_input = current_tags
+            f"{default_tags}]:"
+        ).strip() or default_tags
+    except KeyboardInterrupt:
+        print("\nConfiguration setup cancelled.")
+        sys.exit(0)
 
     # If tags_input doens't contain 'Name', display a warning
     if "Name" not in tags_input:
@@ -126,7 +123,19 @@ def setup_config(config, initial_setup=False):
             "This may make it difficult to identify resources."
         )
     config["asc"] = {"displayed_tags": tags_input}
+    save_config(config)
 
+
+def save_config(config):
+    """
+    Save the configuration object to the configuration file.
+
+    Args:
+        config: The configuration object.
+
+    Returns:
+        None
+    """
     try:
         with open(config_path, "w") as configfile:
             config.write(configfile)
