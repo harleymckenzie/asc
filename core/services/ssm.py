@@ -136,7 +136,7 @@ def list_ssm_parameters(args):
     parameter_list = []
 
     try:
-        response = ssm_client.describe_parameters()
+        response = ssm_client.describe_parameters(MaxResults=50)
     except Exception as e:
         print(f"Error listing parameters: {e}")
         exit(1)
@@ -171,27 +171,19 @@ def get_ssm_parameters(args, parameter_list):
     session = create_boto_session(profile=args.profile, region=args.region)
     ssm_client = session.client("ssm")
 
-    try:
-        response = ssm_client.get_parameters(
-            Names=[parameter["Name"] for parameter in parameter_list],
-            WithDecryption=args.decrypt,
-        )
-    except Exception as e:
-        print(f"Error getting parameter values: {e}")
-        exit(1)
-
-    # Update the parameter list with the parameter values
-    # Set value to '*****' for SecureString parameters
-    # if --decrypt is not specified
-    for parameter in parameter_list:
-        for parameter_data in response["Parameters"]:
-            if parameter["Name"] == parameter_data["Name"]:
-                if parameter_data["Type"] == "SecureString" and not args.decrypt:
-                    parameter["Value"] = "*****"
-                else:
-                    parameter["Value"] = parameter_data["Value"]
-                break
-
+    # Call the get_parameters API with 10 parameters at a time
+    for i in range(0, len(parameter_list), 10):
+        chunk = parameter_list[i:i+10]
+        names = [param["Name"] for param in chunk]
+        try:
+            response = ssm_client.get_parameters(Names=names, WithDecryption=True)
+            for param in response['Parameters']:
+                for chunk_param in chunk:
+                    if chunk_param["Name"] == param["Name"]:
+                        chunk_param["Value"] = param["Value"]
+        except Exception as e:
+            print(f"Error getting parameter values: {e}")
+            exit(1)
     return parameter_list
 
 
