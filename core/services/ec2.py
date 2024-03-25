@@ -11,6 +11,7 @@ from ..common import (
     subparser_register,
     create_boto_session,
     print_as_table,
+    arrange_dict_keys,
     apply_tags
 )
 
@@ -46,6 +47,16 @@ def add_subparsers(subparsers, global_parser) -> None:
         epilog="""Example: asc ec2 ls""",
         parents=[global_parser],
     )
+    ec2_list_parser.add_argument(
+        "--sort-by",
+        help="Sort the output by a specific key",
+        default="Name"
+    )
+    ec2_list_parser.add_argument(
+        "--sort-order",
+        help="Specify sort order: 'asc' for ascending or 'desc' for descending",
+        default="asc"
+    )
     ec2_list_parser.set_defaults(func=list_ec2_instances)
 
 
@@ -72,6 +83,10 @@ def list_ec2_instances(args):
         print(f"Failed to list EC2 instances: {e}")
         exit(1)
 
+    # Provide order of the instance data
+    # Check the response to see if the provided keys are in the instances in the response
+    # If one or more instances contain the key, add it with a blank value to those that dont
+    # If the key isn't in any of the instances, remove it from the key_order
     for reservation in response["Reservations"]:
         for instance_data in reservation["Instances"]:
             instance = {
@@ -84,4 +99,12 @@ def list_ec2_instances(args):
             instance = apply_tags(instance, instance_data, displayed_tags_list)
             instance_list.append(instance)
 
-    print_as_table(instance_list)
+    key_order = [
+        'Name', 'Id', 'Type', 'State', 'Public IP'
+    ] + displayed_tags_list
+    print_as_table(
+        instance_list,
+        key_order=key_order,
+        sort_key=args.sort_by,
+        sort_order=args.sort_order
+    )

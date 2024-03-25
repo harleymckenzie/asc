@@ -50,6 +50,16 @@ def add_subparsers(subparsers, global_parser):
         help="Display endpoint in output.",
         action="store_true"
     )
+    rds_list_parser.add_argument(
+        "--sort-by",
+        help="Specify sort order: 'asc' for ascending or 'desc' for descending",
+        default="Identifier"
+    )
+    rds_list_parser.add_argument(
+        "--sort-order",
+        help="Specify sort order: 'asc' for ascending or 'desc' for descending",
+        default="asc"
+    )
     rds_list_parser.set_defaults(func=list_rds_instances)
 
 
@@ -94,8 +104,15 @@ def list_rds_instances(args):
         instance = apply_tags(instance, instance_data, displayed_tags_list)
         instance_list.append(instance)
 
-    instances = sorted(instance_list, key=lambda i: i["Identifier"])
-    print_as_table(instances)
+    key_order = [
+        "Name", "Identifier", "Type", "State", "Endpoint", "Role"
+    ] + displayed_tags_list
+    print_as_table(
+        instance_list,
+        key_order=key_order,
+        sort_key=args.sort_by,
+        sort_order=args.sort_order
+    )
 
 
 def get_aurora_instance(instance, instance_data, cluster_response, args):

@@ -51,6 +51,16 @@ def add_subparsers(subparsers, global_parser):
         help="Display endpoint in output.",
         action="store_true"
     )
+    redis_list_parser.add_argument(
+        "--sort-by",
+        help="Sort the output by a specific key",
+        default="Cluster Id"
+    )
+    redis_list_parser.add_argument(
+        "--sort-order",
+        help="Specify sort order: 'asc' for ascending or 'desc' for descending",
+        default="asc"
+    )
     redis_list_parser.set_defaults(func=list_redis_instances)
 
 
@@ -103,5 +113,12 @@ def list_redis_instances(args):
             instance = apply_tags(instance, instance_data, displayed_tags_list)
             instance_list.append(instance)
 
-    instances = sorted(instance_list, key=lambda i: i["Cluster Id"])
-    print_as_table(instances)
+    key_order = [
+        'Cluster Id', 'Type', 'Status', 'Endpoint'
+    ] + displayed_tags_list
+    print_as_table(
+        instance_list,
+        key_order=key_order,
+        sort_key=args.sort_by,
+        sort_order=args.sort_order
+    )

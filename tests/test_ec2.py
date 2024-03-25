@@ -5,13 +5,57 @@ This module contains the test cases for the EC2 service.
 """
 from unittest.mock import patch
 import pytest
-from core.services import ec2
-from .test_utils import setup_args
+from core.services.ec2 import add_subparsers, list_ec2_instances
+from .test_utils import setup_parser, setup_config
 
 
+@pytest.mark.parametrize(
+    "arg_list, displayed_tags, expected_output",
+    [
+        # Each tuple represents: argument list, tags to display, expected output
+        (
+            ['ec2', 'ls', '--profile', 'default', '--region', 'us-west-2'],
+            "Name",  # Displayed tags
+            (
+                "Name        Id                   Type        State    Public IP\n"
+                "----------  -------------------  ----------  -------  ---------------\n"
+                "            i-2c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.115\n"
+                "app-server  i-1c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.114\n"
+                "web-server  i-0f76a2e0e6b8d6e2c  t2.micro    running  201.32.58.128"
+            )
+        ),
+        (
+            ['ec2', 'ls', '--profile', 'admin', '--region', 'eu-central-1', '--sort-by', 'Public IP'],
+            "Name,Environment",  # Displayed tags
+            (
+                "Name        Id                   Type        State    Public IP        Environment\n"
+                "----------  -------------------  ----------  -------  ---------------  -------------\n"
+                "app-server  i-1c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.114\n"
+                "            i-2c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.115  production\n"
+                "web-server  i-0f76a2e0e6b8d6e2c  t2.micro    running  201.32.58.128    production"
+            )
+        ),
+        (
+            ['ec2', 'ls', '--profile', 'admin', '--region', 'eu-west-1', '--sort-by', 'Environment', '--sort-order', 'desc'],
+            "Owner,Environment",  # Displayed tags
+            (
+                "Id                   Type        State    Public IP        Environment    Owner\n"
+                "-------------------  ----------  -------  ---------------  -------------  ----------\n"
+                "i-0f76a2e0e6b8d6e2c  t2.micro    running  201.32.58.128    production     John Doe\n"
+                "i-2c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.115  production     John Doe\n"
+                "i-1c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.114                 Sarah Jane\n"
+            )
+        ),
+    ],
+    ids=[
+        "No sorting or tags",
+        "Sort by Public IP, Tags: Name,Environment",
+        "Sort by Owner, Tags: Owner,Environment"
+    ]
+)
 @patch('core.services.ec2.create_boto_session')
-@pytest.mark.parametrize("displayed_tags", [("Name"), ("Name,Environment"), (None)])
-def test_list_ec2_instances(create_boto_session, displayed_tags, capsys):
+def test_list_ec2_instances(mock_create_boto_session, arg_list,
+                            displayed_tags, expected_output, capsys):
     """
     Test case for the list_ec2_instances function.
 
@@ -19,17 +63,17 @@ def test_list_ec2_instances(create_boto_session, displayed_tags, capsys):
     and prints the details of EC2 instances.
 
     Args:
-        mock_args: Mocked command-line arguments.
         create_boto_session: Mocked function to create a Boto session.
         capsys: Pytest fixture to capture stdout and stderr.
 
     Returns:
         None
     """
-    args = setup_args(displayed_tags=displayed_tags)
-    mock_session = create_boto_session.return_value
-    mock_client = mock_session.client.return_value
+    args = setup_parser(add_subparsers, arg_list)
+    args.config = setup_config(displayed_tags)
 
+    mock_session = mock_create_boto_session.return_value
+    mock_client = mock_session.client.return_value
     mock_client.describe_instances.return_value = {
         "Reservations": [
             {
@@ -44,31 +88,37 @@ def test_list_ec2_instances(create_boto_session, displayed_tags, capsys):
                             {"Key": "Environment", "Value": "production"},
                             {"Key": "Owner", "Value": "John Doe"}
                         ]
+                    },
+                    {
+                        "InstanceId": "i-1c76a2e0e6b8d6e2c",
+                        "InstanceType": "r7i.xlarge",
+                        "State": {"Name": "running"},
+                        "PublicIpAddress": "112.112.113.114",
+                        "Tags": [
+                            {"Key": "Name", "Value": "app-server"},
+                            {"Key": "Owner", "Value": "Sarah Jane"}
+                        ]
+                    },
+                    {
+                        "InstanceId": "i-2c76a2e0e6b8d6e2c",
+                        "InstanceType": "r7i.xlarge",
+                        "State": {"Name": "running"},
+                        "PublicIpAddress": "112.112.113.115",
+                        "Tags": [
+                            {"Key": "Environment", "Value": "production"},
+                            {"Key": "Owner", "Value": "John Doe"}
+                        ]
                     }
                 ]
             }
         ]
     }
-    ec2.list_ec2_instances(args)
-    out, err = capsys.readouterr()
-    
+    list_ec2_instances(args)
+    out, _ = capsys.readouterr()
     print("\n" + out)
+    assert out.strip() == expected_output.strip()
 
-    if displayed_tags == "Name":
-        assert out == (
-            "Name        Public IP      Id                   Type      State\n"
-            "----------  -------------  -------------------  --------  -------\n"
-            "web-server  201.32.58.128  i-0f76a2e0e6b8d6e2c  t2.micro  running\n"
-        )
-    elif displayed_tags == "Name,Environment":
-        assert out == (
-            "Name        Public IP      Id                   Type      State    Environment\n"
-            "----------  -------------  -------------------  --------  -------  -------------\n"
-            "web-server  201.32.58.128  i-0f76a2e0e6b8d6e2c  t2.micro  running  production\n"
-        )
-    else:
-        assert out == (
-            "Public IP      Id                   Type      State\n"
-            "-------------  -------------------  --------  -------\n"
-            "201.32.58.128  i-0f76a2e0e6b8d6e2c  t2.micro  running\n"
-        )
+    # Verify that external calls were made as expected
+    mock_create_boto_session.assert_called_once_with(profile=args.profile,
+                                                     region=args.region)
+    mock_client.describe_instances.assert_called_once()

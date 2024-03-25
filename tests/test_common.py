@@ -19,10 +19,14 @@ def test_print_as_table(capsys):
         None
     """
     data = [
-        {"Name": "instance-1", "Environment": "production", "Status": "running"},
+        {"Environment": "production", "Name": "instance-1", "Status": "running"},
         {"Name": "instance-2", "Environment": "development", "Status": "stopped"},
     ]
-    common.print_as_table(data)
+    common.print_as_table(
+        data,
+        key_order=["Name", "Environment", "Status"],
+        sort_key="Environment"
+    )
     out, _ = capsys.readouterr()
 
     print("\n" + out)
@@ -30,8 +34,8 @@ def test_print_as_table(capsys):
     assert out == (
         "Name        Environment    Status\n"
         "----------  -------------  --------\n"
-        "instance-1  production     running\n"
         "instance-2  development    stopped\n"
+        "instance-1  production     running\n"
     )
 
 
