@@ -83,10 +83,6 @@ def list_ec2_instances(args):
         print(f"Failed to list EC2 instances: {e}")
         exit(1)
 
-    # Provide order of the instance data
-    # Check the response to see if the provided keys are in the instances in the response
-    # If one or more instances contain the key, add it with a blank value to those that dont
-    # If the key isn't in any of the instances, remove it from the key_order
     for reservation in response["Reservations"]:
         for instance_data in reservation["Instances"]:
             instance = {
