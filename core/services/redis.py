@@ -7,16 +7,19 @@ Functions:
 - add_subparsers(subparsers, global_parser) -> None
 - list_redis_instances(args)
 """
+
+from typing import Any
+import logging
 from ..common import (
     subparser_register,
     create_boto_session,
     print_as_table,
-    apply_tags
+    apply_tags,
 )
 
 
-@subparser_register('redis')
-def add_subparsers(subparsers, global_parser):
+@subparser_register("redis")
+def add_subparsers(subparsers: Any, global_parser: Any) -> None:
     """
     Add subparsers for common commands.
 
@@ -33,9 +36,7 @@ def add_subparsers(subparsers, global_parser):
     )
     redis_parser.set_defaults(func=lambda args: redis_parser.print_help())
     redis_subparsers = redis_parser.add_subparsers(
-        help='',
-        metavar='subcommand',
-        dest='subcommand'
+        help="", metavar="subcommand", dest="subcommand"
     )
 
     # Redis list subcommand
@@ -47,14 +48,25 @@ def add_subparsers(subparsers, global_parser):
         parents=[global_parser],
     )
     redis_list_parser.add_argument(
-        "--endpoint", "-e",
+        "--endpoint",
+        "-e",
         help="Display endpoint in output.",
-        action="store_true"
+        action="store_true",
+    )
+    redis_list_parser.add_argument(
+        "--sort-by",
+        help="Sort the output by a specific key",
+        default="Cluster Id",
+    )
+    redis_list_parser.add_argument(
+        "--sort-order",
+        help="Specify sort order: 'asc' for ascending or 'desc' for descending",
+        default="asc",
     )
     redis_list_parser.set_defaults(func=list_redis_instances)
 
 
-def list_redis_instances(args):
+def list_redis_instances(args: Any) -> None:
     """
     Lists Redis instances based on given arguments.
 
@@ -67,13 +79,14 @@ def list_redis_instances(args):
     session = create_boto_session(profile=args.profile, region=args.region)
     ec_client = session.client("elasticache")
     displayed_tags_list = args.config.get(
-        "asc", "displayed_tags", fallback="").split(",")
+        "asc", "displayed_tags", fallback=""
+    ).split(",")
     instance_list = []
 
     try:
         response = ec_client.describe_cache_clusters(ShowCacheNodeInfo=True)
     except Exception as e:
-        print(f"Failed to list Redis instances: {e}")
+        logging.error("Failed to list Redis instances: %s", e)
         exit(1)
 
     # Cluster tags aren't returned in the response,
@@ -88,7 +101,11 @@ def list_redis_instances(args):
             # if creation is in progress
             cluster["tag_response"] = {"TagList": []}
         except Exception as e:
-            print(f"Error while listing tags for {cluster['CacheClusterId']}: {e}")
+            logging.error(
+                "Error while listing tags for %s: %s",
+                cluster["CacheClusterId"],
+                e,
+            )
 
         for instance_data in cluster["CacheNodes"]:
             instance_data["TagList"] = cluster["tag_response"]["TagList"]
@@ -103,5 +120,15 @@ def list_redis_instances(args):
             instance = apply_tags(instance, instance_data, displayed_tags_list)
             instance_list.append(instance)
 
-    instances = sorted(instance_list, key=lambda i: i["Cluster Id"])
-    print_as_table(instances)
+    key_order = [
+        "Cluster Id",
+        "Type",
+        "Status",
+        "Endpoint",
+    ] + displayed_tags_list
+    print_as_table(
+        instance_list,
+        key_order=key_order,
+        sort_key=args.sort_by,
+        sort_order=args.sort_order,
+    )

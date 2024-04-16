@@ -11,8 +11,12 @@ Functions:
 - print_as_table: Print a list of dicts as a table.
 - apply_tags: Apply tags to an instance.
 """
-import os
+
 import logging
+import operator
+from collections import OrderedDict
+from typing import Optional, List, Dict, Any
+import sys
 from tabulate import tabulate
 from botocore.exceptions import UnauthorizedSSOTokenError
 from boto3 import Session
@@ -20,7 +24,7 @@ from boto3 import Session
 SUBPARSER_REGISTRY = {}
 
 
-def subparser_register(name):
+def subparser_register(name: str):
     """
     Decorator for registering subparser functions.
 
@@ -35,9 +39,12 @@ def subparser_register(name):
     return decorator
 
 
-def logger(verbose_level):
+def configure_logger(verbose_level: int):
     """
     Set up logging for the application
+
+    Args:
+        verbose_level: The level of verbosity to set for the logger.
     """
 
     if verbose_level == 1:
@@ -53,14 +60,32 @@ def logger(verbose_level):
         log_level = "WARNING"
         boto_log_level = "ERROR"
 
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    # Set up the logger
+    if verbose_level > 0:
+        logging.basicConfig(
+            level=log_level,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        )
+    else:
+        logging.basicConfig(level=log_level, format="%(message)s")
+
+    logger = logging.getLogger("asc")
+    logger.setLevel(log_level)
+
+    # Set up the boto3 logger
+    boto_logger = logging.getLogger("botocore")
+    boto_logger.setLevel(boto_log_level)
+
+    logger.info(
+        "Log level set to %s, boto log level set to %s",
+        log_level,
+        boto_log_level,
     )
-    logging.getLogger("botocore").setLevel(boto_log_level)
 
 
-def create_boto_session(profile=None, region=None):
+def create_boto_session(
+    profile: Optional[str] = None, region: Optional[str] = None
+) -> Session:
     """
     Set up AWS session.
 
@@ -80,32 +105,103 @@ def create_boto_session(profile=None, region=None):
 
     try:
         session = Session(**session_params)
-        session.client('sts').get_caller_identity()
+        session.client("sts").get_caller_identity()
         return session
     except UnauthorizedSSOTokenError as sso_err:
-        print(f"SSO Token Load Error: {sso_err}")
-        exit(1)
+        logging.error("SSO Token Load Error: %s", sso_err)
+        sys.exit(1)
     except Exception as e:
         # For all other exceptions, print the stack trace
-        print(f"Error: {e}")
-        exit(1)
+        logging.error("Error: %s", e)
+        sys.exit(1)
 
 
-def print_as_table(items):
+def print_as_table(
+    items: List[Dict[str, Any]],
+    key_order: Optional[List[str]] = None,
+    sort_key: Optional[str] = None,
+    sort_order: str = "asc",
+):
     """
     Print a list of dicts as a table.
 
     Args:
         items: List of dictionaries containing the data to print.
+        key_order: The order in which the keys should be arranged.
+        sort_key: The key to sort the items by.
 
     Prints:
         A table representation of the provided data.
     """
-    table = tabulate(items, headers="keys")
+    logging.debug("Printing %s items", len(items))
+    if key_order:
+        arranged_items = arrange_dict_keys(items, key_order)
+    else:
+        arranged_items = items
+
+    if sort_key:
+        try:
+            arranged_items.sort(
+                key=operator.itemgetter(sort_key), reverse=sort_order == "desc"
+            )
+        except KeyError:
+            logging.error("Error: The key '%s' does not exist.", sort_key)
+    table = tabulate(arranged_items, headers="keys")
     print(table)
 
 
-def apply_tags(instance, instance_data, displayed_tags_list):
+def arrange_dict_keys(
+    instance_list: List[Dict[str, Any]], key_order: Optional[List[str]]
+) -> List[OrderedDict]:
+    """
+    Sorts all items in each dictionary in a list by the order of keys in
+    key_order. If a key is not in any dictionary, it will not be included
+    in the sorted list. If a key is in one dictionary but not in another,
+    it is added with an empty value.
+
+    Args:
+        instance_list: The list of dictionaries to sort.
+        key_order: The order in which the keys should be arranged.
+
+    Returns:
+        The sorted list of dictionaries.
+    """
+    logging.debug(
+        "Arranging dictionary keys in the following order: %s", key_order
+    )
+    sorted_list = []
+
+    # Iterate over each key in key_order
+    for key in list(key_order):
+        logging.debug("Checking for key: %s", key)
+        # Check to see if the key is in any of the dictionaries
+        if any(key in d for d in instance_list):
+            # If the key exists in any of the dicts,
+            # add it to any that are missing it
+            for instance in instance_list:
+                if key not in instance:
+                    instance[key] = ""
+        else:
+            # Remove the key from the list if it doesn't exist
+            key_order.remove(key)
+
+    # Use key_order to sort the items in each dictionary
+    key_order.reverse()
+    for instance in instance_list:
+        od = OrderedDict(instance)
+        for key in key_order:
+            od.move_to_end(key, last=False)
+
+        sorted_list.append(od)
+
+    return sorted_list
+
+
+def apply_tags(
+    instance: Dict[str, Any],
+    instance_data: Dict[str, Any],
+    displayed_tags_list: List[str],
+) -> Dict[str, Any]:
     """
     Check to see if items in displayed tags list are in the instance data
     The "Name" tag should automatically be displayed
@@ -119,7 +215,7 @@ def apply_tags(instance, instance_data, displayed_tags_list):
         The instance with the tags applied.
     """
     # Determine whether to use 'Tags' or 'TagList'
-    tags_key = 'Tags' if 'Tags' in instance_data else 'TagList'
+    tags_key = "Tags" if "Tags" in instance_data else "TagList"
 
     for tag_dict in instance_data.get(tags_key, []):
         tag_key = tag_dict.get("Key")

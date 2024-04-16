@@ -7,16 +7,19 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for RDS commands.
 - list_rds_instances(args): Lists RDS instances.
 """
+
+from typing import Any
+import logging
 from ..common import (
     subparser_register,
     create_boto_session,
     print_as_table,
-    apply_tags
+    apply_tags,
 )
 
 
-@subparser_register('rds')
-def add_subparsers(subparsers, global_parser):
+@subparser_register("rds")
+def add_subparsers(subparsers: Any, global_parser: Any) -> None:
     """
     Adds subparsers for RDS commands to the main parser.
 
@@ -33,9 +36,7 @@ def add_subparsers(subparsers, global_parser):
     )
     rds_parser.set_defaults(func=lambda args: rds_parser.print_help())
     rds_subparsers = rds_parser.add_subparsers(
-        help='',
-        metavar='subcommand',
-        dest='subcommand'
+        help="", metavar="subcommand", dest="subcommand"
     )
 
     rds_list_parser = rds_subparsers.add_parser(
@@ -46,14 +47,25 @@ def add_subparsers(subparsers, global_parser):
         parents=[global_parser],
     )
     rds_list_parser.add_argument(
-        "--endpoint", "-e",
+        "--endpoint",
+        "-e",
         help="Display endpoint in output.",
-        action="store_true"
+        action="store_true",
+    )
+    rds_list_parser.add_argument(
+        "--sort-by",
+        help="Specify sort order: 'asc' for ascending or 'desc' for descending",
+        default="Identifier",
+    )
+    rds_list_parser.add_argument(
+        "--sort-order",
+        help="Specify sort order: 'asc' for ascending or 'desc' for descending",
+        default="asc",
     )
     rds_list_parser.set_defaults(func=list_rds_instances)
 
 
-def list_rds_instances(args):
+def list_rds_instances(args: Any) -> None:
     """
     Lists RDS instances based on given arguments.
 
@@ -66,16 +78,51 @@ def list_rds_instances(args):
     session = create_boto_session(profile=args.profile, region=args.region)
     rds_client = session.client("rds")
     displayed_tags_list = args.config.get(
-        "asc", "displayed_tags", fallback="").split(",")
+        "asc", "displayed_tags", fallback=""
+    ).split(",")
     instance_list = []
 
     try:
         response = rds_client.describe_db_instances()
         cluster_response = rds_client.describe_db_clusters()
     except Exception as e:
-        print(f"Failed to list RDS instances: {e}")
+        logging.error("Failed to list RDS instances: %s", e)
         exit(1)
 
+    instance_list = process_instances(
+        response, cluster_response, args, displayed_tags_list
+    )
+
+    key_order = [
+        "Name",
+        "Identifier",
+        "Type",
+        "State",
+        "Endpoint",
+        "Role",
+    ] + displayed_tags_list
+    print_as_table(
+        instance_list,
+        key_order=key_order,
+        sort_key=args.sort_by,
+        sort_order=args.sort_order,
+    )
+
+
+def process_instances(response, cluster_response, args, displayed_tags_list):
+    """
+    Processes RDS instances and clusters to extract relevant information.
+
+    Args:
+        response: The response from describe_db_instances.
+        cluster_response: The response from describe_db_clusters.
+        args: The arguments received from the command-line input.
+        displayed_tags_list: List of tags to be displayed.
+
+    Returns:
+        A list of dictionaries containing information about each instance.
+    """
+    instance_list = []
     for instance_data in response["DBInstances"]:
         instance = {
             "Identifier": instance_data["DBInstanceIdentifier"],
@@ -93,9 +140,7 @@ def list_rds_instances(args):
 
         instance = apply_tags(instance, instance_data, displayed_tags_list)
         instance_list.append(instance)
-
-    instances = sorted(instance_list, key=lambda i: i["Identifier"])
-    print_as_table(instances)
+    return instance_list
 
 
 def get_aurora_instance(instance, instance_data, cluster_response, args):
@@ -113,7 +158,10 @@ def get_aurora_instance(instance, instance_data, cluster_response, args):
     """
     for cluster in cluster_response["DBClusters"]:
         for member in cluster["DBClusterMembers"]:
-            if member["DBInstanceIdentifier"] == instance_data["DBInstanceIdentifier"]:
+            if (
+                member["DBInstanceIdentifier"]
+                == instance_data["DBInstanceIdentifier"]
+            ):
                 # Only add Endpoint if args.endpoint is set
                 if args.endpoint:
                     instance["Endpoint"] = (

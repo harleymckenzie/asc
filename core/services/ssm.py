@@ -9,11 +9,13 @@ import signal
 import contextlib
 import errno
 import subprocess
+import logging
+from typing import Any
 from ..common import subparser_register, create_boto_session, print_as_table
 
 
 @subparser_register("ssm")
-def add_subparsers(subparsers, global_parser):
+def add_subparsers(subparsers: Any, global_parser: Any) -> None:
     """
     Adds subparsers for the SSM service.
     """
@@ -33,7 +35,9 @@ def add_subparsers(subparsers, global_parser):
     add_session_manager_parser(ssm_subparsers, global_parser)
 
 
-def add_parameter_store_parser(ssm_subparsers, global_parser):
+def add_parameter_store_parser(
+    ssm_subparsers: Any, global_parser: Any
+) -> None:
     """
     Adds a subparser for Parameter Store related commands.
     """
@@ -65,7 +69,9 @@ def add_parameter_store_parser(ssm_subparsers, global_parser):
         "--values", action="store_true", help="Include parameter values"
     )
     ssm_parameter_list_parser.add_argument(
-        "--decrypt", action="store_true", help="Decrypt secure string parameters"
+        "--decrypt",
+        action="store_true",
+        help="Decrypt secure string parameters",
     )
 
     ssm_parameter_add_parser = ssm_parameter_subparsers.add_parser(
@@ -76,8 +82,12 @@ def add_parameter_store_parser(ssm_subparsers, global_parser):
         parents=[global_parser],
     )
     ssm_parameter_add_parser.set_defaults(func=add_or_update_parameter)
-    ssm_parameter_add_parser.add_argument("name", help="Name of the parameter to add")
-    ssm_parameter_add_parser.add_argument("value", help="Value of the parameter to add")
+    ssm_parameter_add_parser.add_argument(
+        "name", help="Name of the parameter to add"
+    )
+    ssm_parameter_add_parser.add_argument(
+        "value", help="Value of the parameter to add"
+    )
     ssm_parameter_add_parser.add_argument(
         "--type",
         default="String",
@@ -102,7 +112,9 @@ def add_parameter_store_parser(ssm_subparsers, global_parser):
     )
 
 
-def add_session_manager_parser(ssm_subparsers, global_parser):
+def add_session_manager_parser(
+    ssm_subparsers: Any, global_parser: Any
+) -> None:
     """
     Adds a subparser for Session Manager related commands.
     """
@@ -120,7 +132,7 @@ def add_session_manager_parser(ssm_subparsers, global_parser):
     )
 
 
-def list_ssm_parameters(args):
+def list_ssm_parameters(args: Any) -> None:
     """
     List parameters in the Systems Manager Parameter Store.
 
@@ -136,9 +148,9 @@ def list_ssm_parameters(args):
     parameter_list = []
 
     try:
-        response = ssm_client.describe_parameters()
+        response = ssm_client.describe_parameters(MaxResults=50)
     except Exception as e:
-        print(f"Error listing parameters: {e}")
+        logging.error("Error listing parameters: %s", e)
         exit(1)
 
     for instance in response["Parameters"]:
@@ -156,7 +168,7 @@ def list_ssm_parameters(args):
     print_as_table(parameter_list)
 
 
-def get_ssm_parameters(args, parameter_list):
+def get_ssm_parameters(args: Any, parameter_list: Any) -> Any:
     """
     Get the values of the parameters in the Systems Manager Parameter Store.
 
@@ -171,31 +183,25 @@ def get_ssm_parameters(args, parameter_list):
     session = create_boto_session(profile=args.profile, region=args.region)
     ssm_client = session.client("ssm")
 
-    try:
-        response = ssm_client.get_parameters(
-            Names=[parameter["Name"] for parameter in parameter_list],
-            WithDecryption=args.decrypt,
-        )
-    except Exception as e:
-        print(f"Error getting parameter values: {e}")
-        exit(1)
-
-    # Update the parameter list with the parameter values
-    # Set value to '*****' for SecureString parameters
-    # if --decrypt is not specified
-    for parameter in parameter_list:
-        for parameter_data in response["Parameters"]:
-            if parameter["Name"] == parameter_data["Name"]:
-                if parameter_data["Type"] == "SecureString" and not args.decrypt:
-                    parameter["Value"] = "*****"
-                else:
-                    parameter["Value"] = parameter_data["Value"]
-                break
-
+    # Call the get_parameters API with 10 parameters at a time
+    for i in range(0, len(parameter_list), 10):
+        chunk = parameter_list[i : i + 10]
+        names = [param["Name"] for param in chunk]
+        try:
+            response = ssm_client.get_parameters(
+                Names=names, WithDecryption=True
+            )
+            for param in response["Parameters"]:
+                for chunk_param in chunk:
+                    if chunk_param["Name"] == param["Name"]:
+                        chunk_param["Value"] = param["Value"]
+        except Exception as e:
+            logging.error("Error getting parameter values: %s", e)
+            exit(1)
     return parameter_list
 
 
-def add_or_update_parameter(args):
+def add_or_update_parameter(args: Any) -> None:
     """
     Add or update a parameter in the Systems Manager Parameter Store.
 
@@ -210,18 +216,22 @@ def add_or_update_parameter(args):
             Name=args.name,
             Value=args.value,
             Type=args.type,
-            Overwrite=args.overwrite
+            Overwrite=args.overwrite,
         )
-        print(f"Parameter {'updated' if args.overwrite else 'added'} successfully.")
+        print(
+            f"Parameter {'updated' if args.overwrite else 'added'} successfully."
+        )
     except ssm_client.exceptions.ParameterAlreadyExists:
-        print(f"Parameter '{args.name}' already exists. Use --overwrite to update.")
+        print(
+            f"Parameter '{args.name}' already exists. Use --overwrite to update."
+        )
         exit(1)
     except Exception as e:
-        print(f"Error adding/updating parameter: {e}")
+        logging.error("Error adding/updating parameter: %s", e)
         exit(1)
 
 
-def remove_ssm_parameter(args):
+def remove_ssm_parameter(args: Any) -> None:
     """
     Remove a parameter from the Systems Manager Parameter Store.
 
@@ -235,7 +245,7 @@ def remove_ssm_parameter(args):
         ssm_client.delete_parameter(Name=args.name)
         print(f"Parameter '{args.name}' removed successfully.")
     except Exception as e:
-        print(f"Error removing parameter: {e}")
+        logging.error("Error removing parameter: %s", e)
         exit(1)
 
 
@@ -255,7 +265,7 @@ def ignore_user_entered_signals():
             signal.signal(user_signal, actual_signals[sig])
 
 
-def connect_to_instance(args):
+def connect_to_instance(args: Any) -> None:
     """
     Connect to a managed instance using Session Manager.
 
@@ -292,12 +302,12 @@ def connect_to_instance(args):
     except OSError as ex:
         if ex.errno == errno.ENOENT:
             ssm_client.terminate_session(SessionId=session_id)
-            raise ValueError(
+            logging.error(
                 "The session-manager-plugin executable could not be found."
-            ) from ex
+            )
 
 
-def is_plugin_installed():
+def is_plugin_installed() -> bool:
     """Check if the session-manager-plugin is installed."""
     try:
         subprocess.check_call(

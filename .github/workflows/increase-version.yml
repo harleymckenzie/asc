@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  PROJECT: 'asc'
+
 jobs:
   increment_version:
     runs-on: ubuntu-latest
@@ -101,4 +104,4 @@ jobs:
           token: ${{ secrets.AUTH_TOKEN }}
           repository: harleymckenzie/homebrew-asc
           event-type: update-formula
-          client-payload: '{"version": "${{ steps.generate_version.outputs.new_version }}"}'
+          client-payload: '{"version": "${{ steps.generate_version.outputs.new_version }}", "project": "${{ env.PROJECT }}"'

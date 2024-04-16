@@ -8,10 +8,14 @@ Functions:
 - setup: Run initial configuration setup for the application.
 """
 import os
+import sys
 import configparser
+import logging
+from typing import Optional
 from core.common import subparser_register
 
 config_path = os.path.expanduser("~/.asc/config")
+logger = logging.getLogger(__name__)
 
 
 @subparser_register("configuration")
@@ -33,7 +37,7 @@ def add_subparsers(subparsers, global_parser):
     config_parser.set_defaults(func=update_config)
 
 
-def initialise_config(tags=None):
+def initialise_config(tags: Optional[str] = None) -> configparser.ConfigParser:
     """
     Checks to see if the configuration file exists:
     If it does not exist, the setup function is called.
@@ -48,13 +52,15 @@ def initialise_config(tags=None):
     config = configparser.ConfigParser()
 
     if not os.path.exists(config_path):
+        logger.info("Configuration file does not exist. Running setup.")
         setup_config(config, initial_setup=True)
     config = load_config(config, tags)
 
     return config
 
 
-def load_config(config, tags=None):
+def load_config(config: configparser.ConfigParser,
+                tags: Optional[str] = None) -> configparser.ConfigParser:
     """
     Load the configuration file and return the configuration object.
     If tags are provided, they are added to the displayed tags.
@@ -89,7 +95,8 @@ def update_config(args):
     setup_config(config)
 
 
-def setup_config(config, initial_setup=False):
+def setup_config(config: configparser.ConfigParser,
+                 initial_setup: bool = False) -> configparser.ConfigParser:
     """
     Run initial configuration setup for the application.
     If called for the first time, provided input + 'Name' is set.
@@ -104,32 +111,41 @@ def setup_config(config, initial_setup=False):
     """
     print("\nConfiguration Setup\n" "-------------------")
 
-    if initial_setup:
-        tags_input = input(
-            "Provide a comma separated list of tags to display [Name]:"
-        ).strip()
-        if not tags_input:
-            tags_input = "Name"
-    else:
-        current_tags = config["asc"]["displayed_tags"]
+    default_tags = "Name" if initial_setup else config["asc"]["displayed_tags"]
+
+    try:
         tags_input = input(
             "Provide a comma separated list of tags to display [" +
-            f"{current_tags}]:"
-        ).strip()
-        if not tags_input:
-            tags_input = current_tags
+            f"{default_tags}]:"
+        ).strip() or default_tags
+    except KeyboardInterrupt:
+        print("\nConfiguration setup cancelled.")
+        sys.exit(0)
 
     # If tags_input doens't contain 'Name', display a warning
     if "Name" not in tags_input:
-        print(
+        logger.warning(
             "WARNING: 'Name' is not included in the displayed tags. "
             "This may make it difficult to identify resources."
         )
     config["asc"] = {"displayed_tags": tags_input}
+    save_config(config)
 
+
+def save_config(config: configparser.ConfigParser):
+    """
+    Save the configuration object to the configuration file.
+
+    Args:
+        config: The configuration object.
+
+    Returns:
+        None
+    """
     try:
-        with open(config_path, "w") as configfile:
+        with open(config_path, "w", encoding="utf-8") as configfile:
             config.write(configfile)
-        print("Configuration saved.")
-    except Exception as e:
-        print(f"Error saving configuration: {e}")
+        logger.info("Configuration saved.")
+    except IOError as e:
+        logger.error("Error saving configuration: %s", e)
+

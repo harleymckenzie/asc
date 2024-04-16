@@ -6,17 +6,49 @@ This module contains the test cases for the RDS module.
 from unittest.mock import patch
 import pytest
 from core.services import rds
-from .test_utils import setup_args
+from .test_utils import setup_parser, setup_config
 
 
-@patch('core.services.rds.create_boto_session')
 @pytest.mark.parametrize(
-    "displayed_tags, endpoint",
-    [("Name", True), ("Name,Environment", False), (None, False)],
+    "arg_list, displayed_tags, expected_output",
+    [
+        (
+            ['rds', 'ls', '--profile', 'test-profile', '--region', 'eu-west-1', '--endpoint'],
+            "Name",
+            "Name                       Identifier                 Type            State      Endpoint                                       Role\n"
+            "-------------------------  -------------------------  --------------  ---------  ---------------------------------------------  ------\n"
+            "db-instance-aurora-reader  db-instance-aurora-reader  db.r7g.xlarge   available  db-cluster-1-ro.us-east-1.rds.amazonaws.com    Reader\n"
+            "db-instance-aurora-writer  db-instance-aurora-writer  db.t2.micro     available  db-cluster-1.us-east-1.rds.amazonaws.com       Writer\n"
+            "db-instance-mysql          db-instance-mysql          db.r7g.4xlarge  available  db-instance-mysql.us-east-1.rds.amazonaws.com\n"
+        ),
+        (
+            ['rds', 'ls', '--profile', 'test-profile', '--region', 'eu-west-1', '--sort-by', 'Identifier', '--sort-order', 'desc'],
+            "Environment",
+            "Identifier                 Type            State      Role    Environment\n"
+            "-------------------------  --------------  ---------  ------  --------------\n"
+            "db-instance-mysql          db.r7g.4xlarge  available          pre-production\n"
+            "db-instance-aurora-writer  db.t2.micro     available  Writer  production\n"
+            "db-instance-aurora-reader  db.r7g.xlarge   available  Reader  production\n"
+        ),
+        (
+            ['rds', 'ls', '--profile', 'test-profile', '--region', 'eu-west-1', '--sort-by', 'Type', '--sort-order', 'desc'],
+            "Name,Environment",
+            "Name                       Identifier                 Type            State      Role    Environment\n"
+            "-------------------------  -------------------------  --------------  ---------  ------  --------------\n"
+            "db-instance-aurora-writer  db-instance-aurora-writer  db.t2.micro     available  Writer  production\n"
+            "db-instance-aurora-reader  db-instance-aurora-reader  db.r7g.xlarge   available  Reader  production\n"
+            "db-instance-mysql          db-instance-mysql          db.r7g.4xlarge  available          pre-production\n"
+        )
+    ],
+    ids=[
+        "Output endpoint, tags: Name",
+        "tags: Environment",
+        "Sort by Type, tags: Name,Environment"
+    ]
 )
-def test_list_rds_instances(
-    create_boto_session, displayed_tags, endpoint, capsys
-):
+@patch('core.services.rds.create_boto_session')
+def test_list_rds_instances(mock_create_boto_session, arg_list,
+                            displayed_tags, expected_output, capsys):
     """
     Test case for the list_rds_instances function.
 
@@ -24,19 +56,18 @@ def test_list_rds_instances(
     and prints the details of RDS instances.
 
     Args:
-        create_boto_session: Mocked function to create a Boto session.
+        mock_create_boto_session: Mocked function to create a Boto session.
         displayed_tags: Tags to display.
         capsys: Pytest fixture to capture stdout and stderr.
 
     Returns:
         None
     """
-    args = setup_args(displayed_tags=displayed_tags)
-    args.endpoint = endpoint
+    args = setup_parser(rds.add_subparsers, arg_list)
+    args.config = setup_config(displayed_tags)
 
-    mock_session = create_boto_session.return_value
+    mock_session = mock_create_boto_session.return_value
     mock_client = mock_session.client.return_value
-
     mock_client.describe_db_instances.return_value = {
         "DBInstances": [
             {
@@ -60,7 +91,7 @@ def test_list_rds_instances(
             },
             {
                 "DBInstanceIdentifier": "db-instance-aurora-reader",
-                "DBInstanceClass": "db.t2.micro",
+                "DBInstanceClass": "db.r7g.xlarge",
                 "Engine": "aurora-mysql",
                 "EngineVersion": "5.7.mysql_aurora.2.03.2",
                 "DBClusterIdentifier": "db-cluster-1",
@@ -79,7 +110,7 @@ def test_list_rds_instances(
             },
             {
                 "DBInstanceIdentifier": "db-instance-mysql",
-                "DBInstanceClass": "db.t2.micro",
+                "DBInstanceClass": "db.r7g.4xlarge",
                 "Engine": "mysql",
                 "EngineVersion": "5.7.30",
                 "DBInstanceStatus": "available",
@@ -123,30 +154,10 @@ def test_list_rds_instances(
     }
     rds.list_rds_instances(args)
     out, _ = capsys.readouterr()
-
     print("\n" + out)
+    assert out.strip() == expected_output.strip()
 
-    if displayed_tags == "Name" and endpoint:
-        assert out == (
-            "Name                       Identifier                 Type         State      Endpoint                                       Role\n"
-            "-------------------------  -------------------------  -----------  ---------  ---------------------------------------------  ------\n"
-            "db-instance-aurora-reader  db-instance-aurora-reader  db.t2.micro  available  db-cluster-1-ro.us-east-1.rds.amazonaws.com    Reader\n"
-            "db-instance-aurora-writer  db-instance-aurora-writer  db.t2.micro  available  db-cluster-1.us-east-1.rds.amazonaws.com       Writer\n"
-            "db-instance-mysql          db-instance-mysql          db.t2.micro  available  db-instance-mysql.us-east-1.rds.amazonaws.com\n"
-        )
-    elif displayed_tags == "Name,Environment" and not endpoint:
-        assert out == (
-            "Name                       Identifier                 Type         State      Role    Environment\n"
-            "-------------------------  -------------------------  -----------  ---------  ------  --------------\n"
-            "db-instance-aurora-reader  db-instance-aurora-reader  db.t2.micro  available  Reader  production\n"
-            "db-instance-aurora-writer  db-instance-aurora-writer  db.t2.micro  available  Writer  production\n"
-            "db-instance-mysql          db-instance-mysql          db.t2.micro  available          pre-production\n"
-        )
-    else:
-        assert out == (
-            "Identifier                 Type         State      Role\n"
-            "-------------------------  -----------  ---------  ------\n"
-            "db-instance-aurora-reader  db.t2.micro  available  Reader\n"
-            "db-instance-aurora-writer  db.t2.micro  available  Writer\n"
-            "db-instance-mysql          db.t2.micro  available\n"
-            )
+    mock_create_boto_session.assert_called_once_with(
+        profile=args.profile, region=args.region)
+    mock_client.describe_db_instances.assert_called_once()
+    mock_client.describe_db_clusters.assert_called_once()
