@@ -1,7 +1,11 @@
 from argparse import ArgumentParser
+import logging
 from importlib.metadata import version
 from core import common, configdriver
-from core.services import asg, ec2, rds, redis, ssm
+from core.services import (  # noqa: F401, pylint: disable=W0611
+    asg, ec2, rds, redis, ssm)
+
+logger = logging.getLogger(__name__)
 
 
 def arg_parser():
@@ -103,7 +107,8 @@ def main():
     args = process_args(args)
 
     # Set up logging
-    common.logger(args.verbose)
+    common.configure_logger(args.verbose)
+    logger.debug("Arguments: %s", args)
 
     # Load configuration
     args.config = configdriver.initialise_config(args.tags)

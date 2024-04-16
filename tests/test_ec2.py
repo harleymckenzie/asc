@@ -4,9 +4,17 @@ Test cases for the EC2 service
 This module contains the test cases for the EC2 service.
 """
 from unittest.mock import patch
+import logging
 import pytest
 from core.services.ec2 import add_subparsers, list_ec2_instances
 from .test_utils import setup_parser, setup_config
+
+
+@pytest.fixture
+def mock_ec2_session(mocker):
+    mock_session = mocker.patch('core.services.ec2.create_boto_session')
+    mock_client = mock_session.return_value.client.return_value
+    return mock_client
 
 
 @pytest.mark.parametrize(
@@ -39,11 +47,11 @@ from .test_utils import setup_parser, setup_config
             ['ec2', 'ls', '--profile', 'admin', '--region', 'eu-west-1', '--sort-by', 'Environment', '--sort-order', 'desc'],
             "Owner,Environment",  # Displayed tags
             (
-                "Id                   Type        State    Public IP        Environment    Owner\n"
-                "-------------------  ----------  -------  ---------------  -------------  ----------\n"
-                "i-0f76a2e0e6b8d6e2c  t2.micro    running  201.32.58.128    production     John Doe\n"
-                "i-2c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.115  production     John Doe\n"
-                "i-1c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.114                 Sarah Jane\n"
+                "Id                   Type        State    Public IP        Owner       Environment\n"
+                "-------------------  ----------  -------  ---------------  ----------  -------------\n"
+                "i-0f76a2e0e6b8d6e2c  t2.micro    running  201.32.58.128    John Doe    production\n"
+                "i-2c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.115  John Doe    production\n"
+                "i-1c76a2e0e6b8d6e2c  r7i.xlarge  running  112.112.113.114  Sarah Jane\n"
             )
         ),
     ],
@@ -115,6 +123,7 @@ def test_list_ec2_instances(mock_create_boto_session, arg_list,
     }
     list_ec2_instances(args)
     out, _ = capsys.readouterr()
+    logging.info("\n" + out)
     print("\n" + out)
     assert out.strip() == expected_output.strip()
 

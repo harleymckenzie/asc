@@ -38,7 +38,7 @@ def test_setup_config_initial_setup(mock_file_open, mock_input, tags_input):
     setup_config(config, initial_setup=True)
 
     # Ensure the configuration file was opened correctly
-    mock_file_open.assert_called_once_with(config_path, "w")
+    mock_file_open.assert_called_once_with(config_path, "w", encoding="utf-8")
     mock_file_handle = mock_file_open()
 
     written_content = "".join(
@@ -90,7 +90,7 @@ def test_setup_config_update(
     setup_config(config, initial_setup=False)
 
     # Ensure the configuration file was opened correctly
-    mock_file_open.assert_called_once_with(config_path, "w")
+    mock_file_open.assert_called_once_with(config_path, "w", encoding="utf-8")
     mock_file_handle = mock_file_open()
 
     written_content = "".join(

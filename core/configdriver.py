@@ -10,9 +10,12 @@ Functions:
 import os
 import sys
 import configparser
+import logging
+from typing import Optional
 from core.common import subparser_register
 
 config_path = os.path.expanduser("~/.asc/config")
+logger = logging.getLogger(__name__)
 
 
 @subparser_register("configuration")
@@ -34,7 +37,7 @@ def add_subparsers(subparsers, global_parser):
     config_parser.set_defaults(func=update_config)
 
 
-def initialise_config(tags=None):
+def initialise_config(tags: Optional[str] = None) -> configparser.ConfigParser:
     """
     Checks to see if the configuration file exists:
     If it does not exist, the setup function is called.
@@ -49,13 +52,15 @@ def initialise_config(tags=None):
     config = configparser.ConfigParser()
 
     if not os.path.exists(config_path):
+        logger.info("Configuration file does not exist. Running setup.")
         setup_config(config, initial_setup=True)
     config = load_config(config, tags)
 
     return config
 
 
-def load_config(config, tags=None):
+def load_config(config: configparser.ConfigParser,
+                tags: Optional[str] = None) -> configparser.ConfigParser:
     """
     Load the configuration file and return the configuration object.
     If tags are provided, they are added to the displayed tags.
@@ -90,7 +95,8 @@ def update_config(args):
     setup_config(config)
 
 
-def setup_config(config, initial_setup=False):
+def setup_config(config: configparser.ConfigParser,
+                 initial_setup: bool = False) -> configparser.ConfigParser:
     """
     Run initial configuration setup for the application.
     If called for the first time, provided input + 'Name' is set.
@@ -118,7 +124,7 @@ def setup_config(config, initial_setup=False):
 
     # If tags_input doens't contain 'Name', display a warning
     if "Name" not in tags_input:
-        print(
+        logger.warning(
             "WARNING: 'Name' is not included in the displayed tags. "
             "This may make it difficult to identify resources."
         )
@@ -126,7 +132,7 @@ def setup_config(config, initial_setup=False):
     save_config(config)
 
 
-def save_config(config):
+def save_config(config: configparser.ConfigParser):
     """
     Save the configuration object to the configuration file.
 
@@ -137,8 +143,9 @@ def save_config(config):
         None
     """
     try:
-        with open(config_path, "w") as configfile:
+        with open(config_path, "w", encoding="utf-8") as configfile:
             config.write(configfile)
-        print("Configuration saved.")
-    except Exception as e:
-        print(f"Error saving configuration: {e}")
+        logger.info("Configuration saved.")
+    except IOError as e:
+        logger.error("Error saving configuration: %s", e)
+

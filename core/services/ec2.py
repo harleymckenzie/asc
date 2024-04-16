@@ -7,16 +7,20 @@ Functions:
 - add_subparsers(subparsers, global_parser): Adds subparsers for EC2 commands.
 - list_ec2_instances(args): Lists EC2 instances.
 """
+
+import logging
+import sys
+import argparse
+import botocore.exceptions
 from ..common import (
     subparser_register,
     create_boto_session,
     print_as_table,
-    arrange_dict_keys,
-    apply_tags
+    apply_tags,
 )
 
 
-@subparser_register('ec2')
+@subparser_register("ec2")
 def add_subparsers(subparsers, global_parser) -> None:
     """
     Adds subparsers to the given subparsers object for the ec2 service.
@@ -30,14 +34,11 @@ def add_subparsers(subparsers, global_parser) -> None:
         help="EC2 service",
         description="EC2 service",
         epilog="""Example: asc ec2 ls""",
-
         parents=[global_parser],
     )
     ec2_parser.set_defaults(func=lambda args: ec2_parser.print_help())
     ec2_subparsers = ec2_parser.add_subparsers(
-        help='',
-        metavar='subcommand',
-        dest='subcommand'
+        help="", metavar="subcommand", dest="subcommand"
     )
 
     ec2_list_parser = ec2_subparsers.add_parser(
@@ -48,19 +49,17 @@ def add_subparsers(subparsers, global_parser) -> None:
         parents=[global_parser],
     )
     ec2_list_parser.add_argument(
-        "--sort-by",
-        help="Sort the output by a specific key",
-        default="Name"
+        "--sort-by", help="Sort the output by a specific key", default="Name"
     )
     ec2_list_parser.add_argument(
         "--sort-order",
         help="Specify sort order: 'asc' for ascending or 'desc' for descending",
-        default="asc"
+        default="asc",
     )
     ec2_list_parser.set_defaults(func=list_ec2_instances)
 
 
-def list_ec2_instances(args):
+def list_ec2_instances(args: argparse.Namespace) -> None:
     """
     List EC2 instances.
 
@@ -75,13 +74,14 @@ def list_ec2_instances(args):
     ec2_client = session.client("ec2")
     instance_list = []
     displayed_tags_list = args.config.get(
-        "asc", "displayed_tags", fallback="").split(",")
+        "asc", "displayed_tags", fallback=""
+    ).split(",")
 
     try:
         response = ec2_client.describe_instances()
-    except Exception as e:
-        print(f"Failed to list EC2 instances: {e}")
-        exit(1)
+    except botocore.exceptions.ClientError as e:
+        logging.error("Failed to list EC2 instances: %s", e)
+        sys.exit(1)
 
     for reservation in response["Reservations"]:
         for instance_data in reservation["Instances"]:
@@ -89,18 +89,18 @@ def list_ec2_instances(args):
                 "Public IP": instance_data.get("PublicIpAddress", ""),
                 "Id": instance_data["InstanceId"],
                 "Type": instance_data["InstanceType"],
-                "State": instance_data["State"]["Name"]
+                "State": instance_data["State"]["Name"],
             }
 
             instance = apply_tags(instance, instance_data, displayed_tags_list)
             instance_list.append(instance)
 
     key_order = [
-        'Name', 'Id', 'Type', 'State', 'Public IP'
+        "Name", "Id", "Type", "State", "Public IP",
     ] + displayed_tags_list
     print_as_table(
         instance_list,
         key_order=key_order,
         sort_key=args.sort_by,
-        sort_order=args.sort_order
+        sort_order=args.sort_order,
     )

@@ -40,6 +40,20 @@ def setup_parser(add_subparser_func, arg_list):
         The parsed arguments namespace.
     """
     parser = ArgumentParser()
+    group = parser.add_argument_group('global arguments')
+    group.add_argument(
+        '--tags', '-t', help='Comma-separated tags to display in output.',
+        type=str
+    )
+    group.add_argument(
+        '--profile', '-p', nargs='?',
+        help='AWS profile to use.',
+        dest='profile'
+    )
+    group.add_argument(
+        '--region', nargs='?', help='AWS region to use.', dest='region'
+    )
+
     subparsers = parser.add_subparsers()
     global_parser = setup_global_parser()  # Setup global parser options
     add_subparser_func(subparsers, global_parser)  # Add EC2 subparsers
