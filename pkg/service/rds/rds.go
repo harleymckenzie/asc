@@ -194,6 +194,8 @@ func (svc *RDSService) PrintInstances(instances []types.DBInstance) error {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
+    table.SetAutoFormatHeaders(false)
+    table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetHeader(headers)
 	table.SetAutoMergeCellsByColumnIndex([]int{0})
 	table.SetCenterSeparator("-")

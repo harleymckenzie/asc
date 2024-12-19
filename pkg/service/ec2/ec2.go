@@ -131,6 +131,8 @@ func PrintInstances(instances []types.Instance) error {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
+    table.SetAutoFormatHeaders(false)
+    table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetHeader(headers)
 	table.SetColumnSeparator(" ")
 	table.SetCenterSeparator(" ")
