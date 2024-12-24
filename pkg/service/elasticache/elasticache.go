@@ -55,7 +55,6 @@ var availableColumns = map[string]Column{
 	"engine_version": {
         Header: "Engine version",
 		GetValue: func(i types.CacheCluster) string {
-			// return string(*i.EngineVersion)
             return fmt.Sprintf("%s (%s)", *i.EngineVersion, *i.Engine)
 		},
 		GetColour: func(i types.CacheCluster) tablewriter.Colors {
