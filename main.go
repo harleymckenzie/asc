@@ -7,6 +7,9 @@ import (
 	_ "github.com/harleymckenzie/asc-go/cmd/elasticache"
 )
 
+var Version = "0.0.1"
+
 func main() {
+	cmd.RootCmd.Version = Version
 	cmd.Execute()
 }
