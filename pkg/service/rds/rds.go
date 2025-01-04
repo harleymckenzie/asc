@@ -12,8 +12,13 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+type RDSClientAPI interface {
+	DescribeDBInstances(context.Context, *rds.DescribeDBInstancesInput, ...func(*rds.Options)) (*rds.DescribeDBInstancesOutput, error)
+	DescribeDBClusters(context.Context, *rds.DescribeDBClustersInput, ...func(*rds.Options)) (*rds.DescribeDBClustersOutput, error)
+}
+
 type RDSService struct {
-	Client *rds.Client
+	Client RDSClientAPI
 	ctx    context.Context
 }
 
@@ -113,6 +118,17 @@ func NewRDSService(ctx context.Context, profile string) (*RDSService, error) {
 }
 
 func (svc *RDSService) getInstanceRole(instance types.DBInstance) string {
+
+	// If ReadReplicaSourceDBInstanceIdentifier is set, then this is a replica. If
+	// if ReadReplicaDBInstanceIdentifiers is set, then this is a primary.
+	if instance.ReadReplicaSourceDBInstanceIdentifier != nil {
+		return "Replica"
+	}
+
+	if len(instance.ReadReplicaDBInstanceIdentifiers) > 0 {
+		return "Primary"
+	}
+
 	if instance.DBClusterIdentifier == nil {
 		return "None"
 	}
@@ -153,7 +169,7 @@ func buildTableData(svc *RDSService, instances []types.DBInstance,
 		for _, colKey := range selectedColumns {
 			if col, exists := availableColumns[colKey]; exists {
 				value := col.GetValue(instance)
-				if colKey == "role" && instance.DBClusterIdentifier != nil {
+				if colKey == "role" {
 					value = svc.getInstanceRole(instance)
 				}
 				row = append(row, value)
@@ -194,8 +210,8 @@ func (svc *RDSService) PrintInstances(instances []types.DBInstance) error {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-    table.SetAutoFormatHeaders(false)
-    table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAutoFormatHeaders(false)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetHeader(headers)
 	table.SetAutoMergeCellsByColumnIndex([]int{0})
 	table.SetCenterSeparator("-")

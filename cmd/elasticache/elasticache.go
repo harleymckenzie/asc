@@ -9,13 +9,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// RDSCmd represents the ec2 command
-var RDSCmd = &cobra.Command{
+var showEndpoint bool
+
+// ElasticacheCmd represents the elasticache command
+var ElasticacheCmd = &cobra.Command{
 	Use:   "elasticache",
 	Short: "Perform Elasticache operations",
 }
 
-// rds subcommands
+// elasticache subcommands
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all Elasticache clusters",
@@ -27,7 +29,7 @@ var lsCmd = &cobra.Command{
 			log.Fatalf("Failed to initialize Elasticache service: %v", err)
 		}
 
-		err = svc.ListInstances(ctx)
+		err = svc.ListInstances(ctx, showEndpoint)
 		if err != nil {
 			log.Fatalf("Error describing clusters: %v", err)
 		}
@@ -35,6 +37,8 @@ var lsCmd = &cobra.Command{
 }
 
 func init() {
-	cmd.RootCmd.AddCommand(RDSCmd)
-	RDSCmd.AddCommand(lsCmd)
+	cmd.RootCmd.AddCommand(ElasticacheCmd)
+	ElasticacheCmd.AddCommand(lsCmd)
+
+	lsCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
 }

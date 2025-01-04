@@ -70,6 +70,15 @@ var availableColumns = map[string]Column{
 			return tablewriter.Colors{}
 		},
 	},
+	"endpoint": {
+		Header: "Endpoint",
+		GetValue: func(i types.CacheCluster) string {
+			return string(*i.CacheNodes[0].Endpoint.Address)
+		},
+		GetColour: func(i types.CacheCluster) tablewriter.Colors {
+			return tablewriter.Colors{}
+		},
+	},
 }
 
 func NewElasticacheService(ctx context.Context, profile string) (*ElasticacheService, error) {
@@ -92,8 +101,10 @@ func NewElasticacheService(ctx context.Context, profile string) (*ElasticacheSer
 	return &ElasticacheService{Client: client}, nil
 }
 
-func (svc *ElasticacheService) ListInstances(ctx context.Context) error {
-	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{})
+func (svc *ElasticacheService) ListInstances(ctx context.Context, showEndpoint bool) error {
+	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
+		ShowCacheNodeInfo: aws.Bool(showEndpoint),
+	})
 	if err != nil {
 		log.Printf("Failed to describe instances: %v", err)
 		return err
@@ -104,12 +115,16 @@ func (svc *ElasticacheService) ListInstances(ctx context.Context) error {
 		instances = append(instances, instance)
 	}
 
-	return PrintInstances(instances)
+	return PrintInstances(instances, showEndpoint)
 }
 
-func PrintInstances(instances []types.CacheCluster) error {
+func PrintInstances(instances []types.CacheCluster, showEndpoint bool) error {
 	// Define which columns to display
 	selectedColumns := []string{"name", "status", "engine_version", "instance_type"}
+
+	if showEndpoint {
+		selectedColumns = append(selectedColumns, "endpoint")
+	}
 
 	var headers []string
 	for _, colKey := range selectedColumns {
