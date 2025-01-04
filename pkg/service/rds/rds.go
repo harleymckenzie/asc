@@ -113,6 +113,17 @@ func NewRDSService(ctx context.Context, profile string) (*RDSService, error) {
 }
 
 func (svc *RDSService) getInstanceRole(instance types.DBInstance) string {
+	
+	// If ReadReplicaSourceDBInstanceIdentifier is set, then this is a replica. If 
+	// if ReadReplicaDBInstanceIdentifiers is set, then this is a primary.
+	if instance.ReadReplicaSourceDBInstanceIdentifier != nil {
+		return "Replica"
+	}
+
+	if len(instance.ReadReplicaDBInstanceIdentifiers) > 0 {
+		return "Primary"
+	}
+
 	if instance.DBClusterIdentifier == nil {
 		return "None"
 	}
