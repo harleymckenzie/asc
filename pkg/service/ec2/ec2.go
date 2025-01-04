@@ -12,9 +12,14 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+type EC2ClientAPI interface {
+	DescribeInstances(ctx context.Context, params *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) (*ec2.DescribeInstancesOutput, error)
+}
+
 // EC2Service is a struct that holds the EC2 client.
 type EC2Service struct {
-	Client *ec2.Client
+	Client EC2ClientAPI
+	ctx    context.Context
 }
 
 type Column struct {

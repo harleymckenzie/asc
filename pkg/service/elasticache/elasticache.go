@@ -13,9 +13,14 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+type ElasticacheClientAPI interface {
+	DescribeCacheClusters(context.Context, *elasticache.DescribeCacheClustersInput, ...func(*elasticache.Options)) (*elasticache.DescribeCacheClustersOutput, error)
+}
+
 // ElasticacheService is a struct that holds the Elasticache client.
 type ElasticacheService struct {
-	Client *elasticache.Client
+	Client ElasticacheClientAPI
+	ctx    context.Context
 }
 
 type Column struct {
