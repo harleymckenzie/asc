@@ -9,7 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/olekukonko/tablewriter"
+
+	"github.com/harleymckenzie/asc-go/pkg/shared/tableformat"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type RDSClientAPI interface {
@@ -22,79 +25,56 @@ type RDSService struct {
 	ctx    context.Context
 }
 
-type Column struct {
-	Header    string
-	GetValue  func(types.DBInstance) string
-	GetColour func(types.DBInstance) tablewriter.Colors
+type columnDef struct {
+	id       string
+	title    string
+	getValue func(*types.DBInstance, []types.DBCluster) string
 }
 
-var availableColumns = map[string]Column{
-	"cluster_identifier": {
-		Header: "Cluster Identifier",
-		GetValue: func(i types.DBInstance) string {
+var availableColumns = []columnDef{
+	{
+		id:    "cluster_identifier",
+		title: "Cluster Identifier",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 			if i.DBClusterIdentifier != nil {
 				return aws.ToString(i.DBClusterIdentifier)
 			}
 			return "None"
 		},
-		GetColour: func(i types.DBInstance) tablewriter.Colors {
-			return tablewriter.Colors{}
-		},
 	},
-	"identifier": {
-		Header: "Identifier",
-		GetValue: func(i types.DBInstance) string {
+	{
+		id:    "identifier",
+		title: "Identifier",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 			return aws.ToString(i.DBInstanceIdentifier)
 		},
-		GetColour: func(i types.DBInstance) tablewriter.Colors {
-			return tablewriter.Colors{}
+	},
+	{
+		id:    "status",
+		title: "Status",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return tableformat.ResourceState(aws.ToString(i.DBInstanceStatus))
 		},
 	},
-	"status": {
-		Header: "Status",
-		GetValue: func(i types.DBInstance) string {
-			return aws.ToString(i.DBInstanceStatus)
-		},
-		GetColour: func(i types.DBInstance) tablewriter.Colors {
-			stateColors := map[string]tablewriter.Colors{
-				"available":  {tablewriter.FgGreenColor},
-				"backing-up": {tablewriter.FgYellowColor},
-				"creating":   {tablewriter.FgYellowColor},
-				"deleting":   {tablewriter.FgRedColor},
-				"modifying":  {tablewriter.FgYellowColor},
-				"rebooting":  {tablewriter.FgYellowColor},
-			}
-			return stateColors[aws.ToString(i.DBInstanceStatus)]
-		},
-	},
-	"engine": {
-		Header: "Engine",
-		GetValue: func(i types.DBInstance) string {
+	{
+		id:    "engine",
+		title: "Engine",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 			return string(*i.Engine)
 		},
-		GetColour: func(i types.DBInstance) tablewriter.Colors {
-			return tablewriter.Colors{}
-		},
 	},
-	"size": {
-		Header: "Size",
-		GetValue: func(i types.DBInstance) string {
+	{
+		id:    "size",
+		title: "Size",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 			return string(*i.DBInstanceClass)
 		},
-		GetColour: func(i types.DBInstance) tablewriter.Colors {
-			return tablewriter.Colors{}
-		},
 	},
-	"role": {
-		Header: "Role",
-		GetValue: func(i types.DBInstance) string {
-			if i.DBClusterIdentifier == nil {
-				return "None"
-			}
-			return "Pending" // Will be updated in buildTableData
-		},
-		GetColour: func(i types.DBInstance) tablewriter.Colors {
-			return tablewriter.Colors{}
+	{
+		id:    "role",
+		title: "Role",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return getDBInstanceRole(*i, clusters)
 		},
 	},
 }
@@ -117,8 +97,79 @@ func NewRDSService(ctx context.Context, profile string) (*RDSService, error) {
 	return &RDSService{Client: client, ctx: ctx}, nil
 }
 
-func (svc *RDSService) getInstanceRole(instance types.DBInstance) string {
+func (svc *RDSService) ListInstances(ctx context.Context) error {
+	// Define which columns to display
+	selectedColumns := []string{"cluster_identifier", "identifier", "status", "engine", "size", "role"}
 
+	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{})
+	if err != nil {
+		log.Printf("Failed to describe instances: %v", err)
+		return err
+	}
+
+	var instances []types.DBInstance
+	for _, instance := range output.DBInstances {
+		instances = append(instances, instance)
+	}
+
+	clusterOutput, err := svc.Client.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{})
+	if err != nil {
+		log.Printf("Failed to describe clusters: %v", err)
+		return err
+	}
+
+	var clusters []types.DBCluster
+	for _, cluster := range clusterOutput.DBClusters {
+		clusters = append(clusters, cluster)
+	}
+
+	// Create the table
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+
+	headerRow := make(table.Row, 0)
+	for _, colID := range selectedColumns {
+		for _, col := range availableColumns {
+			if col.id == colID {
+				headerRow = append(headerRow, col.title)
+				break
+			}
+		}
+	}
+	t.AppendHeader(headerRow)
+
+	// The following loop is the same across different services, and will eventually
+	// be replaced with a shared function.
+	for _, instance := range instances {
+		// Create empty row for selected instance. Iterate through selected columns
+		row := make(table.Row, len(selectedColumns))
+		for i, colID := range selectedColumns {
+			// Iterate through available columns
+			for _, col := range availableColumns {
+				// If selected column = selected available column
+				if col.id == colID {
+					// Add value of getValue to index value (i) in row slice
+					row[i] = col.getValue(&instance, clusters)
+					break
+				}
+			}
+		}
+		t.AppendRow(row, table.RowConfig{AutoMerge: true})
+	}
+
+	t.SetStyle(table.StyleRounded)
+
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{Number: 1, AutoMerge: true},
+	})
+	t.Style().Options.SeparateRows = true
+	t.Style().Format.Header = text.FormatTitle
+	t.Render()
+
+	return nil
+}
+
+func getDBInstanceRole(instance types.DBInstance, clusters []types.DBCluster) string {
 	// If ReadReplicaSourceDBInstanceIdentifier is set, then this is a replica. If
 	// if ReadReplicaDBInstanceIdentifiers is set, then this is a primary.
 	if instance.ReadReplicaSourceDBInstanceIdentifier != nil {
@@ -133,16 +184,7 @@ func (svc *RDSService) getInstanceRole(instance types.DBInstance) string {
 		return "None"
 	}
 
-	output, err := svc.Client.DescribeDBClusters(svc.ctx, &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: instance.DBClusterIdentifier,
-	})
-
-	if err != nil {
-		log.Printf("Failed to describe DB clusters: %v", err)
-		return "Unknown"
-	}
-
-	for _, cluster := range output.DBClusters {
+	for _, cluster := range clusters {
 		for _, member := range cluster.DBClusterMembers {
 			if aws.ToString(member.DBInstanceIdentifier) == aws.ToString(instance.DBInstanceIdentifier) {
 				if member.IsClusterWriter != nil && *member.IsClusterWriter {
@@ -154,77 +196,4 @@ func (svc *RDSService) getInstanceRole(instance types.DBInstance) string {
 	}
 
 	return "Unknown"
-}
-
-func buildTableData(svc *RDSService, instances []types.DBInstance,
-	selectedColumns []string) ([][]string, [][]tablewriter.Colors) {
-
-	var data [][]string
-	var colours [][]tablewriter.Colors
-
-	for _, instance := range instances {
-		var row []string
-		var rowColors []tablewriter.Colors
-
-		for _, colKey := range selectedColumns {
-			if col, exists := availableColumns[colKey]; exists {
-				value := col.GetValue(instance)
-				if colKey == "role" {
-					value = svc.getInstanceRole(instance)
-				}
-				row = append(row, value)
-				rowColors = append(rowColors, col.GetColour(instance))
-			}
-		}
-
-		data = append(data, row)
-		colours = append(colours, rowColors)
-	}
-
-	return data, colours
-}
-
-func (svc *RDSService) ListInstances(ctx context.Context) error {
-	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{})
-	if err != nil {
-		log.Printf("Failed to describe instances: %v", err)
-		return err
-	}
-
-	var instances []types.DBInstance
-	for _, instance := range output.DBInstances {
-		instances = append(instances, instance)
-	}
-
-	return svc.PrintInstances(instances)
-}
-
-func (svc *RDSService) PrintInstances(instances []types.DBInstance) error {
-	selectedColumns := []string{"cluster_identifier", "identifier", "status", "engine", "size", "role"}
-
-	var headers []string
-	for _, colKey := range selectedColumns {
-		if col, exists := availableColumns[colKey]; exists {
-			headers = append(headers, col.Header)
-		}
-	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetAutoFormatHeaders(false)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeader(headers)
-	table.SetAutoMergeCellsByColumnIndex([]int{0})
-	table.SetCenterSeparator("-")
-	table.SetColumnSeparator(" ")
-	table.SetBorder(false)
-	table.SetRowLine(true)
-
-	data, colours := buildTableData(svc, instances, selectedColumns)
-
-	for i := range data {
-		table.Rich(data[i], colours[i])
-	}
-
-	table.Render()
-	return nil
 }

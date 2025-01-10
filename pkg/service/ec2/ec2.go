@@ -9,7 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/olekukonko/tablewriter"
+
+	"github.com/harleymckenzie/asc-go/pkg/shared/tableformat"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type EC2ClientAPI interface {
@@ -22,65 +25,47 @@ type EC2Service struct {
 	ctx    context.Context
 }
 
-type Column struct {
-	Header    string
-	GetValue  func(types.Instance) string
-	GetColour func(types.Instance) tablewriter.Colors
+// ColumnDef is a definition of a column to display in the table
+type columnDef struct {
+	id       string
+	title    string
+	getValue func(*types.Instance) string
 }
 
-var availableColumns = map[string]Column{
-	"name": {
-		Header: "Name",
-		GetValue: func(i types.Instance) string {
-			return getInstanceName(i)
-		},
-		GetColour: func(i types.Instance) tablewriter.Colors {
-			return tablewriter.Colors{}
+var availableColumns = []columnDef{
+	{
+		id:    "name",
+		title: "Name",
+		getValue: func(i *types.Instance) string {
+			return getInstanceName(*i)
 		},
 	},
-	"instance_id": {
-		Header: "Instance ID",
-		GetValue: func(i types.Instance) string {
+	{
+		id:    "instance_id",
+		title: "Instance ID",
+		getValue: func(i *types.Instance) string {
 			return aws.ToString(i.InstanceId)
 		},
-		GetColour: func(i types.Instance) tablewriter.Colors {
-			return tablewriter.Colors{}
+	},
+	{
+		id:    "state",
+		title: "State",
+		getValue: func(i *types.Instance) string {
+			return tableformat.ResourceState(string(i.State.Name))
 		},
 	},
-	"state": {
-		Header: "State",
-		GetValue: func(i types.Instance) string {
-			return string(i.State.Name)
-		},
-		GetColour: func(i types.Instance) tablewriter.Colors {
-			stateColors := map[types.InstanceStateName]tablewriter.Colors{
-				types.InstanceStateNameRunning:    {tablewriter.FgGreenColor},
-				types.InstanceStateNameStopped:    {tablewriter.FgRedColor},
-				types.InstanceStateNamePending:    {tablewriter.FgYellowColor},
-				types.InstanceStateNameTerminated: {tablewriter.FgRedColor},
-			}
-			if color, exists := stateColors[i.State.Name]; exists {
-				return color
-			}
-			return tablewriter.Colors{}
-		},
-	},
-	"instance_type": {
-		Header: "Type",
-		GetValue: func(i types.Instance) string {
+	{
+		id:    "instance_type",
+		title: "Type",
+		getValue: func(i *types.Instance) string {
 			return string(i.InstanceType)
 		},
-		GetColour: func(i types.Instance) tablewriter.Colors {
-			return tablewriter.Colors{}
-		},
 	},
-	"public_ip": {
-		Header: "Public IP",
-		GetValue: func(i types.Instance) string {
+	{
+		id:    "public_ip",
+		title: "Public IP",
+		getValue: func(i *types.Instance) string {
 			return aws.ToString(i.PublicIpAddress)
-		},
-		GetColour: func(i types.Instance) tablewriter.Colors {
-			return tablewriter.Colors{}
 		},
 	},
 }
@@ -106,77 +91,88 @@ func NewEC2Service(ctx context.Context, profile string) (*EC2Service, error) {
 }
 
 func (svc *EC2Service) ListInstances(ctx context.Context) error {
+	// Define which columns to display
+	selectedColumns := []string{"name", "instance_id", "state", "instance_type", "public_ip"}
+
 	output, err := svc.Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
 	if err != nil {
 		log.Printf("Failed to describe instances: %v", err)
 		return err
 	}
 
+	// At this point we have our instances
 	var instances []types.Instance
 	for _, reservation := range output.Reservations {
 		for _, instance := range reservation.Instances {
-			if instance.State.Name == types.InstanceStateNameRunning {
-				instances = append(instances, instance)
+			instances = append(instances, instance)
+		}
+	}
+
+	// Create the table
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+
+	headerRow := make(table.Row, 0)
+	for _, colID := range selectedColumns {
+		for _, col := range availableColumns {
+			if col.id == colID {
+				headerRow = append(headerRow, col.title)
+				break
 			}
 		}
 	}
+	t.AppendHeader(headerRow)
 
-	return PrintInstances(instances)
-}
-
-func PrintInstances(instances []types.Instance) error {
-	// Define which columns to display
-	selectedColumns := []string{"name", "instance_id", "state", "instance_type", "public_ip"}
-
-	var headers []string
-	for _, colKey := range selectedColumns {
-		if col, exists := availableColumns[colKey]; exists {
-			headers = append(headers, col.Header)
-		}
-	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-    table.SetAutoFormatHeaders(false)
-    table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeader(headers)
-	table.SetColumnSeparator(" ")
-	table.SetCenterSeparator(" ")
-	table.SetBorder(false)
-
-	// Build table data
-	data, colours := buildTableData(instances, selectedColumns)
-
-	// Add rows to table
-	for i := range data {
-		table.Rich(data[i], colours[i])
-	}
-
-	table.Render()
-	return nil
-}
-
-func buildTableData(instances []types.Instance,
-	selectedColumns []string) ([][]string, [][]tablewriter.Colors) {
-
-	var data [][]string
-	var colours [][]tablewriter.Colors
-
+	// The following loop is the same across different services, and will eventually
+	// be replaced with a shared function.
 	for _, instance := range instances {
-		var row []string
-		var rowColors []tablewriter.Colors
-
-		for _, colKey := range selectedColumns {
-			if col, exists := availableColumns[colKey]; exists {
-				row = append(row, col.GetValue(instance))
-				rowColors = append(rowColors, col.GetColour(instance))
+		// Create empty row for selected instance. Iterate through selected columns
+		row := make(table.Row, len(selectedColumns))
+		for i, colID := range selectedColumns {
+			// Iterate through available columns
+			for _, col := range availableColumns {
+				// If selected column = selected available column
+				if col.id == colID {
+					// Add value of getValue to index value (i) in row slice
+					row[i] = col.getValue(&instance)
+					break
+				}
 			}
 		}
-
-		data = append(data, row)
-		colours = append(colours, rowColors)
+		t.AppendRow(row)
 	}
 
-	return data, colours
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{
+			Name:     "Name",
+			WidthMax: 40,
+		},
+		{
+			Name:     "Instance ID",
+			WidthMax: 20,
+		},
+		{
+			Name:     "State",
+			WidthMax: 15,
+		},
+		{
+			Name:     "Type",
+			WidthMax: 12,
+		},
+		{
+			Name:     "Public IP",
+			WidthMax: 15,
+		},
+	})
+	t.SetStyle(table.StyleRounded)
+	t.SortBy([]table.SortBy{
+		{Name: "Name", Mode: table.Asc},
+		{Name: "Instance ID", Mode: table.Asc},
+	})
+	t.Style().Format.Header = text.FormatTitle
+
+	t.Render()
+	return nil
 }
 
 func getInstanceName(instance types.Instance) string {

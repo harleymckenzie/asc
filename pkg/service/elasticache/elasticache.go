@@ -2,7 +2,7 @@ package elasticache
 
 import (
 	"context"
-    "fmt"
+	"fmt"
 	"log"
 	"os"
 
@@ -10,7 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/olekukonko/tablewriter"
+
+	"github.com/harleymckenzie/asc-go/pkg/shared/tableformat"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type ElasticacheClientAPI interface {
@@ -23,65 +26,46 @@ type ElasticacheService struct {
 	ctx    context.Context
 }
 
-type Column struct {
-	Header    string
-	GetValue  func(types.CacheCluster) string
-	GetColour func(types.CacheCluster) tablewriter.Colors
+type columnDef struct {
+	id       string
+	title    string
+	getValue func(*types.CacheCluster) string
 }
 
-var availableColumns = map[string]Column{
-	"name": {
-		Header: "Cache name",
-		GetValue: func(i types.CacheCluster) string {
+var availableColumns = []columnDef{
+	{
+		id:    "name",
+		title: "Cache name",
+		getValue: func(i *types.CacheCluster) string {
 			return aws.ToString(i.CacheClusterId)
 		},
-		GetColour: func(i types.CacheCluster) tablewriter.Colors {
-			return tablewriter.Colors{}
+	},
+	{
+		id:    "status",
+		title: "Status",
+		getValue: func(i *types.CacheCluster) string {
+			return tableformat.ResourceState(string(*i.CacheClusterStatus))
 		},
 	},
-	"status": {
-		Header: "Status",
-		GetValue: func(i types.CacheCluster) string {
-			return string(*i.CacheClusterStatus)
-		},
-		GetColour: func(i types.CacheCluster) tablewriter.Colors {
-			stateColors := map[string]tablewriter.Colors{
-				"available": {tablewriter.FgGreenColor},
-				"deleting":  {tablewriter.FgRedColor},
-				"deleted":   {tablewriter.FgRedColor},
-				"rebooting": {tablewriter.FgYellowColor},
-			}
-			if color, exists := stateColors[aws.ToString(i.CacheClusterStatus)]; exists {
-				return color
-			}
-			return tablewriter.Colors{}
+	{
+		id:    "engine_version",
+		title: "Engine version",
+		getValue: func(i *types.CacheCluster) string {
+			return fmt.Sprintf("%s (%s)", *i.EngineVersion, *i.Engine)
 		},
 	},
-	"engine_version": {
-        Header: "Engine version",
-		GetValue: func(i types.CacheCluster) string {
-            return fmt.Sprintf("%s (%s)", *i.EngineVersion, *i.Engine)
-		},
-		GetColour: func(i types.CacheCluster) tablewriter.Colors {
-			return tablewriter.Colors{}
-		},
-    },
-	"instance_type": {
-		Header: "Configuration",
-		GetValue: func(i types.CacheCluster) string {
+	{
+		id:    "instance_type",
+		title: "Configuration",
+		getValue: func(i *types.CacheCluster) string {
 			return string(*i.CacheNodeType)
 		},
-		GetColour: func(i types.CacheCluster) tablewriter.Colors {
-			return tablewriter.Colors{}
-		},
 	},
-	"endpoint": {
-		Header: "Endpoint",
-		GetValue: func(i types.CacheCluster) string {
+	{
+		id:    "endpoint",
+		title: "Endpoint",
+		getValue: func(i *types.CacheCluster) string {
 			return string(*i.CacheNodes[0].Endpoint.Address)
-		},
-		GetColour: func(i types.CacheCluster) tablewriter.Colors {
-			return tablewriter.Colors{}
 		},
 	},
 }
@@ -107,6 +91,8 @@ func NewElasticacheService(ctx context.Context, profile string) (*ElasticacheSer
 }
 
 func (svc *ElasticacheService) ListInstances(ctx context.Context, showEndpoint bool) error {
+	selectedColumns := []string{"name", "status", "engine_version", "instance_type"}
+
 	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
 		ShowCacheNodeInfo: aws.Bool(showEndpoint),
 	})
@@ -119,65 +105,46 @@ func (svc *ElasticacheService) ListInstances(ctx context.Context, showEndpoint b
 	for _, instance := range output.CacheClusters {
 		instances = append(instances, instance)
 	}
-
-	return PrintInstances(instances, showEndpoint)
-}
-
-func PrintInstances(instances []types.CacheCluster, showEndpoint bool) error {
-	// Define which columns to display
-	selectedColumns := []string{"name", "status", "engine_version", "instance_type"}
-
 	if showEndpoint {
 		selectedColumns = append(selectedColumns, "endpoint")
 	}
 
-	var headers []string
-	for _, colKey := range selectedColumns {
-		if col, exists := availableColumns[colKey]; exists {
-			headers = append(headers, col.Header)
-		}
-	}
+	// Create the table
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
 
-	table := tablewriter.NewWriter(os.Stdout)
-    table.SetAutoFormatHeaders(false)
-    table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-    table.SetHeader(headers)
-	table.SetColumnSeparator(" ")
-	table.SetCenterSeparator(" ")
-	table.SetBorder(false)
-
-	// Build table data
-	data, colours := buildTableData(instances, selectedColumns)
-
-	// Add rows to table
-	for i := range data {
-		table.Rich(data[i], colours[i])
-	}
-
-	table.Render()
-	return nil
-}
-
-func buildTableData(instances []types.CacheCluster,
-	selectedColumns []string) ([][]string, [][]tablewriter.Colors) {
-
-	var data [][]string
-	var colours [][]tablewriter.Colors
-
-	for _, instance := range instances {
-		var row []string
-		var rowColors []tablewriter.Colors
-
-		for _, colKey := range selectedColumns {
-			if col, exists := availableColumns[colKey]; exists {
-				row = append(row, col.GetValue(instance))
-				rowColors = append(rowColors, col.GetColour(instance))
+	headerRow := make(table.Row, 0)
+	for _, colID := range selectedColumns {
+		for _, col := range availableColumns {
+			if col.id == colID {
+				headerRow = append(headerRow, col.title)
+				break
 			}
 		}
+	}
+	t.AppendHeader(headerRow)
 
-		data = append(data, row)
-		colours = append(colours, rowColors)
+	// Start loop
+	for _, instance := range instances {
+		// Create empty row for selected instance. Iterate through selected columns
+		row := make(table.Row, len(selectedColumns))
+		for i, colID := range selectedColumns {
+			// Iterate through available columns
+			for _, col := range availableColumns {
+				// If selected column = selected available column
+				if col.id == colID {
+					// Add value of getValue to index value (i) in row slice
+					row[i] = col.getValue(&instance)
+					break
+				}
+			}
+		}
+		t.AppendRow(row)
 	}
 
-	return data, colours
+	t.SetStyle(table.StyleRounded)
+	t.Style().Format.Header = text.FormatTitle
+	t.Render()
+
+	return nil
 }
