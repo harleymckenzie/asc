@@ -12,7 +12,6 @@ import (
 
 	"github.com/harleymckenzie/asc-go/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type RDSClientAPI interface {
@@ -153,40 +152,16 @@ func (svc *RDSService) ListInstances(ctx context.Context, sortOrder []string, li
 		t.AppendRow(row)
 	}
 
-	t.SortBy(sortBy(sortOrder))
-	setStyle(t, list)
+	var (
+		separateRows = true
+		mergeColumn  = "Cluster Identifier"
+	)
+
+	t.SortBy(tableformat.SortBy(sortOrder))
+	tableformat.SetStyle(t, list, separateRows, &mergeColumn)
 	t.Render()
 
 	return nil
-}
-
-func sortBy(sortOrder []string) []table.SortBy {
-	sortBy := []table.SortBy{}
-
-	if len(sortOrder) == 0 {
-		sortOrder = []string{"Identifier"}
-	}
-
-	for _, sortField := range sortOrder {
-		sortBy = append(sortBy, table.SortBy{Name: sortField, Mode: table.Asc})
-	}
-	return sortBy
-}
-
-func setStyle(t table.Writer, list bool) {
-
-	t.SetStyle(table.StyleRounded)
-	if list {
-		t.Style().Options.DrawBorder = false
-		t.Style().Options.SeparateColumns = false
-		t.Style().Options.SeparateHeader = false
-	} else {
-		t.Style().Options.SeparateRows = true
-		t.Style().Format.Header = text.FormatTitle
-		t.SetColumnConfigs([]table.ColumnConfig{
-			{Name: "Cluster Identifier", AutoMerge: true},
-		})
-	}
 }
 
 func getDBInstanceRole(instance types.DBInstance, clusters []types.DBCluster) string {

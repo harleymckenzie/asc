@@ -13,7 +13,6 @@ import (
 
 	"github.com/harleymckenzie/asc-go/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type EC2ClientAPI interface {
@@ -171,8 +170,8 @@ func (svc *EC2Service) ListInstances(ctx context.Context, sortOrder []string, li
 		},
 	})
 
-	t.SortBy(sortBy(sortOrder))
-	setStyle(t, list)
+	t.SortBy(tableformat.SortBy(sortOrder))
+	tableformat.SetStyle(t, list, false, nil)
 	t.Render()
 	return nil
 }
@@ -188,29 +187,4 @@ func getInstanceName(instance types.Instance) string {
 	}
 
 	return name
-}
-
-func sortBy(sortOrder []string) []table.SortBy {
-	sortBy := []table.SortBy{}
-
-	if len(sortOrder) == 0 {
-		sortOrder = []string{"Name"}
-	}
-
-	for _, sortField := range sortOrder {
-		sortBy = append(sortBy, table.SortBy{Name: sortField, Mode: table.Asc})
-	}
-	return sortBy
-}
-
-func setStyle(t table.Writer, list bool) {
-
-	t.SetStyle(table.StyleRounded)
-	if list {
-		t.Style().Options.DrawBorder = false
-		t.Style().Options.SeparateColumns = false
-		t.Style().Options.SeparateHeader = false
-	} else {
-		t.Style().Format.Header = text.FormatTitle
-	}
 }

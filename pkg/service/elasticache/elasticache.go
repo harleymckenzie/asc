@@ -13,7 +13,6 @@ import (
 
 	"github.com/harleymckenzie/asc-go/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type ElasticacheClientAPI interface {
@@ -140,41 +139,9 @@ func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []st
 		t.AppendRow(row)
 	}
 
-	t.SortBy(sortBy(sortOrder))
-	setStyle(t, list)
+	t.SortBy(tableformat.SortBy(sortOrder))
+	tableformat.SetStyle(t, list, false, nil)
 	t.Render()
 
 	return nil
-}
-
-func sortBy(sortOrder []string) []table.SortBy {
-	sortBy := []table.SortBy{}
-
-	if len(sortOrder) == 0 {
-		sortOrder = []string{"name"}
-	}
-
-	for _, sortField := range sortOrder {
-		sortBy = append(sortBy, table.SortBy{Name: sortField, Mode: table.Asc})
-	}
-	return sortBy
-}
-
-func setStyle(t table.Writer, list bool) {
-	var tableStyle table.Style
-
-	if list {
-		tableStyle = table.StyleRounded
-		fmt.Println("List style")
-	} else {
-		tableStyle = table.StyleRounded
-	}
-	t.SetStyle(tableStyle)
-	t.Style().Format.Header = text.FormatTitle
-	if list {
-		t.Style().Options.DrawBorder = false
-		t.Style().Options.SeparateColumns = false
-		t.Style().Options.SeparateHeader = false
-		t.Style().Format.Header = text.FormatUpper
-	}
 }
