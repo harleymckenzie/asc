@@ -233,7 +233,7 @@ brews:
       # Repository name.
       #
       # Templates: allowed.
-      name: asc-go
+      name: homebrew-asc
 
       # Optionally a branch can be provided.
       #
@@ -282,7 +282,7 @@ brews:
         # Base can also be another repository, in which case the owner and name
         # above will be used as HEAD, allowing cross-repository pull requests.
         base:
-          owner: goreleaser
+          owner: harleymckenzie
           name: homebrew-asc
           branch: main
 
