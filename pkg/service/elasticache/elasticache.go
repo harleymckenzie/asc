@@ -23,7 +23,6 @@ type ElasticacheClientAPI interface {
 // ElasticacheService is a struct that holds the Elasticache client.
 type ElasticacheService struct {
 	Client ElasticacheClientAPI
-	ctx    context.Context
 }
 
 type columnDef struct {
@@ -90,7 +89,7 @@ func NewElasticacheService(ctx context.Context, profile string) (*ElasticacheSer
 	return &ElasticacheService{Client: client}, nil
 }
 
-func (svc *ElasticacheService) ListInstances(ctx context.Context, showEndpoint bool) error {
+func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []string, list bool, showEndpoint bool) error {
 	selectedColumns := []string{"name", "status", "engine_version", "instance_type"}
 
 	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
@@ -102,9 +101,8 @@ func (svc *ElasticacheService) ListInstances(ctx context.Context, showEndpoint b
 	}
 
 	var instances []types.CacheCluster
-	for _, instance := range output.CacheClusters {
-		instances = append(instances, instance)
-	}
+	instances = append(instances, output.CacheClusters...)
+
 	if showEndpoint {
 		selectedColumns = append(selectedColumns, "endpoint")
 	}
@@ -142,9 +140,41 @@ func (svc *ElasticacheService) ListInstances(ctx context.Context, showEndpoint b
 		t.AppendRow(row)
 	}
 
-	t.SetStyle(table.StyleRounded)
-	t.Style().Format.Header = text.FormatTitle
+	t.SortBy(sortBy(sortOrder))
+	setStyle(t, list)
 	t.Render()
 
 	return nil
+}
+
+func sortBy(sortOrder []string) []table.SortBy {
+	sortBy := []table.SortBy{}
+
+	if len(sortOrder) == 0 {
+		sortOrder = []string{"name"}
+	}
+
+	for _, sortField := range sortOrder {
+		sortBy = append(sortBy, table.SortBy{Name: sortField, Mode: table.Asc})
+	}
+	return sortBy
+}
+
+func setStyle(t table.Writer, list bool) {
+	var tableStyle table.Style
+
+	if list {
+		tableStyle = table.StyleRounded
+		fmt.Println("List style")
+	} else {
+		tableStyle = table.StyleRounded
+	}
+	t.SetStyle(tableStyle)
+	t.Style().Format.Header = text.FormatTitle
+	if list {
+		t.Style().Options.DrawBorder = false
+		t.Style().Options.SeparateColumns = false
+		t.Style().Options.SeparateHeader = false
+		t.Style().Format.Header = text.FormatUpper
+	}
 }

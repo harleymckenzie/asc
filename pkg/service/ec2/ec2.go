@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -22,7 +23,6 @@ type EC2ClientAPI interface {
 // EC2Service is a struct that holds the EC2 client.
 type EC2Service struct {
 	Client EC2ClientAPI
-	ctx    context.Context
 }
 
 // ColumnDef is a definition of a column to display in the table
@@ -68,6 +68,14 @@ var availableColumns = []columnDef{
 			return aws.ToString(i.PublicIpAddress)
 		},
 	},
+	{
+		id:    "created_time",
+		title: "Created Time",
+		getValue: func(i *types.Instance) string {
+			// Get created time from attachment time for primary network interface
+			return i.NetworkInterfaces[0].Attachment.AttachTime.Format(time.RFC3339)
+		},
+	},
 }
 
 func NewEC2Service(ctx context.Context, profile string) (*EC2Service, error) {
@@ -90,7 +98,7 @@ func NewEC2Service(ctx context.Context, profile string) (*EC2Service, error) {
 	return &EC2Service{Client: client}, nil
 }
 
-func (svc *EC2Service) ListInstances(ctx context.Context) error {
+func (svc *EC2Service) ListInstances(ctx context.Context, sortOrder []string, list bool) error {
 	// Define which columns to display
 	selectedColumns := []string{"name", "instance_id", "state", "instance_type", "public_ip"}
 
@@ -103,9 +111,7 @@ func (svc *EC2Service) ListInstances(ctx context.Context) error {
 	// At this point we have our instances
 	var instances []types.Instance
 	for _, reservation := range output.Reservations {
-		for _, instance := range reservation.Instances {
-			instances = append(instances, instance)
-		}
+		instances = append(instances, reservation.Instances...)
 	}
 
 	// Create the table
@@ -164,13 +170,9 @@ func (svc *EC2Service) ListInstances(ctx context.Context) error {
 			WidthMax: 15,
 		},
 	})
-	t.SetStyle(table.StyleRounded)
-	t.SortBy([]table.SortBy{
-		{Name: "Name", Mode: table.Asc},
-		{Name: "Instance ID", Mode: table.Asc},
-	})
-	t.Style().Format.Header = text.FormatTitle
 
+	t.SortBy(sortBy(sortOrder))
+	setStyle(t, list)
 	t.Render()
 	return nil
 }
@@ -186,4 +188,29 @@ func getInstanceName(instance types.Instance) string {
 	}
 
 	return name
+}
+
+func sortBy(sortOrder []string) []table.SortBy {
+	sortBy := []table.SortBy{}
+
+	if len(sortOrder) == 0 {
+		sortOrder = []string{"Name"}
+	}
+
+	for _, sortField := range sortOrder {
+		sortBy = append(sortBy, table.SortBy{Name: sortField, Mode: table.Asc})
+	}
+	return sortBy
+}
+
+func setStyle(t table.Writer, list bool) {
+
+	t.SetStyle(table.StyleRounded)
+	if list {
+		t.Style().Options.DrawBorder = false
+		t.Style().Options.SeparateColumns = false
+		t.Style().Options.SeparateHeader = false
+	} else {
+		t.Style().Format.Header = text.FormatTitle
+	}
 }

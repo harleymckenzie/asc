@@ -97,7 +97,7 @@ func NewRDSService(ctx context.Context, profile string) (*RDSService, error) {
 	return &RDSService{Client: client, ctx: ctx}, nil
 }
 
-func (svc *RDSService) ListInstances(ctx context.Context) error {
+func (svc *RDSService) ListInstances(ctx context.Context, sortOrder []string, list bool) error {
 	// Define which columns to display
 	selectedColumns := []string{"cluster_identifier", "identifier", "status", "engine", "size", "role"}
 
@@ -108,9 +108,7 @@ func (svc *RDSService) ListInstances(ctx context.Context) error {
 	}
 
 	var instances []types.DBInstance
-	for _, instance := range output.DBInstances {
-		instances = append(instances, instance)
-	}
+	instances = append(instances, output.DBInstances...)
 
 	clusterOutput, err := svc.Client.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{})
 	if err != nil {
@@ -119,9 +117,7 @@ func (svc *RDSService) ListInstances(ctx context.Context) error {
 	}
 
 	var clusters []types.DBCluster
-	for _, cluster := range clusterOutput.DBClusters {
-		clusters = append(clusters, cluster)
-	}
+	clusters = append(clusters, clusterOutput.DBClusters...)
 
 	// Create the table
 	t := table.NewWriter()
@@ -154,19 +150,43 @@ func (svc *RDSService) ListInstances(ctx context.Context) error {
 				}
 			}
 		}
-		t.AppendRow(row, table.RowConfig{AutoMerge: true})
+		t.AppendRow(row)
 	}
 
-	t.SetStyle(table.StyleRounded)
-
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{Number: 1, AutoMerge: true},
-	})
-	t.Style().Options.SeparateRows = true
-	t.Style().Format.Header = text.FormatTitle
+	t.SortBy(sortBy(sortOrder))
+	setStyle(t, list)
 	t.Render()
 
 	return nil
+}
+
+func sortBy(sortOrder []string) []table.SortBy {
+	sortBy := []table.SortBy{}
+
+	if len(sortOrder) == 0 {
+		sortOrder = []string{"Identifier"}
+	}
+
+	for _, sortField := range sortOrder {
+		sortBy = append(sortBy, table.SortBy{Name: sortField, Mode: table.Asc})
+	}
+	return sortBy
+}
+
+func setStyle(t table.Writer, list bool) {
+
+	t.SetStyle(table.StyleRounded)
+	if list {
+		t.Style().Options.DrawBorder = false
+		t.Style().Options.SeparateColumns = false
+		t.Style().Options.SeparateHeader = false
+	} else {
+		t.Style().Options.SeparateRows = true
+		t.Style().Format.Header = text.FormatTitle
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{Name: "Cluster Identifier", AutoMerge: true},
+		})
+	}
 }
 
 func getDBInstanceRole(instance types.DBInstance, clusters []types.DBCluster) string {
