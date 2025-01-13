@@ -206,8 +206,7 @@ brews:
     # Template: allowed
     # Default: 'bin.install "BinaryName"'.
     install: |
-      ENV["GOPATH"] = buildpath
-      system "go", "build", "-v", "-o", bin/"asc"
+      bin.install "asc"
 
     # Additional install instructions so you don't need to override `install`.
     #
