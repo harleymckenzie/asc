@@ -22,6 +22,7 @@ builds:
       # - linux
       # - windows
       - darwin
+    binary: asc
 
 archives:
   - format: tar.gz
