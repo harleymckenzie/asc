@@ -25,3 +25,7 @@ go.work.sum
 .env
 # Added by goreleaser init:
 dist/
+
+# IDE files
+.idea/
+.vscode/
