@@ -10,16 +10,18 @@ import (
 )
 
 // Global variable to store the profile value
-var Profile string
-
+var (
+	Profile string
+	Version = "0.0.3"
+)
 
 func NewRootCmd() *cobra.Command {
 	cmds := &cobra.Command{
 		Use:   "asc",
 		Short: "AWS Simple CLI (asc) - A simplified interface for AWS operations",
 	}
-
 	cmds.PersistentFlags().StringVarP(&Profile, "profile", "p", "", "AWS profile to use")
+	cmds.Version = Version
 
 	cmds.AddCommand(ec2.NewEC2Cmd())
 	cmds.AddCommand(rds.NewRDSCmd())
