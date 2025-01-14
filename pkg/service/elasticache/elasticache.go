@@ -90,7 +90,18 @@ func NewElasticacheService(ctx context.Context, profile string) (*ElasticacheSer
 
 func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
 
-	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{})
+	showEndpoint := false
+	// Display endpoint if it is in the selected columns
+	for _, col := range selectedColumns {
+		if col == "endpoint" {
+			showEndpoint = true
+			break
+		}
+	}
+
+	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
+		ShowCacheNodeInfo: aws.Bool(showEndpoint),
+	})
 	if err != nil {
 		log.Printf("Failed to describe instances: %v", err)
 		return err

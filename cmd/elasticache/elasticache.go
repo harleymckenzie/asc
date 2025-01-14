@@ -32,9 +32,9 @@ func NewElasticacheCmd() *cobra.Command {
 			// Set default columns
 			selectedColumns = []string{
 				"name",
-				"configuration",
 				"status",
 				"engine_version",
+				"instance_type",
 			}
 
 			if showEndpoint {
