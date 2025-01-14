@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/harleymckenzie/asc-go/cmd"
-	_ "github.com/harleymckenzie/asc-go/cmd/ec2"
-	_ "github.com/harleymckenzie/asc-go/cmd/rds"
-	_ "github.com/harleymckenzie/asc-go/cmd/elasticache"
+	"github.com/harleymckenzie/asc/cmd"
+	_ "github.com/harleymckenzie/asc/cmd/ec2"
+	_ "github.com/harleymckenzie/asc/cmd/rds"
+	_ "github.com/harleymckenzie/asc/cmd/elasticache"
 )
 
-var Version = "1.1.1"
+var Version = "1.1.2"
 
 func main() {
-	cmd.RootCmd.Version = Version
+	cmd.NewRootCmd().Version = Version
 	cmd.Execute()
 }

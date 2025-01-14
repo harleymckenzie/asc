@@ -1,4 +1,4 @@
-module github.com/harleymckenzie/asc-go
+module github.com/harleymckenzie/asc
 
 go 1.23.3
 

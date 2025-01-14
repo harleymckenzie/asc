@@ -1,2 +1,38 @@
-# asc-go
-AWS Simple CLI (ASC) - A simplified interface for AWS operations
+# asc
+AWS Simple CLI (asc) - A simplified interface for AWS operations
+
+# What is asc?
+
+asc is a CLI tool that allows you to interact with AWS services in a simplified way. It is designed to be easy to use and understand, and to provide a consistent interface for interacting with AWS services.
+
+## Installation
+
+```sh
+brew tap harleymckenzie/asc
+brew install asc
+```
+
+# Subcommands
+- `ec2` - EC2 operations
+- `rds` - RDS operations
+- `elasticache` - ElastiCache operations
+
+# Examples
+
+List all EC2 instances, sorted by name and time created:
+
+```sh
+asc ec2 ls -nt
+```
+
+List all RDS resources, sorted by identifier and cluster:
+
+```sh
+asc rds ls -nc
+```
+
+List all ElastiCache clusters, sorted by type:
+
+```sh
+asc elasticache ls -T
+```
