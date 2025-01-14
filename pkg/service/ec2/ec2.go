@@ -68,8 +68,8 @@ var availableColumns = []columnDef{
 		},
 	},
 	{
-		id:    "created_time",
-		title: "Created Time",
+		id:    "launch_time",
+		title: "Launch Time",
 		getValue: func(i *types.Instance) string {
 			// Get created time from attachment time for primary network interface
 			return i.NetworkInterfaces[0].Attachment.AttachTime.Format(time.RFC3339)
@@ -97,9 +97,7 @@ func NewEC2Service(ctx context.Context, profile string) (*EC2Service, error) {
 	return &EC2Service{Client: client}, nil
 }
 
-func (svc *EC2Service) ListInstances(ctx context.Context, sortOrder []string, list bool) error {
-	// Define which columns to display
-	selectedColumns := []string{"name", "instance_id", "state", "instance_type", "public_ip"}
+func (svc *EC2Service) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
 
 	output, err := svc.Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
 	if err != nil {

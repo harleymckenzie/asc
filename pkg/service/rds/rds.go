@@ -76,6 +76,13 @@ var availableColumns = []columnDef{
 			return getDBInstanceRole(*i, clusters)
 		},
 	},
+	{
+		id:    "endpoint",
+		title: "Endpoint",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return aws.ToString(i.Endpoint.Address)
+		},
+	},
 }
 
 func NewRDSService(ctx context.Context, profile string) (*RDSService, error) {
@@ -96,9 +103,7 @@ func NewRDSService(ctx context.Context, profile string) (*RDSService, error) {
 	return &RDSService{Client: client, ctx: ctx}, nil
 }
 
-func (svc *RDSService) ListInstances(ctx context.Context, sortOrder []string, list bool) error {
-	// Define which columns to display
-	selectedColumns := []string{"cluster_identifier", "identifier", "status", "engine", "size", "role"}
+func (svc *RDSService) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
 
 	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{})
 	if err != nil {

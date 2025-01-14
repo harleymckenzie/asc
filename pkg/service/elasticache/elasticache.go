@@ -88,12 +88,9 @@ func NewElasticacheService(ctx context.Context, profile string) (*ElasticacheSer
 	return &ElasticacheService{Client: client}, nil
 }
 
-func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []string, list bool, showEndpoint bool) error {
-	selectedColumns := []string{"name", "status", "engine_version", "instance_type"}
+func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
 
-	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
-		ShowCacheNodeInfo: aws.Bool(showEndpoint),
-	})
+	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{})
 	if err != nil {
 		log.Printf("Failed to describe instances: %v", err)
 		return err
@@ -101,10 +98,6 @@ func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []st
 
 	var instances []types.CacheCluster
 	instances = append(instances, output.CacheClusters...)
-
-	if showEndpoint {
-		selectedColumns = append(selectedColumns, "endpoint")
-	}
 
 	// Create the table
 	t := table.NewWriter()
