@@ -67,9 +67,8 @@ func NewEC2Cmd() *cobra.Command {
 				log.Fatalf("Failed to initialize EC2 service: %v", err)
 			}
 
-			err = svc.ListInstances(ctx, sortOrder, list, selectedColumns)
-			if err != nil {
-				log.Fatalf("Error describing running instances: %v", err)
+			if err := svc.ListInstances(ctx, sortOrder, list, selectedColumns); err != nil {
+				log.Fatalf("Failed to list EC2 instances: %v", err)
 			}
 		},
 	}

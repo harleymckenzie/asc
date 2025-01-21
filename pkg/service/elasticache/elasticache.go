@@ -3,7 +3,6 @@ package elasticache
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -90,7 +89,6 @@ func NewElasticacheService(ctx context.Context, profile string) (*ElasticacheSer
 
 func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
 
-
 	// Set the default sort order to name if no sort order is provided
 	if len(sortOrder) == 0 {
 		sortOrder = []string{"Cache name"}
@@ -109,7 +107,6 @@ func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []st
 		ShowCacheNodeInfo: aws.Bool(showEndpoint),
 	})
 	if err != nil {
-		log.Printf("Failed to describe instances: %v", err)
 		return err
 	}
 

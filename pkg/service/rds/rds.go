@@ -104,7 +104,6 @@ func NewRDSService(ctx context.Context, profile string) (*RDSService, error) {
 }
 
 func (svc *RDSService) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
-
 	// Set the default sort order to name if no sort order is provided
 	if len(sortOrder) == 0 {
 		sortOrder = []string{"Cluster Identifier", "Identifier"}
@@ -112,7 +111,6 @@ func (svc *RDSService) ListInstances(ctx context.Context, sortOrder []string, li
 
 	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{})
 	if err != nil {
-		log.Printf("Failed to describe instances: %v", err)
 		return err
 	}
 

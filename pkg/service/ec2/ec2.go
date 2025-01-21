@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"context"
-	"log"
 	"os"
 	"time"
 
@@ -98,7 +97,6 @@ func NewEC2Service(ctx context.Context, profile string) (*EC2Service, error) {
 }
 
 func (svc *EC2Service) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
-
 	// Set the default sort order to name if no sort order is provided
 	if len(sortOrder) == 0 {
 		sortOrder = []string{"Name"}
@@ -106,7 +104,6 @@ func (svc *EC2Service) ListInstances(ctx context.Context, sortOrder []string, li
 
 	output, err := svc.Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
 	if err != nil {
-		log.Printf("Failed to describe instances: %v", err)
 		return err
 	}
 

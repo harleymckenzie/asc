@@ -70,9 +70,8 @@ func NewRDSCmd() *cobra.Command {
 				log.Fatalf("Failed to initialize RDS service: %v", err)
 			}
 
-			err = svc.ListInstances(ctx, sortOrder, list, selectedColumns)
-			if err != nil {
-				log.Fatalf("Error describing database clusters and instances: %v", err)
+			if err := svc.ListInstances(ctx, sortOrder, list, selectedColumns); err != nil {
+				log.Fatalf("Failed to list RDS instances: %v", err)
 			}
 		},
 	}
