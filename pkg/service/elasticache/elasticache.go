@@ -90,6 +90,12 @@ func NewElasticacheService(ctx context.Context, profile string) (*ElasticacheSer
 
 func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
 
+
+	// Set the default sort order to name if no sort order is provided
+	if len(sortOrder) == 0 {
+		sortOrder = []string{"Cache name"}
+	}
+
 	showEndpoint := false
 	// Display endpoint if it is in the selected columns
 	for _, col := range selectedColumns {

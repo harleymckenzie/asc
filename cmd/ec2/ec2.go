@@ -50,7 +50,7 @@ func NewEC2Cmd() *cobra.Command {
 				case "sort-name":
 					sortOrder = append(sortOrder, "Name")
 				case "sort-id":
-					sortOrder = append(sortOrder, "Instance ID")
+					sortOrder = append(sortOrder, "Instance Id")
 				case "sort-type":
 					sortOrder = append(sortOrder, "Type")
 				case "sort-launch-time":

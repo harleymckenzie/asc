@@ -41,7 +41,7 @@ var availableColumns = []columnDef{
 	},
 	{
 		id:    "instance_id",
-		title: "Instance ID",
+		title: "Instance Id",
 		getValue: func(i *types.Instance) string {
 			return aws.ToString(i.InstanceId)
 		},
@@ -98,6 +98,11 @@ func NewEC2Service(ctx context.Context, profile string) (*EC2Service, error) {
 }
 
 func (svc *EC2Service) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
+
+	// Set the default sort order to name if no sort order is provided
+	if len(sortOrder) == 0 {
+		sortOrder = []string{"Name"}
+	}
 
 	output, err := svc.Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
 	if err != nil {

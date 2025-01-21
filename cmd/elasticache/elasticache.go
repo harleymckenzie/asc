@@ -36,7 +36,6 @@ func NewElasticacheCmd() *cobra.Command {
 				"engine_version",
 				"instance_type",
 			}
-
 			if showEndpoint {
 				selectedColumns = append(selectedColumns, "endpoint")
 			}
@@ -45,13 +44,13 @@ func NewElasticacheCmd() *cobra.Command {
 			cobraCmd.Flags().Visit(func(f *pflag.Flag) {
 				switch f.Name {
 				case "sort-name":
-					sortOrder = append(sortOrder, "Cache name")
+					sortOrder = append(sortOrder, "Cache Name")
 				case "sort-type":
 					sortOrder = append(sortOrder, "Configuration")
 				case "sort-status":
 					sortOrder = append(sortOrder, "Status")
 				case "sort-engine":
-					sortOrder = append(sortOrder, "Engine version")
+					sortOrder = append(sortOrder, "Engine Version")
 				}
 			})
 		},
