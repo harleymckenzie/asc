@@ -22,9 +22,70 @@ type RDSClientAPI interface {
 type RDSService struct {
 	*base.AWSService
 	Client RDSClientAPI
+	ctx    context.Context
 }
 
-// NewRDSService creates a new RDS service instance
+type columnDef struct {
+	id       string
+	title    string
+	getValue func(*types.DBInstance, []types.DBCluster) string
+}
+
+var availableColumns = []columnDef{
+	{
+		id:    "cluster_identifier",
+		title: "Cluster Identifier",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			if i.DBClusterIdentifier != nil {
+				return aws.ToString(i.DBClusterIdentifier)
+			}
+			return "None"
+		},
+	},
+	{
+		id:    "identifier",
+		title: "Identifier",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return aws.ToString(i.DBInstanceIdentifier)
+		},
+	},
+	{
+		id:    "status",
+		title: "Status",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return tableformat.ResourceState(aws.ToString(i.DBInstanceStatus))
+		},
+	},
+	{
+		id:    "engine",
+		title: "Engine",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return string(*i.Engine)
+		},
+	},
+	{
+		id:    "size",
+		title: "Size",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return string(*i.DBInstanceClass)
+		},
+	},
+	{
+		id:    "role",
+		title: "Role",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return getDBInstanceRole(*i, clusters)
+		},
+	},
+	{
+		id:    "endpoint",
+		title: "Endpoint",
+		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+			return aws.ToString(i.Endpoint.Address)
+		},
+	},
+}
+
 func NewRDSService(ctx context.Context, profile string, region string) (*RDSService, error) {
 	var cfg aws.Config
 	var err error
@@ -39,6 +100,7 @@ func NewRDSService(ctx context.Context, profile string, region string) (*RDSServ
 	}
 
 	cfg, err = config.LoadDefaultConfig(ctx, opts...)
+
 	if err != nil {
 		return nil, err
 	}
