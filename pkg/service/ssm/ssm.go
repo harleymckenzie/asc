@@ -16,6 +16,7 @@ import (
 
 type SSMClientAPI interface {
 	DescribeParameters(ctx context.Context, params *ssm.DescribeParametersInput, optFns ...func(*ssm.Options)) (*ssm.DescribeParametersOutput, error)
+	GetParameter(ctx context.Context, params *ssm.GetParameterInput, optFns ...func(*ssm.Options)) (*ssm.GetParameterOutput, error)
 }
 
 type SSMService struct {
@@ -23,26 +24,26 @@ type SSMService struct {
 }
 
 type columnDef struct {
-	id       string
-	title    string
-	getValue func(*types.ParameterMetadata) string
+	id    string
+	title string
+}
+
+func getParameterName(p *types.ParameterMetadata) string {
+	return aws.ToString(p.Name)
+}
+
+func getParameterType(p *types.ParameterMetadata) string {
+	return string(p.Type)
+}
+
+func getParameterValue(p *types.Parameter) string {
+	return aws.ToString(p.Value)
 }
 
 var availableColumns = []columnDef{
-	{
-		id:    "name",
-		title: "Name",
-		getValue: func(p *types.ParameterMetadata) string {
-			return aws.ToString(p.Name)
-		},
-	},
-	{
-		id:    "type",
-		title: "Type",
-		getValue: func(p *types.ParameterMetadata) string {
-			return string(p.Type)
-		},
-	},
+	{id: "name", title: "Name"},
+	{id: "type", title: "Type"},
+	{id: "value", title: "Value"},
 }
 
 func NewSSMService(ctx context.Context, profile string) (*SSMService, error) {
@@ -64,9 +65,6 @@ func NewSSMService(ctx context.Context, profile string) (*SSMService, error) {
 }
 
 func (svc *SSMService) ListParameters(ctx context.Context, selectedColumns []string) error {
-	if len(selectedColumns) == 0 {
-		selectedColumns = []string{"type", "name"}
-	}
 
 	params, err := svc.Client.DescribeParameters(ctx, &ssm.DescribeParametersInput{})
 	if err != nil {
@@ -101,7 +99,22 @@ func (svc *SSMService) ListParameters(ctx context.Context, selectedColumns []str
 	}
 
 	tableformat.SetStyle(t, true, false, nil)
-    fmt.Println("total", len(params.Parameters))
+	fmt.Println("total", len(params.Parameters))
 	t.Render()
+	return nil
+}
+
+func (svc *SSMService) GetParameters(ctx context.Context, parameterNames []string) error {
+	for _, name := range parameterNames {
+		param, err := svc.Client.GetParameter(ctx, &ssm.GetParameterInput{
+			Name:           aws.String(name),
+			WithDecryption: aws.Bool(true),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to get parameter %s: %w", name, err)
+		}
+
+		fmt.Printf("%s = %s\n", name, aws.ToString(param.Parameter.Value))
+	}
 	return nil
 }

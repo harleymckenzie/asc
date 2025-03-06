@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 var (
 	selectedColumns []string
+	showValues      bool
 )
 
 func NewSSMCmd() *cobra.Command {
@@ -22,28 +22,36 @@ func NewSSMCmd() *cobra.Command {
 	// ls sub command
 	lsCmd := &cobra.Command{
 		Use:   "ls",
-		Short: "List parameeters in Systems Manager Parameter Store",
-        PreRun: func(cobraCmd *cobra.Command, args []string) {
-            selectedColumns = []string{
-                "type",
-                "name",
-            }
-        },
-        Run: func(cobraCmd *cobra.Command, args []string) {
-            ctx := context.TODO()
-            profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
+		Short: "List parameters in Systems Manager Parameter Store",
+		PreRun: func(cobraCmd *cobra.Command, args []string) {
 
-            svc, err := ssm.NewSSMService(ctx, profile)
-            if err != nil {
-                log.Fatalf("Failed to initialize SSM service: %v", err)
-            }
+			// Set default columns
+			selectedColumns = []string{
+				"type",
+				"name",
+			}
+			if showValues {
+				selectedColumns = append(selectedColumns, "value")
+			}
+		},
+		Run: func(cobraCmd *cobra.Command, args []string) {
+			ctx := context.TODO()
+			profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 
-            if err := svc.ListParameters(ctx, selectedColumns); err != nil {
-                log.Fatalf("Failed to list parameters: %v", err)
-            }
-        },
+			svc, err := ssm.NewSSMService(ctx, profile)
+			if err != nil {
+				log.Fatalf("Failed to initialize SSM service: %v", err)
+			}
+
+			if err := svc.ListParameters(ctx, selectedColumns, showValues); err != nil {
+				log.Fatalf("Failed to list parameters: %v", err)
+			}
+		},
 	}
-    cmd.AddCommand(lsCmd)
+	cmd.AddCommand(lsCmd)
 
-    return cmd
+	// Add flags - Output
+	lsCmd.Flags().BoolVarP(&showValues, "output", "o", false, "Output the values of the parameters.")
+
+	return cmd
 }
