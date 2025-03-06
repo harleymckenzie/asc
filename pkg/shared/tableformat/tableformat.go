@@ -8,9 +8,9 @@ import (
 // ResourceState formats AWS resource states with appropriate colors for table output
 func ResourceState(state string) string {
     switch state {
-    case "running", "available", "active":
+    case "running", "available", "active", "Healthy":
         return text.FgGreen.Sprint(state)
-    case "stopped", "failed", "deleting", "deleted", "terminated":
+    case "stopped", "failed", "deleting", "deleted", "terminated", "unhealthy":
         return text.FgRed.Sprint(state)
     case "pending", "creating", "stopping", "modifying", "rebooting":
         return text.FgYellow.Sprint(state)

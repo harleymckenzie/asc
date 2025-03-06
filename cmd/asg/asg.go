@@ -19,28 +19,39 @@ var (
 func NewASGCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "asg",
-		Short: "Perform ASG operations",
+		Short: "Perform Auto Scaling Group operations",
 	}
 
-	// ls sub command
 	lsCmd := &cobra.Command{
-		Use:   "ls",
-		Short: "List all Auto-Scaling Groups",
-		Long:  "List all Auto-Scaling Groups. Sort flags can be combined to define multiple sort orders, where the order of the flags determines the sort priority.",
+		Use:   "ls [asg-name]",
+		Short: "List all Auto Scaling Groups or instances within a specific ASG",
 		PreRun: func(cobraCmd *cobra.Command, args []string) {
 			// Clear any existing sort order
 			sortOrder = []string{}
 
-			// Set default columns
-			selectedColumns = []string{
-				"name",
-				"instances",
-				"desired_capacity",
-				"min_capacity",
-				"max_capacity",
-			}
-			if showARNs {
-				selectedColumns = append(selectedColumns, "arn")
+			// Set default columns based on whether we're listing ASGs or instances
+			if len(args) > 0 {
+				// Default columns for instances
+				selectedColumns = []string{
+					"name",
+					"state",
+					"instance_type",
+					"launch_config",
+					"availability_zone",
+					"health",
+				}
+			} else {
+				// Default columns for ASGs
+				selectedColumns = []string{
+					"name",
+					"instances",
+					"desired_capacity",
+					"min_capacity",
+					"max_capacity",
+				}
+				if showARNs {
+					selectedColumns = append(selectedColumns, "arn")
+				}
 			}
 
 			// Visit flags in the order they appear in the command line
@@ -69,8 +80,13 @@ func NewASGCmd() *cobra.Command {
 				log.Fatalf("Failed to initialize ASG service: %v", err)
 			}
 
-			if err := svc.ListAutoScalingGroups(ctx, sortOrder, list, selectedColumns); err != nil {
-				log.Fatalf("Failed to list Auto-Scaling Groups: %v", err)
+			if len(args) > 0 {
+				err = svc.ListAutoScalingGroupInstances(ctx, args[0], sortOrder, list, selectedColumns)
+			} else {
+				err = svc.ListAutoScalingGroups(ctx, sortOrder, list, selectedColumns)
+			}
+			if err != nil {
+				log.Fatalf("Failed to list ASG resources: %v", err)
 			}
 		},
 	}

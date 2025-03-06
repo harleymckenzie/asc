@@ -30,6 +30,12 @@ type columnDef struct {
 	getValue func(*types.AutoScalingGroup) string
 }
 
+type instanceColumnDef struct {
+	id       string
+	title    string
+	getValue func(*types.Instance) string
+}
+
 var availableColumns = []columnDef{
 	{
 		id:    "name",
@@ -72,6 +78,56 @@ var availableColumns = []columnDef{
 		title: "ARN",
 		getValue: func(i *types.AutoScalingGroup) string {
 			return aws.ToString(i.AutoScalingGroupARN)
+		},
+	},
+}
+
+var instanceColumns = []instanceColumnDef{
+	{
+		id:    "name",
+		title: "Name",
+		getValue: func(i *types.Instance) string {
+			return aws.ToString(i.InstanceId)
+		},
+	},
+	{
+		id:    "state",
+		title: "State",
+		getValue: func(i *types.Instance) string {
+			return string(i.LifecycleState)
+		},
+	},
+	{
+		id:    "instance_type",
+		title: "Instance Type",
+		getValue: func(i *types.Instance) string {
+			return aws.ToString(i.InstanceType)
+		},
+	},
+	{
+		id:    "launch_config",
+		title: "Launch Template/Configuration",
+		getValue: func(i *types.Instance) string {
+			if i.LaunchTemplate != nil {
+				return aws.ToString(i.LaunchTemplate.LaunchTemplateName)
+			}
+			return aws.ToString(i.LaunchConfigurationName)
+		},
+	},
+	{
+		id:    "availability_zone",
+		title: "Availability Zone",
+		getValue: func(i *types.Instance) string {
+			return aws.ToString(i.AvailabilityZone)
+		},
+	},
+	
+	
+	{
+		id:    "health",
+		title: "Health",
+		getValue: func(i *types.Instance) string {
+			return tableformat.ResourceState(aws.ToString(i.HealthStatus))
 		},
 	},
 }
@@ -149,28 +205,24 @@ func (svc *AutoScalingService) ListAutoScalingGroups(ctx context.Context, sortOr
 
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
-			Name:     "Name",
-			WidthMax: 40,
-		},
-		{
 			Name:     "Instances",
-			WidthMin: 8,
-			WidthMax: 15,
+			WidthMin: 9,
+			WidthMax: 9,
 		},
 		{
 			Name:     "Desired",
-			WidthMin: 8,
-			WidthMax: 15,
+			WidthMin: 7,
+			WidthMax: 7,
 		},
 		{
 			Name:     "Min",
-			WidthMin: 8,
-			WidthMax: 15,
+			WidthMin: 5,
+			WidthMax: 5,
 		},
 		{
 			Name:     "Max",
-			WidthMin: 8,
-			WidthMax: 15,
+			WidthMin: 5,
+			WidthMax: 5,
 		},
 	})
 
@@ -195,12 +247,12 @@ func (svc *AutoScalingService) ListAutoScalingGroupInstances(ctx context.Context
 	}
 
 	// Create the table
-	t := table.NewWriter() 
+	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
 	headerRow := make(table.Row, 0)
 	for _, colID := range selectedColumns {
-		for _, col := range availableColumns {
+		for _, col := range instanceColumns {
 			if col.id == colID {
 				headerRow = append(headerRow, col.title)
 				break
@@ -209,17 +261,11 @@ func (svc *AutoScalingService) ListAutoScalingGroupInstances(ctx context.Context
 	}
 	t.AppendHeader(headerRow)
 
-		// The following loop is the same across different services, and will eventually
-	// be replaced with a shared function.
 	for _, instance := range instances {
-		// Create empty row for selected instance. Iterate through selected columns
 		row := make(table.Row, len(selectedColumns))
 		for i, colID := range selectedColumns {
-			// Iterate through available columns
-			for _, col := range availableColumns {
-				// If selected column = selected available column
+			for _, col := range instanceColumns {
 				if col.id == colID {
-					// Add value of getValue to index value (i) in row slice
 					row[i] = col.getValue(&instance)
 					break
 				}
