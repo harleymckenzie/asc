@@ -25,6 +25,16 @@ func NewASGCmd() *cobra.Command {
 	lsCmd := &cobra.Command{
 		Use:   "ls [asg-name]",
 		Short: "List all Auto Scaling Groups or instances within a specific ASG",
+		Long: `List all Auto Scaling Groups or instances within a specific ASG.
+
+When listing ASGs (no argument):
+  - Sort by name (default), instances, desired capacity, min capacity, or max capacity
+  - Use -l for list format
+  - Use --arn to show ARNs
+
+When listing instances (with ASG name):
+  - Sort by name (default), instance type, or launch template/configuration
+  - Use -l for list format`,
 		PreRun: func(cobraCmd *cobra.Command, args []string) {
 			// Clear any existing sort order
 			sortOrder = []string{}
@@ -60,13 +70,19 @@ func NewASGCmd() *cobra.Command {
 				case "sort-name":
 					sortOrder = append(sortOrder, "Name")
 				case "sort-instances":
-					sortOrder = append(sortOrder, "Instances")
+					if len(args) > 0 {
+						sortOrder = append(sortOrder, "Instance Type")
+					} else {
+						sortOrder = append(sortOrder, "Instances")
+					}
 				case "sort-desired-capacity":
-					sortOrder = append(sortOrder, "Desired Capacity")
+					sortOrder = append(sortOrder, "Desired")
 				case "sort-min-capacity":
-					sortOrder = append(sortOrder, "Min Capacity")
+					sortOrder = append(sortOrder, "Min")
 				case "sort-max-capacity":
-					sortOrder = append(sortOrder, "Max Capacity")
+					sortOrder = append(sortOrder, "Max")
+				case "sort-launch-config":
+					sortOrder = append(sortOrder, "Launch Template/Configuration")
 				}
 			})
 		},
@@ -93,15 +109,16 @@ func NewASGCmd() *cobra.Command {
 	cmd.AddCommand(lsCmd)
 
 	// Add flags - Output
-	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
-	lsCmd.Flags().BoolVar(&showARNs, "arn", false, "Show ARNs for each Auto-Scaling Group.")
+	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Output in list format")
+	lsCmd.Flags().BoolVar(&showARNs, "arn", false, "Show ARNs for each Auto-Scaling Group (ASG list only)")
 
 	// Add flags - Sorting
-	lsCmd.Flags().BoolP("sort-name", "n", true, "Sort by descending ASG name.")
-	lsCmd.Flags().BoolP("sort-instances", "i", false, "Sort by descending number of instances.")
-	lsCmd.Flags().BoolP("sort-desired-capacity", "d", false, "Sort by descending desired capacity.")
-	lsCmd.Flags().BoolP("sort-min-capacity", "m", false, "Sort by descending min capacity.")
-	lsCmd.Flags().BoolP("sort-max-capacity", "M", false, "Sort by descending max capacity.")
+	lsCmd.Flags().BoolP("sort-name", "n", true, "Sort by descending name")
+	lsCmd.Flags().BoolP("sort-instances", "i", false, "Sort by descending number of instances (ASG list) or instance type (instance list)")
+	lsCmd.Flags().BoolP("sort-desired-capacity", "d", false, "Sort by descending desired capacity (ASG list only)")
+	lsCmd.Flags().BoolP("sort-min-capacity", "m", false, "Sort by descending min capacity (ASG list only)")
+	lsCmd.Flags().BoolP("sort-max-capacity", "M", false, "Sort by descending max capacity (ASG list only)")
+	lsCmd.Flags().BoolP("sort-launch-config", "c", false, "Sort by descending launch template/configuration (instance list only)")
 	lsCmd.Flags().SortFlags = false
 
 	return cmd
