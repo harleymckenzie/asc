@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/harleymckenzie/asc/pkg/service/base"
 	"github.com/harleymckenzie/asc/pkg/service/rds"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -14,6 +15,8 @@ var (
 	list            bool
 	selectedColumns []string
 	showEndpoint    bool
+	force           bool
+	waitSync        bool
 )
 
 func NewRDSCmd() *cobra.Command {
@@ -22,6 +25,7 @@ func NewRDSCmd() *cobra.Command {
 		Short: "Perform RDS operations",
 	}
 
+	// List command
 	lsCmd := &cobra.Command{
 		Use:   "ls",
 		Short: "List all RDS clusters and instances",
@@ -71,18 +75,107 @@ func NewRDSCmd() *cobra.Command {
 				log.Fatalf("Failed to initialize RDS service: %v", err)
 			}
 
-			if err := svc.ListInstances(ctx, sortOrder, list, selectedColumns); err != nil {
+			options := base.ListOptions{
+				CommandOptions: base.CommandOptions{
+					Profile: profile,
+					Region:  region,
+				},
+				SortOrder:       sortOrder,
+				List:            list,
+				SelectedColumns: selectedColumns,
+			}
+
+			if err := svc.ListInstances(ctx, options); err != nil {
 				log.Fatalf("Failed to list RDS instances: %v", err)
 			}
 		},
 	}
-	cmd.AddCommand(lsCmd)
 
-	// Add flags - Output
+	// Stop command
+	stopCmd := &cobra.Command{
+		Use:   "stop [instance-id...]",
+		Short: "Stop RDS instances",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cobraCmd *cobra.Command, args []string) {
+			ctx := context.TODO()
+			profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
+			region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+
+			svc, err := rds.NewRDSService(ctx, profile, region)
+			if err != nil {
+				log.Fatalf("Failed to initialize RDS service: %v", err)
+			}
+
+			resources := make([]base.ResourceIdentifier, len(args))
+			for i, id := range args {
+				resources[i] = base.ResourceIdentifier{
+					Name: id,
+					Type: "db-instance",
+				}
+			}
+
+			options := base.StateChangeOptions{
+				CommandOptions: base.CommandOptions{
+					Profile:  profile,
+					Region:   region,
+					Force:    force,
+					WaitSync: waitSync,
+				},
+				ResourceIDs: resources,
+			}
+
+			if err := svc.StopInstances(ctx, options); err != nil {
+				log.Fatalf("Failed to stop RDS instances: %v", err)
+			}
+		},
+	}
+
+	// Start command
+	startCmd := &cobra.Command{
+		Use:   "start [instance-id...]",
+		Short: "Start RDS instances",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cobraCmd *cobra.Command, args []string) {
+			ctx := context.TODO()
+			profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
+			region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+
+			svc, err := rds.NewRDSService(ctx, profile, region)
+			if err != nil {
+				log.Fatalf("Failed to initialize RDS service: %v", err)
+			}
+
+			resources := make([]base.ResourceIdentifier, len(args))
+			for i, id := range args {
+				resources[i] = base.ResourceIdentifier{
+					Name: id,
+					Type: "db-instance",
+				}
+			}
+
+			options := base.StateChangeOptions{
+				CommandOptions: base.CommandOptions{
+					Profile:  profile,
+					Region:   region,
+					Force:    force,
+					WaitSync: waitSync,
+				},
+				ResourceIDs: resources,
+			}
+
+			if err := svc.StartInstances(ctx, options); err != nil {
+				log.Fatalf("Failed to start RDS instances: %v", err)
+			}
+		},
+	}
+
+	cmd.AddCommand(lsCmd, stopCmd, startCmd)
+
+	// Add flags - Output (ls command)
 	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs RDS clusters and instances in list format.")
 	lsCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
 
-	// Add flags - Sorting
+	// Add flags - Sorting (ls command)
 	lsCmd.Flags().BoolP("sort-name", "n", true, "Sort by descending RDS instance identifier.")
 	lsCmd.Flags().BoolP("sort-cluster", "c", false, "Sort by descending RDS cluster identifier.")
 	lsCmd.Flags().BoolP("sort-type", "T", false, "Sort by descending RDS instance type.")
@@ -90,6 +183,12 @@ func NewRDSCmd() *cobra.Command {
 	lsCmd.Flags().BoolP("sort-status", "s", false, "Sort by descending RDS instance status.")
 	lsCmd.Flags().BoolP("sort-role", "R", false, "Sort by descending RDS instance role.")
 	lsCmd.Flags().SortFlags = false
+
+	// Add flags - State change commands (start/stop)
+	for _, subCmd := range []*cobra.Command{startCmd, stopCmd} {
+		subCmd.Flags().BoolVarP(&force, "force", "f", false, "Force the operation without confirmation")
+		subCmd.Flags().BoolVarP(&waitSync, "wait", "w", false, "Wait for the operation to complete")
+	}
 
 	return cmd
 }
