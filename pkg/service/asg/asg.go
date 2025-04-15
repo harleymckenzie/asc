@@ -140,6 +140,7 @@ func NewAutoScalingService(ctx context.Context, profile string, region string) (
 	if profile != "" {
 		opts = append(opts, config.WithSharedConfigProfile(profile))
 	}
+
 	if region != "" {
 		opts = append(opts, config.WithRegion(region))
 	}

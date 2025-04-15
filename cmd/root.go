@@ -13,6 +13,7 @@ import (
 // Global variable to store the profile value
 var (
 	Profile string
+	Region  string
 	Version = "0.0.6"
 )
 
@@ -22,6 +23,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "AWS Simple CLI (asc) - A simplified interface for AWS operations",
 	}
 	cmds.PersistentFlags().StringVarP(&Profile, "profile", "p", "", "AWS profile to use")
+	cmds.PersistentFlags().StringVarP(&Region, "region", "r", "", "AWS region to use")
 	cmds.Version = Version
 
 	cmds.AddCommand(asg.NewASGCmd())
