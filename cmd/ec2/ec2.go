@@ -12,7 +12,9 @@ import (
 var (
 	sortOrder       []string
 	list            bool
+	showAMI         bool
 	showLaunchTime  bool
+	showPrivateIP   bool
 	selectedColumns []string
 )
 
@@ -40,8 +42,16 @@ func NewEC2Cmd() *cobra.Command {
 				"public_ip",
 			}
 
+			if showAMI {
+				selectedColumns = append(selectedColumns, "ami_id")
+			}
+
 			if showLaunchTime {
 				selectedColumns = append(selectedColumns, "launch_time")
+			}
+
+			if showPrivateIP {
+				selectedColumns = append(selectedColumns, "private_ip")
 			}
 
 			// Visit flags in the order they appear in the command line
@@ -76,7 +86,9 @@ func NewEC2Cmd() *cobra.Command {
 
 	// Add flags - Output
 	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
+	lsCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
 	lsCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
+	lsCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
 
 	// Add flags - Sorting
 	lsCmd.Flags().BoolP("sort-name", "n", true, "Sort by descending EC2 instance name.")
