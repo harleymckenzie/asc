@@ -88,7 +88,7 @@ func NewRDSCmd() *cobra.Command {
 	lsCmd.Flags().BoolP("sort-type", "T", false, "Sort by descending RDS instance type.")
 	lsCmd.Flags().BoolP("sort-engine", "E", false, "Sort by descending database engine type.")
 	lsCmd.Flags().BoolP("sort-status", "s", false, "Sort by descending RDS instance status.")
-	lsCmd.Flags().BoolP("sort-role", "r", false, "Sort by descending RDS instance role.")
+	lsCmd.Flags().BoolP("sort-role", "R", false, "Sort by descending RDS instance role.")
 	lsCmd.Flags().SortFlags = false
 
 	return cmd
