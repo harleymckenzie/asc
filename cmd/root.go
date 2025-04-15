@@ -3,7 +3,6 @@ package cmd
 import (
 	"os"
 
-	"github.com/harleymckenzie/asc/cmd/asg"
 	"github.com/harleymckenzie/asc/cmd/ec2"
 	"github.com/harleymckenzie/asc/cmd/elasticache"
 	"github.com/harleymckenzie/asc/cmd/rds"
@@ -26,7 +25,6 @@ func NewRootCmd() *cobra.Command {
 	cmds.PersistentFlags().StringVarP(&Region, "region", "r", "", "AWS region to use")
 	cmds.Version = Version
 
-	cmds.AddCommand(asg.NewASGCmd())
 	cmds.AddCommand(ec2.NewEC2Cmd())
 	cmds.AddCommand(rds.NewRDSCmd())
 	cmds.AddCommand(elasticache.NewElasticacheCmd())
