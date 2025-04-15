@@ -60,10 +60,24 @@ var availableColumns = []columnDef{
 		},
 	},
 	{
+		id:    "ami_id",
+		title: "AMI ID",
+		getValue: func(i *types.Instance) string {
+			return aws.ToString(i.ImageId)
+		},
+	},
+	{
 		id:    "public_ip",
 		title: "Public IP",
 		getValue: func(i *types.Instance) string {
 			return aws.ToString(i.PublicIpAddress)
+		},
+	},
+	{
+		id:    "private_ip",
+		title: "Private IP",
+		getValue: func(i *types.Instance) string {
+			return aws.ToString(i.PrivateIpAddress)
 		},
 	},
 	{
