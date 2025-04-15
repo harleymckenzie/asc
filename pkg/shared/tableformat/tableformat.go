@@ -1,14 +1,17 @@
 package tableformat
 
 import (
+	"strings"
+
 	"github.com/jedib0t/go-pretty/v6/table"
     "github.com/jedib0t/go-pretty/v6/text"
 )
 
 // ResourceState formats AWS resource states with appropriate colors for table output
 func ResourceState(state string) string {
-    switch state {
-    case "running", "available", "active":
+    stateLower := strings.ToLower(state)
+    switch stateLower {
+    case "running", "available", "active", "healthy":
         return text.FgGreen.Sprint(state)
     case "stopped", "failed", "deleting", "deleted", "terminated":
         return text.FgRed.Sprint(state)
