@@ -13,7 +13,7 @@ import (
 // Global variable to store the profile value
 var (
 	Profile string
-	Version = "0.0.5"
+	Version = "0.0.6"
 )
 
 func NewRootCmd() *cobra.Command {
