@@ -16,6 +16,7 @@ brew install asc
 - `ec2` - EC2 operations
 - `rds` - RDS operations
 - `elasticache` - ElastiCache operations
+- `asg` - ASG operations
 
 # Examples
 
@@ -36,3 +37,16 @@ List all ElastiCache clusters, sorted by type:
 ```sh
 asc elasticache ls -T
 ```
+
+List all ASGs, sorted by name:
+
+```sh
+asc asg ls -n
+```
+
+List all instances in an ASG, sorted by name:
+
+```sh
+asc asg ls
+```
+
