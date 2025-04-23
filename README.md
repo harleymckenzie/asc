@@ -47,6 +47,6 @@ asc asg ls -n
 List all instances in an ASG, sorted by name:
 
 ```sh
-asc asg ls
+asc asg ls <asg-name>
 ```
 
