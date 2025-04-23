@@ -84,8 +84,7 @@ var availableColumns = []columnDef{
 		id:    "launch_time",
 		title: "Launch Time",
 		getValue: func(i *types.Instance) string {
-			// Get created time from attachment time for primary network interface
-			return i.NetworkInterfaces[0].Attachment.AttachTime.Format(time.RFC3339)
+			return i.LaunchTime.Format(time.RFC3339)
 		},
 	},
 }
