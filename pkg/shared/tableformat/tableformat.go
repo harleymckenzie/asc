@@ -7,6 +7,14 @@ import (
     "github.com/jedib0t/go-pretty/v6/text"
 )
 
+// TableData provides the data needed to render a generic table.
+type TableData interface {
+	Headers() table.Row
+	Rows() []table.Row
+	SortColumns() []string
+	ColumnConfigs() []table.ColumnConfig
+}
+
 // ResourceState formats AWS resource states with appropriate colors for table output
 func ResourceState(state string) string {
     stateLower := strings.ToLower(state)

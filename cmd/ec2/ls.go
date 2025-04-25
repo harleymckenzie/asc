@@ -5,17 +5,23 @@ import (
 	"log"
 
 	"github.com/harleymckenzie/asc/pkg/service/ec2"
+	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
+type Column struct {
+	ID      string
+	Default bool
+	Flag    *bool
+}
+
 var (
-	sortOrder       []string
 	list            bool
+	sortOrder       []string
+
 	showAMI         bool
 	showLaunchTime  bool
 	showPrivateIP   bool
-	selectedColumns []string
 )
 
 func NewEC2Cmd() *cobra.Command {
@@ -28,46 +34,6 @@ func NewEC2Cmd() *cobra.Command {
 	lsCmd := &cobra.Command{
 		Use:   "ls",
 		Short: "List all EC2 instances",
-		Long:  "List all EC2 instances. Sort flags can be combined (e.g. -iTn) to define multiple sort orders, where the order of the flags determines the sort priority.",
-		PreRun: func(cobraCmd *cobra.Command, args []string) {
-			// Clear any existing sort order
-			sortOrder = []string{}
-
-			// Set default columns
-			selectedColumns = []string{
-				"name",
-				"instance_id",
-				"state",
-				"instance_type",
-				"public_ip",
-			}
-
-			if showAMI {
-				selectedColumns = append(selectedColumns, "ami_id")
-			}
-
-			if showLaunchTime {
-				selectedColumns = append(selectedColumns, "launch_time")
-			}
-
-			if showPrivateIP {
-				selectedColumns = append(selectedColumns, "private_ip")
-			}
-
-			// Visit flags in the order they appear in the command line
-			cobraCmd.Flags().Visit(func(f *pflag.Flag) {
-				switch f.Name {
-				case "sort-name":
-					sortOrder = append(sortOrder, "Name")
-				case "sort-id":
-					sortOrder = append(sortOrder, "Instance Id")
-				case "sort-type":
-					sortOrder = append(sortOrder, "Type")
-				case "sort-launch-time":
-					sortOrder = append(sortOrder, "Launch Time")
-				}
-			})
-		},
 		Run: func(cobraCmd *cobra.Command, args []string) {
 			ctx := context.TODO()
 			profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
@@ -78,9 +44,37 @@ func NewEC2Cmd() *cobra.Command {
 				log.Fatalf("Failed to initialize EC2 service: %v", err)
 			}
 
-			if err := svc.ListInstances(ctx, sortOrder, list, selectedColumns); err != nil {
+			instances, err := svc.GetInstances(ctx)
+			if err != nil {
 				log.Fatalf("Failed to list EC2 instances: %v", err)
 			}
+
+			// Define available columns and associated flags
+			columns := []Column{
+				{ID: "name", Default: true},
+				{ID: "instance_id", Default: true},
+				{ID: "state", Default: true},
+				{ID: "instance_type", Default: true},
+				{ID: "public_ip", Default: true},
+				{ID: "ami_id", Flag: &showAMI},
+				{ID: "launch_time", Flag: &showLaunchTime},
+				{ID: "private_ip", Flag: &showPrivateIP},
+			}
+
+			selectedColumns := make([]string, 0, len(columns))
+
+			// Dynamically build the list of columns
+			for _, col := range columns {
+				if col.Default || (col.Flag != nil && *col.Flag) {
+					selectedColumns = append(selectedColumns, col.ID)
+				}
+			}
+
+			tableformat.Render(&ec2.EC2Table{
+				Instances:       instances,
+				SelectedColumns: selectedColumns,
+				SortOrder:       sortOrder,
+			}, list)
 		},
 	}
 	cmd.AddCommand(lsCmd)
