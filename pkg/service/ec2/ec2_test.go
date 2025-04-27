@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 type mockEC2Client struct {
@@ -95,13 +96,106 @@ func TestListInstances(t *testing.T) {
 
 			svc := &EC2Service{
 				Client: mockClient,
-				ctx:    context.Background(),
 			}
 
-			err := svc.ListInstances(context.Background())
+			instances, err := svc.GetInstances(context.Background())
 			if (err != nil) != tc.wantErr {
 				t.Errorf("ListInstances() error = %v, wantErr %v", err, tc.wantErr)
 			}
+
+			if len(instances) != len(tc.instances) {
+				t.Errorf("ListInstances() returned %d instances, want %d", len(instances), len(tc.instances))
+			}
+
+			for i, instance := range instances {
+				if instance.InstanceId != tc.instances[i].InstanceId {
+					t.Errorf("ListInstances() returned instance %d with ID %s, want %s", i, *instance.InstanceId, *tc.instances[i].InstanceId)
+				}
+			}
+		})
+	}
+}
+
+func TestTableOutput(t *testing.T) {
+	instances := []types.Instance{
+		{
+			InstanceId:   aws.String("i-1234567890abcdef0"),
+			InstanceType: types.InstanceType("t3.micro"),
+			State: &types.InstanceState{
+				Name: types.InstanceStateName("running"),
+			},
+			Tags: []types.Tag{
+				{
+					Key:   aws.String("Name"),
+					Value: aws.String("test-instance"),
+				},
+			},
+		},
+		{
+			InstanceId:   aws.String("i-1234567890abcdef1"),
+			InstanceType: types.InstanceType("t3.small"),
+			State: &types.InstanceState{
+				Name: types.InstanceStateName("stopped"),
+			},
+			Tags: []types.Tag{
+				{
+					Key:   aws.String("Name"),
+					Value: aws.String("test-instance-2"),
+				},
+			},
+		},
+	}
+
+	testCases := []struct {
+		name            string
+		selectedColumns []string
+		wantHeaders     table.Row
+		wantRowCount    int
+	}{
+		{
+			name:            "basic instance details",
+			selectedColumns: []string{"Name", "Instance ID", "State", "Instance Type"},
+			wantHeaders:     table.Row{"Name", "Instance ID", "State", "Instance Type"},
+			wantRowCount:    2,
+		},
+		{
+			name:            "minimal columns",
+			selectedColumns: []string{"Name", "State"},
+			wantHeaders:     table.Row{"Name", "State"},
+			wantRowCount:    2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ec2Table := &EC2Table{
+				Instances:       instances,
+				SelectedColumns: tc.selectedColumns,
+			}
+
+			// Test Headers
+			headers := ec2Table.Headers()
+			if len(headers) != len(tc.wantHeaders) {
+				t.Errorf("Headers() returned %d columns, want %d", len(headers), len(tc.wantHeaders))
+			}
+			for i, h := range headers {
+				if h != tc.wantHeaders[i] {
+					t.Errorf("Headers()[%d] = %v, want %v", i, h, tc.wantHeaders[i])
+				}
+			}
+
+			// Test Rows
+			rows := ec2Table.Rows()
+			if len(rows) != tc.wantRowCount {
+				t.Errorf("Rows() returned %d rows, want %d", len(rows), tc.wantRowCount)
+			}
+
+			// Print the actual table output for visual inspection
+			tw := table.NewWriter()
+			tw.AppendHeader(headers)
+			tw.AppendRows(rows)
+			tw.SetStyle(ec2Table.TableStyle())
+			t.Logf("\nTable Output:\n%s", tw.Render())
 		})
 	}
 }
