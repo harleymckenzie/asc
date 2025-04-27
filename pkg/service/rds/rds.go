@@ -96,7 +96,7 @@ func (et *RDSTable) Rows() []table.Row {
 
 func (et *RDSTable) ColumnConfigs() []table.ColumnConfig {
 	return []table.ColumnConfig{
-		{Name: "Cluster Identifier", WidthMax: 40},
+		{Name: "Cluster Identifier", WidthMax: 40, AutoMerge: true},
 		// {Name: "Identifier", WidthMax: 20},
 		{Name: "Status", WidthMax: 15},
 		{Name: "Engine", WidthMax: 12},

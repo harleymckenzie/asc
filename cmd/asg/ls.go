@@ -59,7 +59,7 @@ var lsCmd = &cobra.Command{
 			tableformat.Render(&asg.AutoScalingInstanceTable{
 				Instances:         instances,
 				SelectedColumns:   selectedColumns,
-			}, sortBy)
+			}, sortBy, list)
 		} else {
 			autoScalingGroups, err := svc.GetAutoScalingGroups(ctx)
 			if err != nil {
@@ -79,7 +79,7 @@ var lsCmd = &cobra.Command{
 			tableformat.Render(&asg.AutoScalingTable{
 				AutoScalingGroups: autoScalingGroups,
 				SelectedColumns:   selectedColumns,
-			}, sortBy)
+			}, sortBy, list)
 		}
 	},
 }

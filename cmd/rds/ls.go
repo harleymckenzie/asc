@@ -40,6 +40,11 @@ var lsCmd = &cobra.Command{
 			log.Fatalf("Failed to list EC2 instances: %v", err)
 		}
 
+		clusters, err := svc.GetClusters(ctx)
+		if err != nil {
+			log.Fatalf("Failed to list RDS clusters: %v", err)
+		}
+
 		// Define available columns and associated flags
 		columns := []tableformat.Column{
 			{ID: "Cluster Identifier", Visible: true, Sort: sortCluster},
@@ -47,16 +52,17 @@ var lsCmd = &cobra.Command{
 			{ID: "Status", Visible: true, Sort: sortStatus},
 			{ID: "Engine", Visible: true, Sort: sortEngine},
 			{ID: "Engine Version", Visible: showEngineVersion, Sort: false},
-			{ID: "Size", Visible: true},
+			{ID: "Size", Visible: true, Sort: false},
 			{ID: "Role", Visible: true, Sort: sortRole},
-			{ID: "Endpoint", Visible: showEndpoint},
+			{ID: "Endpoint", Visible: showEndpoint, Sort: false},
 		}
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 		tableformat.Render(&rds.RDSTable{
 			Instances:       instances,
+			Clusters:        clusters,
 			SelectedColumns: selectedColumns,
-		}, sortBy)
+		}, sortBy, list)
 	},
 }
 
@@ -67,7 +73,7 @@ func init() {
 	lsCmd.Flags().BoolVarP(&showEngineVersion, "engine-version", "v", false, "Show the engine version of the cluster")
 
 	// Add flags - Sorting
-	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending RDS instance identifier.")
+	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending RDS instance identifier.")
 	lsCmd.Flags().BoolVarP(&sortCluster, "sort-cluster", "c", false, "Sort by descending RDS cluster identifier.")
 	lsCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending RDS instance type.")
 	lsCmd.Flags().BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending database engine type.")

@@ -49,7 +49,7 @@ var lsCmd = &cobra.Command{
 		tableformat.Render(&elasticache.ElasticacheTable{
 			Instances:       instances,
 			SelectedColumns: selectedColumns,
-		}, sortBy)
+		}, sortBy, list)
 	},
 }
 

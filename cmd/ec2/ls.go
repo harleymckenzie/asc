@@ -55,7 +55,7 @@ var lsCmd = &cobra.Command{
 		tableformat.Render(&ec2.EC2Table{
 			Instances:       instances,
 			SelectedColumns: selectedColumns,
-		}, sortBy)
+		}, sortBy, list)
 	},
 }
 
