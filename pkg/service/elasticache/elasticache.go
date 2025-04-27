@@ -16,13 +16,11 @@ import (
 type ElasticacheTable struct {
 	Instances       []types.CacheCluster
 	SelectedColumns []string
-	SortOrder       []string
 }
 
 type GetInstancesInput struct {
 	List            bool
 	SelectedColumns []string
-	SortOrder       []string
 }
 
 type ElasticacheClientAPI interface {
@@ -35,38 +33,32 @@ type ElasticacheService struct {
 }
 
 type columnDef struct {
-	Title    string
 	GetValue func(*types.CacheCluster) string
 }
 
 func availableColumns() map[string]columnDef {
 	return map[string]columnDef{
-		"name": {
-			Title: "Cache name",
+		"Cache Name": {
 			GetValue: func(i *types.CacheCluster) string {
 				return aws.ToString(i.CacheClusterId)
 			},
 		},
-		"status": {
-			Title: "Status",
+		"Status": {
 			GetValue: func(i *types.CacheCluster) string {
 				return tableformat.ResourceState(string(*i.CacheClusterStatus))
 			},
 		},
-		"engine_version": {
-			Title: "Engine version",
+		"Engine Version": {
 			GetValue: func(i *types.CacheCluster) string {
 				return fmt.Sprintf("%s (%s)", *i.EngineVersion, *i.Engine)
 			},
 		},
-		"instance_type": {
-			Title: "Configuration",
+		"Configuration": {
 			GetValue: func(i *types.CacheCluster) string {
 				return string(*i.CacheNodeType)
 			},
 		},
-		"endpoint": {
-			Title: "Endpoint",
+		"Endpoint": {
 			GetValue: func(i *types.CacheCluster) string {
 				return string(*i.CacheNodes[0].Endpoint.Address)
 			},
@@ -75,10 +67,9 @@ func availableColumns() map[string]columnDef {
 }
 
 func (et *ElasticacheTable) Headers() table.Row {
-	columns := availableColumns()
 	headers := table.Row{}
 	for _, colID := range et.SelectedColumns {
-		headers = append(headers, columns[colID].Title)
+		headers = append(headers, colID)
 	}
 	return headers
 }
@@ -94,10 +85,6 @@ func (et *ElasticacheTable) Rows() []table.Row {
 		rows = append(rows, row)
 	}
 	return rows
-}
-
-func (et *ElasticacheTable) SortColumns() []string {
-	return et.SortOrder
 }
 
 func (et *ElasticacheTable) ColumnConfigs() []table.ColumnConfig {
@@ -144,4 +131,3 @@ func (svc *ElasticacheService) GetInstances(ctx context.Context) ([]types.CacheC
 	instances = append(instances, output.CacheClusters...)
 	return instances, nil
 }
-

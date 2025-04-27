@@ -12,11 +12,12 @@ import (
 type Column struct {
 	ID      string
 	Visible bool
+	Sort    bool
 }
 
 var (
-	list      bool
-	sortOrder []string
+	list   bool
+	sortBy string
 
 	showEndpoint      bool
 	showEngineVersion bool
@@ -49,14 +50,14 @@ var lsCmd = &cobra.Command{
 
 		// Define available columns and associated flags
 		columns := []Column{
-			{ID: "cluster_identifier", Visible: true},
-			{ID: "identifier", Visible: true},
-			{ID: "status", Visible: true},
-			{ID: "engine", Visible: true},
-			{ID: "engine_version", Visible: showEngineVersion},
-			{ID: "size", Visible: true},
-			{ID: "role", Visible: true},
-			{ID: "endpoint", Visible: showEndpoint},
+			{ID: "Cluster Identifier", Visible: true, Sort: sortCluster},
+			{ID: "Identifier", Visible: true, Sort: sortName},
+			{ID: "Status", Visible: true, Sort: sortStatus},
+			{ID: "Engine", Visible: true, Sort: sortEngine},
+			{ID: "Engine Version", Visible: showEngineVersion, Sort: false},
+			{ID: "Size", Visible: true},
+			{ID: "Role", Visible: true, Sort: sortRole},
+			{ID: "Endpoint", Visible: showEndpoint},
 		}
 
 		selectedColumns := make([]string, 0, len(columns))
@@ -71,8 +72,7 @@ var lsCmd = &cobra.Command{
 		tableformat.Render(&rds.RDSTable{
 			Instances:       instances,
 			SelectedColumns: selectedColumns,
-			SortOrder:       sortOrder,
-		})
+		}, sortBy)
 	},
 }
 
@@ -89,5 +89,7 @@ func init() {
 	lsCmd.Flags().BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending database engine type.")
 	lsCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending RDS instance status.")
 	lsCmd.Flags().BoolVarP(&sortRole, "sort-role", "R", false, "Sort by descending RDS instance role.")
+	lsCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-cluster", "sort-type", "sort-engine", "sort-status", "sort-role")
+
 	lsCmd.Flags().SortFlags = false
 }

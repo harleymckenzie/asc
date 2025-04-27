@@ -12,11 +12,12 @@ import (
 type Column struct {
 	ID      string
 	Visible bool
+	Sort    bool
 }
 
 var (
-	list      bool
-	sortOrder []string
+	list   bool
+	sortBy string
 
 	showAMI        bool
 	showLaunchTime bool
@@ -48,14 +49,14 @@ var lsCmd = &cobra.Command{
 
 		// Define available columns and associated flags
 		columns := []Column{
-			{ID: "name", Visible: true},
-			{ID: "instance_id", Visible: true},
-			{ID: "state", Visible: true},
-			{ID: "instance_type", Visible: true},
-			{ID: "public_ip", Visible: true},
-			{ID: "ami_id", Visible: showAMI},
-			{ID: "launch_time", Visible: showLaunchTime},
-			{ID: "private_ip", Visible: showPrivateIP},
+			{ID: "Name", Visible: true, Sort: sortName},
+			{ID: "Instance ID", Visible: true, Sort: sortID},
+			{ID: "State", Visible: true, Sort: false},
+			{ID: "Instance Type", Visible: true, Sort: sortType},
+			{ID: "Public IP", Visible: true, Sort: false},
+			{ID: "AMI ID", Visible: showAMI, Sort: false},
+			{ID: "Launch Time", Visible: showLaunchTime, Sort: sortLaunchTime},
+			{ID: "Private IP", Visible: showPrivateIP, Sort: false},
 		}
 
 		selectedColumns := make([]string, 0, len(columns))
@@ -65,13 +66,19 @@ var lsCmd = &cobra.Command{
 			if col.Visible {
 				selectedColumns = append(selectedColumns, col.ID)
 			}
+			if col.Sort {
+				sortBy = col.ID
+			}
+		}
+
+		if sortBy == "" {
+			sortBy = "Name"
 		}
 
 		tableformat.Render(&ec2.EC2Table{
 			Instances:       instances,
 			SelectedColumns: selectedColumns,
-			SortOrder:       sortOrder,
-		})
+		}, sortBy)
 	},
 }
 
@@ -87,5 +94,7 @@ func init() {
 	lsCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
 	lsCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
 	lsCmd.Flags().BoolVarP(&sortLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
+	lsCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-id", "sort-type", "sort-launch-time")
+
 	lsCmd.Flags().SortFlags = false
 }

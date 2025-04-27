@@ -16,19 +16,16 @@ import (
 type AutoScalingTable struct {
 	AutoScalingGroups []types.AutoScalingGroup
 	SelectedColumns   []string
-	SortOrder         []string
 }
 
 type AutoScalingInstanceTable struct {
 	Instances       []types.Instance
 	SelectedColumns []string
-	SortOrder       []string
 }
 
 type GetAutoScalingGroupsInput struct {
 	List            bool
 	SelectedColumns []string
-	SortOrder       []string
 }
 
 type GetInstancesInput struct {
@@ -46,51 +43,43 @@ type AutoScalingService struct {
 
 // ColumnDef is a definition of a column to display in the table
 type columnDef struct {
-	Title    string
 	GetValue func(*types.AutoScalingGroup) string
 }
 
 type instanceColumnDef struct {
-	Title    string
 	GetValue func(*types.Instance) string
 }
 
 // availableColumns returns a map of column definitions for Auto Scaling Groups
 func availableColumns() map[string]columnDef {
 	return map[string]columnDef{
-		"name": {
-			Title: "Name",
+		"Name": {
 			GetValue: func(i *types.AutoScalingGroup) string {
 				return aws.ToString(i.AutoScalingGroupName)
 			},
 		},
-		"instances": {
-			Title: "Instances",
+		"Instances": {
 			GetValue: func(i *types.AutoScalingGroup) string {
 				// TODO: Return count of Instances (Instance[])
 				return strconv.Itoa(len(i.Instances))
 			},
 		},
-		"desired_capacity": {
-			Title: "Desired",
+		"Desired": {
 			GetValue: func(i *types.AutoScalingGroup) string {
 				return strconv.Itoa(int(*i.DesiredCapacity))
 			},
 		},
-		"min_capacity": {
-			Title: "Min",
+		"Min": {
 			GetValue: func(i *types.AutoScalingGroup) string {
 				return strconv.Itoa(int(*i.MinSize))
 			},
 		},
-		"max_capacity": {
-			Title: "Max",
+		"Max": {
 			GetValue: func(i *types.AutoScalingGroup) string {
 				return strconv.Itoa(int(*i.MaxSize))
 			},
 		},
-		"arn": {
-			Title: "ARN",
+		"ARN": {
 			GetValue: func(i *types.AutoScalingGroup) string {
 				return aws.ToString(i.AutoScalingGroupARN)
 			},
@@ -101,26 +90,22 @@ func availableColumns() map[string]columnDef {
 // instanceColumns returns a map of column definitions for instances
 func instanceColumns() map[string]instanceColumnDef {
 	return map[string]instanceColumnDef{
-		"instance_name": {
-			Title: "Name",
+		"Name": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.InstanceId)
 			},
 		},
-		"state": {
-			Title: "State",
+		"State": {
 			GetValue: func(i *types.Instance) string {
 				return string(i.LifecycleState)
 			},
 		},
-		"instance_type": {
-			Title: "Instance Type",
+		"Instance Type": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.InstanceType)
 			},
 		},
-		"launch_config": {
-			Title: "Launch Template/Configuration",
+		"Launch Template/Configuration": {
 			GetValue: func(i *types.Instance) string {
 				if i.LaunchTemplate != nil {
 					return aws.ToString(i.LaunchTemplate.LaunchTemplateName)
@@ -128,14 +113,12 @@ func instanceColumns() map[string]instanceColumnDef {
 				return aws.ToString(i.LaunchConfigurationName)
 			},
 		},
-		"availability_zone": {
-			Title: "Availability Zone",
+		"Availability Zone": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.AvailabilityZone)
 			},
 		},
-		"health": {
-			Title: "Health",
+		"Health": {
 			GetValue: func(i *types.Instance) string {
 				return tableformat.ResourceState(aws.ToString(i.HealthStatus))
 			},
@@ -145,29 +128,23 @@ func instanceColumns() map[string]instanceColumnDef {
 
 // Header and Row functions for Auto Scaling Groups
 func (et *AutoScalingTable) Headers() table.Row {
-	columns := availableColumns()
 	headers := table.Row{}
 	for _, colID := range et.SelectedColumns {
-		headers = append(headers, columns[colID].Title)
+		headers = append(headers, colID)
 	}
 	return headers
 }
 
 func (et *AutoScalingTable) Rows() []table.Row {
-	columns := availableColumns()
 	rows := []table.Row{}
 	for _, asg := range et.AutoScalingGroups {
 		row := table.Row{}
 		for _, colID := range et.SelectedColumns {
-			row = append(row, columns[colID].GetValue(&asg))
+			row = append(row, availableColumns()[colID].GetValue(&asg))
 		}
 		rows = append(rows, row)
 	}
 	return rows
-}
-
-func (et *AutoScalingTable) SortColumns() []string {
-	return et.SortOrder
 }
 
 func (et *AutoScalingTable) ColumnConfigs() []table.ColumnConfig {
@@ -185,29 +162,23 @@ func (et *AutoScalingTable) TableStyle() table.Style {
 
 // Header and Row functions for Instances
 func (et *AutoScalingInstanceTable) Headers() table.Row {
-	columns := instanceColumns()
 	headers := table.Row{}
 	for _, colID := range et.SelectedColumns {
-		headers = append(headers, columns[colID].Title)
+		headers = append(headers, colID)
 	}
 	return headers
 }
 
 func (et *AutoScalingInstanceTable) Rows() []table.Row {
-	columns := instanceColumns()
 	rows := []table.Row{}
 	for _, instance := range et.Instances {
 		row := table.Row{}
 		for _, colID := range et.SelectedColumns {
-			row = append(row, columns[colID].GetValue(&instance))
+			row = append(row, instanceColumns()[colID].GetValue(&instance))
 		}
 		rows = append(rows, row)
 	}
 	return rows
-}
-
-func (et *AutoScalingInstanceTable) SortColumns() []string {
-	return et.SortOrder
 }
 
 func (et *AutoScalingInstanceTable) ColumnConfigs() []table.ColumnConfig {
@@ -267,105 +238,3 @@ func (svc *AutoScalingService) GetInstances(ctx context.Context, input *GetInsta
 	}
 	return instances, nil
 }
-
-// func (svc *AutoScalingService) ListAutoScalingGroups(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
-// 	// Set the default sort order to name if no sort order is provided
-// 	if len(sortOrder) == 0 {
-// 		sortOrder = []string{"Name"}
-// 	}
-
-// 	output, err := svc.Client.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{})
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// At this point we have our Auto Scaling Groups
-// 	autoScalingGroups := output.AutoScalingGroups
-
-// 	// Create the table
-// 	t := table.NewWriter()
-// 	t.SetOutputMirror(os.Stdout)
-
-// 	headerRow := make(table.Row, 0)
-// 	for _, colID := range selectedColumns {
-// 		for _, col := range availableColumns {
-// 			if col.id == colID {
-// 				headerRow = append(headerRow, col.title)
-// 				break
-// 			}
-// 		}
-// 	}
-// 	t.AppendHeader(headerRow)
-
-// 	// The following loop is the same across different services, and will eventually
-// 	// be replaced with a shared function.
-// 	for _, asg := range autoScalingGroups {
-// 		// Create empty row for selected instance. Iterate through selected columns
-// 		row := make(table.Row, len(selectedColumns))
-// 		for i, colID := range selectedColumns {
-// 			// Iterate through available columns
-// 			for _, col := range availableColumns {
-// 				// If selected column = selected available column
-// 				if col.id == colID {
-// 					// Add value of getValue to index value (i) in row slice
-// 					row[i] = col.getValue(&asg)
-// 					break
-// 				}
-// 			}
-// 		}
-// 		t.AppendRow(row)
-// 	}
-
-// 	t.SortBy(tableformat.SortBy(sortOrder))
-// 	tableformat.SetStyle(t, list, false, nil)
-// 	t.Render()
-// 	return nil
-// }
-
-// func (svc *AutoScalingService) ListAutoScalingGroupInstances(ctx context.Context, autoScalingGroupName string, sortOrder []string, list bool, selectedColumns []string) error {
-// 	// Input provided Auto Scaling Group Name into DescribeAutoScalingGroupsInput
-// 	output, err := svc.Client.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{
-// 		AutoScalingGroupNames: []string{autoScalingGroupName},
-// 	})
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	var instances []types.Instance
-// 	for _, autoScalingGroups := range output.AutoScalingGroups {
-// 		instances = append(instances, autoScalingGroups.Instances...)
-// 	}
-
-// 	// Create the table
-// 	t := table.NewWriter()
-// 	t.SetOutputMirror(os.Stdout)
-
-// 	headerRow := make(table.Row, 0)
-// 	for _, colID := range selectedColumns {
-// 		for _, col := range instanceColumns {
-// 			if col.id == colID {
-// 				headerRow = append(headerRow, col.title)
-// 				break
-// 			}
-// 		}
-// 	}
-// 	t.AppendHeader(headerRow)
-
-// 	for _, instance := range instances {
-// 		row := make(table.Row, len(selectedColumns))
-// 		for i, colID := range selectedColumns {
-// 			for _, col := range instanceColumns {
-// 				if col.id == colID {
-// 					row[i] = col.getValue(&instance)
-// 					break
-// 				}
-// 			}
-// 		}
-// 		t.AppendRow(row)
-// 	}
-
-// 	t.SortBy(tableformat.SortBy(sortOrder))
-// 	tableformat.SetStyle(t, list, false, nil)
-// 	t.Render()
-// 	return nil
-// }

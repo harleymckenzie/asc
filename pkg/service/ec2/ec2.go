@@ -17,7 +17,7 @@ import (
 type EC2Table struct {
 	Instances       []types.Instance
 	SelectedColumns []string
-	SortOrder       []string
+	SortBy          string
 }
 
 type ListInstancesInput struct {
@@ -26,7 +26,7 @@ type ListInstancesInput struct {
 	// Columns to display in the table
 	SelectedColumns []string
 	// Sort order for the instances
-	SortOrder []string
+	SortBy string
 }
 
 type EC2ClientAPI interface {
@@ -40,56 +40,47 @@ type EC2Service struct {
 
 // ColumnDef is a definition of a column to display in the table
 type columnDef struct {
-	Title    string
 	GetValue func(*types.Instance) string
 }
 
 func availableColumns() map[string]columnDef {
 	return map[string]columnDef{
-		"name": {
-			Title: "Name",
+		"Name": {
 			GetValue: func(i *types.Instance) string {
 				return getInstanceName(*i)
 			},
 		},
-		"instance_id": {
-			Title: "Instance ID",
+		"Instance ID": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.InstanceId)
 			},
 		},
-		"state": {
-			Title: "State",
+		"State": {
 			GetValue: func(i *types.Instance) string {
 				return tableformat.ResourceState(string(i.State.Name))
 			},
 		},
-		"instance_type": {
-			Title: "Type",
+		"Instance Type": {
 			GetValue: func(i *types.Instance) string {
 				return string(i.InstanceType)
 			},
 		},
-		"ami_id": {
-			Title: "AMI ID",
+		"AMI ID": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.ImageId)
 			},
 		},
-		"public_ip": {
-			Title: "Public IP",
+		"Public IP": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.PublicIpAddress)
 			},
 		},
-		"private_ip": {
-			Title: "Private IP",
+		"Private IP": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.PrivateIpAddress)
 			},
 		},
-		"launch_time": {
-			Title: "Launch Time",
+		"Launch Time": {
 			GetValue: func(i *types.Instance) string {
 				return i.LaunchTime.Format(time.RFC3339)
 			},
@@ -98,29 +89,23 @@ func availableColumns() map[string]columnDef {
 }
 
 func (et *EC2Table) Headers() table.Row {
-	columns := availableColumns()
 	headers := table.Row{}
 	for _, colID := range et.SelectedColumns {
-		headers = append(headers, columns[colID].Title)
+		headers = append(headers, colID)
 	}
 	return headers
 }
 
 func (et *EC2Table) Rows() []table.Row {
-	columns := availableColumns()
 	rows := []table.Row{}
 	for _, instance := range et.Instances {
 		row := table.Row{}
 		for _, colID := range et.SelectedColumns {
-			row = append(row, columns[colID].GetValue(&instance))
+			row = append(row, availableColumns()[colID].GetValue(&instance))
 		}
 		rows = append(rows, row)
 	}
 	return rows
-}
-
-func (et *EC2Table) SortColumns() []string {
-	return et.SortOrder
 }
 
 func (et *EC2Table) ColumnConfigs() []table.ColumnConfig {

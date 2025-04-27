@@ -12,11 +12,12 @@ import (
 type Column struct {
 	ID      string
 	Visible bool
+	Sort    bool
 }
 
 var (
 	list      bool
-	sortOrder []string
+	sortBy    string
 
 	showARNs bool
 
@@ -53,12 +54,12 @@ var lsCmd = &cobra.Command{
 
 			// Define columns for instances
 			columns := []Column{
-				{ID: "instance_name", Visible: true},
-				{ID: "state", Visible: true},
-				{ID: "instance_type", Visible: true},
-				{ID: "launch_config", Visible: true},
-				{ID: "availability_zone", Visible: true},
-				{ID: "health", Visible: true},
+				{ID: "Name", Visible: true},
+				{ID: "State", Visible: true},
+				{ID: "Instance Type", Visible: true},
+				{ID: "Launch Template/Configuration", Visible: true},
+				{ID: "Availability Zone", Visible: true},
+				{ID: "Health", Visible: true},
 			}
 
 			selectedColumns := make([]string, 0, len(columns))
@@ -71,8 +72,7 @@ var lsCmd = &cobra.Command{
 			tableformat.Render(&asg.AutoScalingInstanceTable{
 				Instances:         instances,
 				SelectedColumns:   selectedColumns,
-				SortOrder:         sortOrder,
-			})
+			}, sortBy)
 		} else {
 			autoScalingGroups, err := svc.GetAutoScalingGroups(ctx)
 			if err != nil {
@@ -81,11 +81,11 @@ var lsCmd = &cobra.Command{
 
 			// Define columns for Auto Scaling Groups
 			columns := []Column{
-				{ID: "name", Visible: true},
-				{ID: "instances", Visible: true},
-				{ID: "desired_capacity", Visible: true},
-				{ID: "min_capacity", Visible: true},
-				{ID: "max_capacity", Visible: true},
+				{ID: "Name", Visible: true},
+				{ID: "Instances", Visible: true},
+				{ID: "Desired", Visible: true},
+				{ID: "Min", Visible: true},
+				{ID: "Max", Visible: true},
 			}
 
             selectedColumns := make([]string, 0, len(columns))
@@ -98,9 +98,8 @@ var lsCmd = &cobra.Command{
 			tableformat.Render(&asg.AutoScalingTable{
 				AutoScalingGroups: autoScalingGroups,
 				SelectedColumns:   selectedColumns,
-				SortOrder:         sortOrder,
-			})
-        }
+			}, sortBy)
+		}
 	},
 }
 

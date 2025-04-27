@@ -16,13 +16,11 @@ type RDSTable struct {
 	Clusters        []types.DBCluster
 	Instances       []types.DBInstance
 	SelectedColumns []string
-	SortOrder       []string
 }
 
 type ListInstancesInput struct {
 	List            bool
 	SelectedColumns []string
-	SortOrder       []string
 }
 
 type RDSClientAPI interface {
@@ -35,14 +33,12 @@ type RDSService struct {
 }
 
 type columnDef struct {
-	Title    string
 	GetValue func(*types.DBInstance, []types.DBCluster) string
 }
 
 func availableColumns() map[string]columnDef {
 	return map[string]columnDef{
-		"cluster_identifier": {
-			Title: "Cluster Identifier",
+		"Cluster Identifier": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				if i.DBClusterIdentifier != nil {
 					return aws.ToString(i.DBClusterIdentifier)
@@ -50,44 +46,37 @@ func availableColumns() map[string]columnDef {
 				return "-"
 			},
 		},
-		"identifier": {
-			Title: "Identifier",
+		"Identifier": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				return aws.ToString(i.DBInstanceIdentifier)
 			},
 		},
-		"status": {
-			Title: "Status",
+		"Status": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				return tableformat.ResourceState(aws.ToString(i.DBInstanceStatus))
 			},
 		},
-		"engine": {
-			Title: "Engine",
+		"Engine": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				return string(*i.Engine)
 			},
 		},
-		"engine_version": {
-			Title: "Engine Version",
+		"Engine Version": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				return string(*i.EngineVersion)
 			},
 		},
-		"size": {
-			Title: "Size",
+		"Size": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				return string(*i.DBInstanceClass)
 			},
 		},
-		"role": {
-			Title: "Role",
+		"Role": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				return getDBInstanceRole(*i, clusters)
 			},
 		},
-		"endpoint": {
-			Title: "Endpoint",
+		"Endpoint": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				return aws.ToString(i.Endpoint.Address)
 			},
@@ -96,29 +85,23 @@ func availableColumns() map[string]columnDef {
 }
 
 func (et *RDSTable) Headers() table.Row {
-	columns := availableColumns()
 	headers := table.Row{}
 	for _, colID := range et.SelectedColumns {
-		headers = append(headers, columns[colID].Title)
+		headers = append(headers, colID)
 	}
 	return headers
 }
 
 func (et *RDSTable) Rows() []table.Row {
-	columns := availableColumns()
 	rows := []table.Row{}
 	for _, instance := range et.Instances {
 		row := table.Row{}
 		for _, colID := range et.SelectedColumns {
-			row = append(row, columns[colID].GetValue(&instance, et.Clusters))
+			row = append(row, availableColumns()[colID].GetValue(&instance, et.Clusters))
 		}
 		rows = append(rows, row)
 	}
 	return rows
-}
-
-func (et *RDSTable) SortColumns() []string {
-	return et.SortOrder
 }
 
 func (et *RDSTable) ColumnConfigs() []table.ColumnConfig {
@@ -137,7 +120,7 @@ func (et *RDSTable) ColumnConfigs() []table.ColumnConfig {
 func (et *RDSTable) TableStyle() table.Style {
 	style := table.StyleRounded
 	style.Options.SeparateRows = true
-	
+
 	style.Options.SeparateColumns = true
 	style.Options.SeparateHeader = true
 	return style

@@ -12,11 +12,12 @@ import (
 type Column struct {
 	ID      string
 	Visible bool
+	Sort    bool
 }
 
 var (
 	list      bool
-	sortOrder []string
+	sortBy    string
 
 	showEndpoint bool
 
@@ -45,11 +46,11 @@ var lsCmd = &cobra.Command{
 		}
 
 		columns := []Column{
-			{ID: "name", Visible: true},
-			{ID: "status", Visible: true},
-			{ID: "engine_version", Visible: true},
-			{ID: "instance_type", Visible: true},
-			{ID: "endpoint", Visible: showEndpoint},
+			{ID: "Cache Name", Visible: true},
+			{ID: "Status", Visible: true},
+			{ID: "Engine Version", Visible: true},
+			{ID: "Configuration", Visible: true},
+			{ID: "Endpoint", Visible: showEndpoint},
 		}
 
 		selectedColumns := make([]string, 0, len(columns))
@@ -63,8 +64,7 @@ var lsCmd = &cobra.Command{
 		tableformat.Render(&elasticache.ElasticacheTable{
 			Instances:       instances,
 			SelectedColumns: selectedColumns,
-			SortOrder:       sortOrder,
-		})
+		}, sortBy)
 	},
 }
 
@@ -78,5 +78,7 @@ func init() {
 	lsCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elasticache cluster type.")
 	lsCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending Elasticache cluster status.")
 	lsCmd.Flags().BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending Elasticache cluster engine version.")
+	lsCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-type", "sort-status", "sort-engine")
+
 	lsCmd.Flags().SortFlags = false
 }

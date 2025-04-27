@@ -6,14 +6,16 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-func Render(td TableData) {
+func Render(td TableData, sortBy string) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
 	t.AppendHeader(td.Headers())
 	t.AppendRows(td.Rows())
 	t.SetColumnConfigs(td.ColumnConfigs())
-	t.SortBy(SortBy(td.SortColumns()))
+	t.SortBy([]table.SortBy{
+		{Name: sortBy, Mode: table.Asc},
+	})
 	t.SetStyle(td.TableStyle())
 
 	t.Render()
