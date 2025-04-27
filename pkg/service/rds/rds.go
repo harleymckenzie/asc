@@ -103,7 +103,7 @@ func (et *RDSTable) ColumnConfigs() []table.ColumnConfig {
 		{Name: "Engine Version", WidthMax: 15},
 		// {Name: "Size", WidthMax: 12},
 		{Name: "Role", WidthMax: 15},
-		{Name: "Endpoint", WidthMax: 15},
+		// {Name: "Endpoint", WidthMax: 15},
 	}
 }
 

@@ -20,16 +20,16 @@ brew install asc
 
 # Examples
 
-List all EC2 instances, sorted by name and time created:
+List all EC2 instances, diplaying and sorting by time created:
 
 ```sh
-asc ec2 ls -nt
+asc ec2 ls -Lt
 ```
 
-List all RDS resources, sorted by identifier and cluster:
+List all RDS resources, sorted by instance identifier:
 
 ```sh
-asc rds ls -nc
+asc rds ls -n
 ```
 
 List all ElastiCache clusters, sorted by type:
@@ -44,7 +44,7 @@ List all ASGs, sorted by name:
 asc asg ls -n
 ```
 
-List all instances in an ASG, sorted by name:
+List all instances in an ASG:
 
 ```sh
 asc asg ls <asg-name>
