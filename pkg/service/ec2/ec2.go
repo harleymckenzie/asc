@@ -40,7 +40,6 @@ type EC2Service struct {
 
 // ColumnDef is a definition of a column to display in the table
 type columnDef struct {
-	id       string
 	Title    string
 	GetValue func(*types.Instance) string
 }
@@ -132,6 +131,14 @@ func (et *EC2Table) ColumnConfigs() []table.ColumnConfig {
 		{Name: "Type", WidthMax: 12},
 		{Name: "Public IP", WidthMax: 15},
 	}
+}
+
+func (et *EC2Table) TableStyle() table.Style {
+	style := table.StyleRounded
+	style.Options.SeparateRows = false
+	style.Options.SeparateColumns = true
+	style.Options.SeparateHeader = true
+	return style
 }
 
 func NewEC2Service(ctx context.Context, profile string, region string) (*EC2Service, error) {

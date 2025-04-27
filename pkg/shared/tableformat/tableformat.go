@@ -13,6 +13,7 @@ type TableData interface {
 	Rows() []table.Row
 	SortColumns() []string
 	ColumnConfigs() []table.ColumnConfig
+	TableStyle() table.Style
 }
 
 // ResourceState formats AWS resource states with appropriate colors for table output

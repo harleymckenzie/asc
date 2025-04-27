@@ -26,10 +26,10 @@ func NewRootCmd() *cobra.Command {
 	cmds.PersistentFlags().StringVarP(&Region, "region", "r", "", "AWS region to use")
 	cmds.Version = Version
 
-	cmds.AddCommand(asg.NewASGCmd())
-	cmds.AddCommand(ec2.NewEC2Cmd())
-	cmds.AddCommand(rds.NewRDSCmd())
-	cmds.AddCommand(elasticache.NewElasticacheCmd())
+	cmds.AddCommand(asg.NewASGRootCmd())
+	cmds.AddCommand(ec2.NewEC2RootCmd())
+	cmds.AddCommand(rds.NewRDSRootCmd())
+	cmds.AddCommand(elasticache.NewElasticacheRootCmd())
 	return cmds
 }
 

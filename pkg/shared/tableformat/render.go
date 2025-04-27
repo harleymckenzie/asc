@@ -6,7 +6,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-func Render(td TableData, list bool) {
+func Render(td TableData) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
@@ -14,7 +14,7 @@ func Render(td TableData, list bool) {
 	t.AppendRows(td.Rows())
 	t.SetColumnConfigs(td.ColumnConfigs())
 	t.SortBy(SortBy(td.SortColumns()))
-	SetStyle(t, list, false, nil)
+	t.SetStyle(td.TableStyle())
 
 	t.Render()
 }

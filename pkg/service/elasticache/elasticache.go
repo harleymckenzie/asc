@@ -3,7 +3,6 @@ package elasticache
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -13,6 +12,18 @@ import (
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
+
+type ElasticacheTable struct {
+	Instances       []types.CacheCluster
+	SelectedColumns []string
+	SortOrder       []string
+}
+
+type GetInstancesInput struct {
+	List            bool
+	SelectedColumns []string
+	SortOrder       []string
+}
 
 type ElasticacheClientAPI interface {
 	DescribeCacheClusters(context.Context, *elasticache.DescribeCacheClustersInput, ...func(*elasticache.Options)) (*elasticache.DescribeCacheClustersOutput, error)
@@ -24,47 +35,77 @@ type ElasticacheService struct {
 }
 
 type columnDef struct {
-	id       string
-	title    string
-	getValue func(*types.CacheCluster) string
+	Title    string
+	GetValue func(*types.CacheCluster) string
 }
 
-var availableColumns = []columnDef{
-	{
-		id:    "name",
-		title: "Cache name",
-		getValue: func(i *types.CacheCluster) string {
-			return aws.ToString(i.CacheClusterId)
+func availableColumns() map[string]columnDef {
+	return map[string]columnDef{
+		"name": {
+			Title: "Cache name",
+			GetValue: func(i *types.CacheCluster) string {
+				return aws.ToString(i.CacheClusterId)
+			},
 		},
-	},
-	{
-		id:    "status",
-		title: "Status",
-		getValue: func(i *types.CacheCluster) string {
-			return tableformat.ResourceState(string(*i.CacheClusterStatus))
+		"status": {
+			Title: "Status",
+			GetValue: func(i *types.CacheCluster) string {
+				return tableformat.ResourceState(string(*i.CacheClusterStatus))
+			},
 		},
-	},
-	{
-		id:    "engine_version",
-		title: "Engine version",
-		getValue: func(i *types.CacheCluster) string {
-			return fmt.Sprintf("%s (%s)", *i.EngineVersion, *i.Engine)
+		"engine_version": {
+			Title: "Engine version",
+			GetValue: func(i *types.CacheCluster) string {
+				return fmt.Sprintf("%s (%s)", *i.EngineVersion, *i.Engine)
+			},
 		},
-	},
-	{
-		id:    "instance_type",
-		title: "Configuration",
-		getValue: func(i *types.CacheCluster) string {
-			return string(*i.CacheNodeType)
+		"instance_type": {
+			Title: "Configuration",
+			GetValue: func(i *types.CacheCluster) string {
+				return string(*i.CacheNodeType)
+			},
 		},
-	},
-	{
-		id:    "endpoint",
-		title: "Endpoint",
-		getValue: func(i *types.CacheCluster) string {
-			return string(*i.CacheNodes[0].Endpoint.Address)
+		"endpoint": {
+			Title: "Endpoint",
+			GetValue: func(i *types.CacheCluster) string {
+				return string(*i.CacheNodes[0].Endpoint.Address)
+			},
 		},
-	},
+	}
+}
+
+func (et *ElasticacheTable) Headers() table.Row {
+	columns := availableColumns()
+	headers := table.Row{}
+	for _, colID := range et.SelectedColumns {
+		headers = append(headers, columns[colID].Title)
+	}
+	return headers
+}
+
+func (et *ElasticacheTable) Rows() []table.Row {
+	columns := availableColumns()
+	rows := []table.Row{}
+	for _, instance := range et.Instances {
+		row := table.Row{}
+		for _, colID := range et.SelectedColumns {
+			row = append(row, columns[colID].GetValue(&instance))
+		}
+		rows = append(rows, row)
+	}
+	return rows
+}
+
+func (et *ElasticacheTable) SortColumns() []string {
+	return et.SortOrder
+}
+
+func (et *ElasticacheTable) ColumnConfigs() []table.ColumnConfig {
+	return []table.ColumnConfig{}
+}
+
+func (et *ElasticacheTable) TableStyle() table.Style {
+	return table.StyleRounded
 }
 
 func NewElasticacheService(ctx context.Context, profile string, region string) (*ElasticacheService, error) {
@@ -91,68 +132,16 @@ func NewElasticacheService(ctx context.Context, profile string, region string) (
 	return &ElasticacheService{Client: client}, nil
 }
 
-func (svc *ElasticacheService) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
-
-	// Set the default sort order to name if no sort order is provided
-	if len(sortOrder) == 0 {
-		sortOrder = []string{"Cache name"}
-	}
-
-	showEndpoint := false
-	// Display endpoint if it is in the selected columns
-	for _, col := range selectedColumns {
-		if col == "endpoint" {
-			showEndpoint = true
-			break
-		}
-	}
-
+func (svc *ElasticacheService) GetInstances(ctx context.Context) ([]types.CacheCluster, error) {
 	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
-		ShowCacheNodeInfo: aws.Bool(showEndpoint),
+		ShowCacheNodeInfo: aws.Bool(true),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var instances []types.CacheCluster
 	instances = append(instances, output.CacheClusters...)
-
-	// Create the table
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-
-	headerRow := make(table.Row, 0)
-	for _, colID := range selectedColumns {
-		for _, col := range availableColumns {
-			if col.id == colID {
-				headerRow = append(headerRow, col.title)
-				break
-			}
-		}
-	}
-	t.AppendHeader(headerRow)
-
-	// Start loop
-	for _, instance := range instances {
-		// Create empty row for selected instance. Iterate through selected columns
-		row := make(table.Row, len(selectedColumns))
-		for i, colID := range selectedColumns {
-			// Iterate through available columns
-			for _, col := range availableColumns {
-				// If selected column = selected available column
-				if col.id == colID {
-					// Add value of getValue to index value (i) in row slice
-					row[i] = col.getValue(&instance)
-					break
-				}
-			}
-		}
-		t.AppendRow(row)
-	}
-
-	t.SortBy(tableformat.SortBy(sortOrder))
-	tableformat.SetStyle(t, list, false, nil)
-	t.Render()
-
-	return nil
+	return instances, nil
 }
+

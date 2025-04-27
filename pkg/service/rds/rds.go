@@ -2,8 +2,6 @@ package rds
 
 import (
 	"context"
-	"log"
-	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -14,6 +12,19 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
+type RDSTable struct {
+	Clusters        []types.DBCluster
+	Instances       []types.DBInstance
+	SelectedColumns []string
+	SortOrder       []string
+}
+
+type ListInstancesInput struct {
+	List            bool
+	SelectedColumns []string
+	SortOrder       []string
+}
+
 type RDSClientAPI interface {
 	DescribeDBInstances(context.Context, *rds.DescribeDBInstancesInput, ...func(*rds.Options)) (*rds.DescribeDBInstancesOutput, error)
 	DescribeDBClusters(context.Context, *rds.DescribeDBClustersInput, ...func(*rds.Options)) (*rds.DescribeDBClustersOutput, error)
@@ -21,68 +32,115 @@ type RDSClientAPI interface {
 
 type RDSService struct {
 	Client RDSClientAPI
-	ctx    context.Context
 }
 
 type columnDef struct {
-	id       string
-	title    string
-	getValue func(*types.DBInstance, []types.DBCluster) string
+	Title    string
+	GetValue func(*types.DBInstance, []types.DBCluster) string
 }
 
-var availableColumns = []columnDef{
-	{
-		id:    "cluster_identifier",
-		title: "Cluster Identifier",
-		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-			if i.DBClusterIdentifier != nil {
-				return aws.ToString(i.DBClusterIdentifier)
-			}
-			return "None"
+func availableColumns() map[string]columnDef {
+	return map[string]columnDef{
+		"cluster_identifier": {
+			Title: "Cluster Identifier",
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				if i.DBClusterIdentifier != nil {
+					return aws.ToString(i.DBClusterIdentifier)
+				}
+				return "-"
+			},
 		},
-	},
-	{
-		id:    "identifier",
-		title: "Identifier",
-		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-			return aws.ToString(i.DBInstanceIdentifier)
+		"identifier": {
+			Title: "Identifier",
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.DBInstanceIdentifier)
+			},
 		},
-	},
-	{
-		id:    "status",
-		title: "Status",
-		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-			return tableformat.ResourceState(aws.ToString(i.DBInstanceStatus))
+		"status": {
+			Title: "Status",
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return tableformat.ResourceState(aws.ToString(i.DBInstanceStatus))
+			},
 		},
-	},
-	{
-		id:    "engine",
-		title: "Engine",
-		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-			return string(*i.Engine)
+		"engine": {
+			Title: "Engine",
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return string(*i.Engine)
+			},
 		},
-	},
-	{
-		id:    "size",
-		title: "Size",
-		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-			return string(*i.DBInstanceClass)
+		"engine_version": {
+			Title: "Engine Version",
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return string(*i.EngineVersion)
+			},
 		},
-	},
-	{
-		id:    "role",
-		title: "Role",
-		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-			return getDBInstanceRole(*i, clusters)
+		"size": {
+			Title: "Size",
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return string(*i.DBInstanceClass)
+			},
 		},
-	},
-	{
-		id:    "endpoint",
-		title: "Endpoint",
-		getValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-			return aws.ToString(i.Endpoint.Address)
+		"role": {
+			Title: "Role",
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return getDBInstanceRole(*i, clusters)
+			},
 		},
-	},
+		"endpoint": {
+			Title: "Endpoint",
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.Endpoint.Address)
+			},
+		},
+	}
+}
+
+func (et *RDSTable) Headers() table.Row {
+	columns := availableColumns()
+	headers := table.Row{}
+	for _, colID := range et.SelectedColumns {
+		headers = append(headers, columns[colID].Title)
+	}
+	return headers
+}
+
+func (et *RDSTable) Rows() []table.Row {
+	columns := availableColumns()
+	rows := []table.Row{}
+	for _, instance := range et.Instances {
+		row := table.Row{}
+		for _, colID := range et.SelectedColumns {
+			row = append(row, columns[colID].GetValue(&instance, et.Clusters))
+		}
+		rows = append(rows, row)
+	}
+	return rows
+}
+
+func (et *RDSTable) SortColumns() []string {
+	return et.SortOrder
+}
+
+func (et *RDSTable) ColumnConfigs() []table.ColumnConfig {
+	return []table.ColumnConfig{
+		{Name: "Cluster Identifier", WidthMax: 40},
+		// {Name: "Identifier", WidthMax: 20},
+		{Name: "Status", WidthMax: 15},
+		{Name: "Engine", WidthMax: 12},
+		{Name: "Engine Version", WidthMax: 15},
+		// {Name: "Size", WidthMax: 12},
+		{Name: "Role", WidthMax: 15},
+		{Name: "Endpoint", WidthMax: 15},
+	}
+}
+
+func (et *RDSTable) TableStyle() table.Style {
+	style := table.StyleRounded
+	style.Options.SeparateRows = true
+	
+	style.Options.SeparateColumns = true
+	style.Options.SeparateHeader = true
+	return style
 }
 
 func NewRDSService(ctx context.Context, profile string, region string) (*RDSService, error) {
@@ -106,76 +164,29 @@ func NewRDSService(ctx context.Context, profile string, region string) (*RDSServ
 	}
 
 	client := rds.NewFromConfig(cfg)
-	return &RDSService{Client: client, ctx: ctx}, nil
+	return &RDSService{Client: client}, nil
 }
 
-func (svc *RDSService) ListInstances(ctx context.Context, sortOrder []string, list bool, selectedColumns []string) error {
-	// Set the default sort order to name if no sort order is provided
-	if len(sortOrder) == 0 {
-		sortOrder = []string{"Cluster Identifier", "Identifier"}
-	}
-
+func (svc *RDSService) GetInstances(ctx context.Context) ([]types.DBInstance, error) {
 	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var instances []types.DBInstance
 	instances = append(instances, output.DBInstances...)
+	return instances, nil
+}
 
+func (svc *RDSService) GetClusters(ctx context.Context) ([]types.DBCluster, error) {
 	clusterOutput, err := svc.Client.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{})
 	if err != nil {
-		log.Printf("Failed to describe clusters: %v", err)
-		return err
+		return nil, err
 	}
 
 	var clusters []types.DBCluster
 	clusters = append(clusters, clusterOutput.DBClusters...)
-
-	// Create the table
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-
-	headerRow := make(table.Row, 0)
-	for _, colID := range selectedColumns {
-		for _, col := range availableColumns {
-			if col.id == colID {
-				headerRow = append(headerRow, col.title)
-				break
-			}
-		}
-	}
-	t.AppendHeader(headerRow)
-
-	// The following loop is the same across different services, and will eventually
-	// be replaced with a shared function.
-	for _, instance := range instances {
-		// Create empty row for selected instance. Iterate through selected columns
-		row := make(table.Row, len(selectedColumns))
-		for i, colID := range selectedColumns {
-			// Iterate through available columns
-			for _, col := range availableColumns {
-				// If selected column = selected available column
-				if col.id == colID {
-					// Add value of getValue to index value (i) in row slice
-					row[i] = col.getValue(&instance, clusters)
-					break
-				}
-			}
-		}
-		t.AppendRow(row)
-	}
-
-	var (
-		separateRows = true
-		mergeColumn  = "Cluster Identifier"
-	)
-
-	t.SortBy(tableformat.SortBy(sortOrder))
-	tableformat.SetStyle(t, list, separateRows, &mergeColumn)
-	t.Render()
-
-	return nil
+	return clusters, nil
 }
 
 func getDBInstanceRole(instance types.DBInstance, clusters []types.DBCluster) string {
