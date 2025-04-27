@@ -9,15 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Column struct {
-	ID      string
-	Visible bool
-	Sort    bool
-}
-
 var (
 	list      bool
-	sortBy    string
 
 	showARNs bool
 
@@ -53,21 +46,15 @@ var lsCmd = &cobra.Command{
 			}
 
 			// Define columns for instances
-			columns := []Column{
-				{ID: "Name", Visible: true},
-				{ID: "State", Visible: true},
-				{ID: "Instance Type", Visible: true},
-				{ID: "Launch Template/Configuration", Visible: true},
-				{ID: "Availability Zone", Visible: true},
-				{ID: "Health", Visible: true},
+			columns := []tableformat.Column{
+				{ID: "Name", Visible: true, Sort: sortName},
+				{ID: "State", Visible: true, Sort: false},
+				{ID: "Instance Type", Visible: true, Sort: false},
+				{ID: "Launch Template/Configuration", Visible: true, Sort: false},
+				{ID: "Availability Zone", Visible: true, Sort: false},
+				{ID: "Health", Visible: true, Sort: false},
 			}
-
-			selectedColumns := make([]string, 0, len(columns))
-			for _, col := range columns {
-				if col.Visible {
-					selectedColumns = append(selectedColumns, col.ID)
-				}
-			}
+			selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 			tableformat.Render(&asg.AutoScalingInstanceTable{
 				Instances:         instances,
@@ -80,20 +67,14 @@ var lsCmd = &cobra.Command{
 			}
 
 			// Define columns for Auto Scaling Groups
-			columns := []Column{
-				{ID: "Name", Visible: true},
-				{ID: "Instances", Visible: true},
-				{ID: "Desired", Visible: true},
-				{ID: "Min", Visible: true},
-				{ID: "Max", Visible: true},
+			columns := []tableformat.Column{
+				{ID: "Name", Visible: true, Sort: sortName},
+				{ID: "Instances", Visible: true, Sort: sortInstances},
+				{ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
+				{ID: "Min", Visible: true, Sort: sortMinCapacity},
+				{ID: "Max", Visible: true, Sort: sortMaxCapacity},
 			}
-
-            selectedColumns := make([]string, 0, len(columns))
-            for _, col := range columns {
-                if col.Visible {
-                    selectedColumns = append(selectedColumns, col.ID)
-                }
-			}
+			selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 			tableformat.Render(&asg.AutoScalingTable{
 				AutoScalingGroups: autoScalingGroups,

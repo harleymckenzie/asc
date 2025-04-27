@@ -18,11 +18,6 @@ type ElasticacheTable struct {
 	SelectedColumns []string
 }
 
-type GetInstancesInput struct {
-	List            bool
-	SelectedColumns []string
-}
-
 type ElasticacheClientAPI interface {
 	DescribeCacheClusters(context.Context, *elasticache.DescribeCacheClustersInput, ...func(*elasticache.Options)) (*elasticache.DescribeCacheClustersOutput, error)
 }
@@ -67,20 +62,14 @@ func availableColumns() map[string]columnDef {
 }
 
 func (et *ElasticacheTable) Headers() table.Row {
-	headers := table.Row{}
-	for _, colID := range et.SelectedColumns {
-		headers = append(headers, colID)
-	}
-	return headers
+	return tableformat.BuildHeaders(et.SelectedColumns)
 }
-
 func (et *ElasticacheTable) Rows() []table.Row {
-	columns := availableColumns()
 	rows := []table.Row{}
 	for _, instance := range et.Instances {
 		row := table.Row{}
 		for _, colID := range et.SelectedColumns {
-			row = append(row, columns[colID].GetValue(&instance))
+			row = append(row, availableColumns()[colID].GetValue(&instance))
 		}
 		rows = append(rows, row)
 	}

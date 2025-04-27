@@ -20,15 +20,6 @@ type EC2Table struct {
 	SortBy          string
 }
 
-type ListInstancesInput struct {
-	// List of instance IDs to describe
-	List bool
-	// Columns to display in the table
-	SelectedColumns []string
-	// Sort order for the instances
-	SortBy string
-}
-
 type EC2ClientAPI interface {
 	DescribeInstances(ctx context.Context, params *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) (*ec2.DescribeInstancesOutput, error)
 }
@@ -89,13 +80,8 @@ func availableColumns() map[string]columnDef {
 }
 
 func (et *EC2Table) Headers() table.Row {
-	headers := table.Row{}
-	for _, colID := range et.SelectedColumns {
-		headers = append(headers, colID)
-	}
-	return headers
+	return tableformat.BuildHeaders(et.SelectedColumns)
 }
-
 func (et *EC2Table) Rows() []table.Row {
 	rows := []table.Row{}
 	for _, instance := range et.Instances {

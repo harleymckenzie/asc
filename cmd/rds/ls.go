@@ -9,16 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Column struct {
-	ID      string
-	Visible bool
-	Sort    bool
-}
-
 var (
-	list   bool
-	sortBy string
-
+	list              bool
 	showEndpoint      bool
 	showEngineVersion bool
 
@@ -49,7 +41,7 @@ var lsCmd = &cobra.Command{
 		}
 
 		// Define available columns and associated flags
-		columns := []Column{
+		columns := []tableformat.Column{
 			{ID: "Cluster Identifier", Visible: true, Sort: sortCluster},
 			{ID: "Identifier", Visible: true, Sort: sortName},
 			{ID: "Status", Visible: true, Sort: sortStatus},
@@ -59,15 +51,7 @@ var lsCmd = &cobra.Command{
 			{ID: "Role", Visible: true, Sort: sortRole},
 			{ID: "Endpoint", Visible: showEndpoint},
 		}
-
-		selectedColumns := make([]string, 0, len(columns))
-
-		// Dynamically build the list of columns
-		for _, col := range columns {
-			if col.Visible {
-				selectedColumns = append(selectedColumns, col.ID)
-			}
-		}
+		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 		tableformat.Render(&rds.RDSTable{
 			Instances:       instances,

@@ -9,16 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Column struct {
-	ID      string
-	Visible bool
-	Sort    bool
-}
-
 var (
-	list   bool
-	sortBy string
-
+	list           bool
 	showAMI        bool
 	showLaunchTime bool
 	showPrivateIP  bool
@@ -48,7 +40,7 @@ var lsCmd = &cobra.Command{
 		}
 
 		// Define available columns and associated flags
-		columns := []Column{
+		columns := []tableformat.Column{
 			{ID: "Name", Visible: true, Sort: sortName},
 			{ID: "Instance ID", Visible: true, Sort: sortID},
 			{ID: "State", Visible: true, Sort: false},
@@ -58,22 +50,7 @@ var lsCmd = &cobra.Command{
 			{ID: "Launch Time", Visible: showLaunchTime, Sort: sortLaunchTime},
 			{ID: "Private IP", Visible: showPrivateIP, Sort: false},
 		}
-
-		selectedColumns := make([]string, 0, len(columns))
-
-		// Dynamically build the list of columns
-		for _, col := range columns {
-			if col.Visible {
-				selectedColumns = append(selectedColumns, col.ID)
-			}
-			if col.Sort {
-				sortBy = col.ID
-			}
-		}
-
-		if sortBy == "" {
-			sortBy = "Name"
-		}
+		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 		tableformat.Render(&ec2.EC2Table{
 			Instances:       instances,

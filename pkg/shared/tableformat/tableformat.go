@@ -15,6 +15,12 @@ type TableData interface {
 	TableStyle() table.Style
 }
 
+type Column struct {
+	ID      string
+	Visible bool
+	Sort    bool
+}
+
 // ResourceState formats AWS resource states with appropriate colors for table output
 func ResourceState(state string) string {
 	stateLower := strings.ToLower(state)
@@ -28,4 +34,30 @@ func ResourceState(state string) string {
 	default:
 		return state
 	}
+}
+
+// BuildHeaders returns a table.Row of column headers
+func BuildHeaders(columns []string) table.Row {
+	headers := table.Row{}
+	for _, col := range columns {
+		headers = append(headers, col)
+	}
+	return headers
+}
+
+func BuildColumns(columns []Column) ([]string, string) {
+	columnIDs := []string{}
+	sortBy := ""
+	for _, col := range columns {
+		if col.Visible {
+			columnIDs = append(columnIDs, col.ID)
+		}
+		if col.Sort {
+			sortBy = col.ID
+		}
+	}
+	if sortBy == "" {
+		sortBy = columnIDs[0]
+	}
+	return columnIDs, sortBy
 }

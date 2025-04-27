@@ -9,16 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Column struct {
-	ID      string
-	Visible bool
-	Sort    bool
-}
-
 var (
 	list      bool
-	sortBy    string
-
 	showEndpoint bool
 
 	sortName   bool
@@ -45,21 +37,14 @@ var lsCmd = &cobra.Command{
 			log.Fatalf("Failed to list Elasticache instances: %v", err)
 		}
 
-		columns := []Column{
+		columns := []tableformat.Column{
 			{ID: "Cache Name", Visible: true},
 			{ID: "Status", Visible: true},
 			{ID: "Engine Version", Visible: true},
 			{ID: "Configuration", Visible: true},
 			{ID: "Endpoint", Visible: showEndpoint},
 		}
-
-		selectedColumns := make([]string, 0, len(columns))
-
-		for _, col := range columns {
-			if col.Visible {
-				selectedColumns = append(selectedColumns, col.ID)
-			}
-		}
+		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 		tableformat.Render(&elasticache.ElasticacheTable{
 			Instances:       instances,

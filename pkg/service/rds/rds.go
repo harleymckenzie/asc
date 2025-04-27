@@ -18,11 +18,6 @@ type RDSTable struct {
 	SelectedColumns []string
 }
 
-type ListInstancesInput struct {
-	List            bool
-	SelectedColumns []string
-}
-
 type RDSClientAPI interface {
 	DescribeDBInstances(context.Context, *rds.DescribeDBInstancesInput, ...func(*rds.Options)) (*rds.DescribeDBInstancesOutput, error)
 	DescribeDBClusters(context.Context, *rds.DescribeDBClustersInput, ...func(*rds.Options)) (*rds.DescribeDBClustersOutput, error)
@@ -85,13 +80,8 @@ func availableColumns() map[string]columnDef {
 }
 
 func (et *RDSTable) Headers() table.Row {
-	headers := table.Row{}
-	for _, colID := range et.SelectedColumns {
-		headers = append(headers, colID)
-	}
-	return headers
+	return tableformat.BuildHeaders(et.SelectedColumns)
 }
-
 func (et *RDSTable) Rows() []table.Row {
 	rows := []table.Row{}
 	for _, instance := range et.Instances {

@@ -23,11 +23,6 @@ type AutoScalingInstanceTable struct {
 	SelectedColumns []string
 }
 
-type GetAutoScalingGroupsInput struct {
-	List            bool
-	SelectedColumns []string
-}
-
 type GetInstancesInput struct {
 	AutoScalingGroupNames []string
 }
@@ -87,8 +82,8 @@ func availableColumns() map[string]columnDef {
 	}
 }
 
-// instanceColumns returns a map of column definitions for instances
-func instanceColumns() map[string]instanceColumnDef {
+// availableInstanceColumns returns a map of column definitions for instances
+func availableInstanceColumns() map[string]instanceColumnDef {
 	return map[string]instanceColumnDef{
 		"Name": {
 			GetValue: func(i *types.Instance) string {
@@ -128,13 +123,8 @@ func instanceColumns() map[string]instanceColumnDef {
 
 // Header and Row functions for Auto Scaling Groups
 func (et *AutoScalingTable) Headers() table.Row {
-	headers := table.Row{}
-	for _, colID := range et.SelectedColumns {
-		headers = append(headers, colID)
-	}
-	return headers
+	return tableformat.BuildHeaders(et.SelectedColumns)
 }
-
 func (et *AutoScalingTable) Rows() []table.Row {
 	rows := []table.Row{}
 	for _, asg := range et.AutoScalingGroups {
@@ -174,7 +164,7 @@ func (et *AutoScalingInstanceTable) Rows() []table.Row {
 	for _, instance := range et.Instances {
 		row := table.Row{}
 		for _, colID := range et.SelectedColumns {
-			row = append(row, instanceColumns()[colID].GetValue(&instance))
+			row = append(row, availableInstanceColumns()[colID].GetValue(&instance))
 		}
 		rows = append(rows, row)
 	}
