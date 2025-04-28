@@ -10,8 +10,12 @@ func Render(td TableData, sortBy string, list bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
-	t.AppendHeader(td.Headers())
-	t.AppendRows(td.Rows())
+	headers := td.Headers()
+	rows := td.Rows()
+	headers, rows = RemoveEmptyColumns(headers, rows)	
+
+	t.AppendHeader(headers)
+	t.AppendRows(rows)
 	t.SetColumnConfigs(td.ColumnConfigs())
 	t.SortBy([]table.SortBy{
 		{Name: sortBy, Mode: table.Asc},

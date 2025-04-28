@@ -34,54 +34,62 @@ var lsCmd = &cobra.Command{
 			log.Fatalf("Failed to initialize Auto Scaling Group service: %v", err)
 		}
 
-		// If a specific ASG is provided, show instance details using GetInstances,
-		// Otherwise use GetAutoScalingGroups
+		// If an argument is provided that isn't a subcommand, show instance details using GetInstances
 		if len(args) > 0 {
-			asgName := args[0]
-			instances, err := svc.GetInstances(ctx, &asg.GetInstancesInput{
-				AutoScalingGroupNames: []string{asgName},
-			})
-			if err != nil {
-				log.Fatalf("Failed to get instances for Auto Scaling Group %s: %v", args[0], err)
-			}
+            ListAutoScalingGroupInstances(svc, args[0])
+        } else {
+            ListAutoScalingGroups(svc)
+        }
+    },
+}
 
-			// Define columns for instances
-			columns := []tableformat.Column{
-				{ID: "Name", Visible: true, Sort: sortName},
-				{ID: "State", Visible: true, Sort: false},
-				{ID: "Instance Type", Visible: true, Sort: false},
-				{ID: "Launch Template/Configuration", Visible: true, Sort: false},
-				{ID: "Availability Zone", Visible: true, Sort: false},
-				{ID: "Health", Visible: true, Sort: false},
-			}
-			selectedColumns, sortBy := tableformat.BuildColumns(columns)
+func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) {
+    ctx := context.TODO()
+    instances, err := svc.GetInstances(ctx, &asg.GetInstancesInput{
+        AutoScalingGroupNames: []string{asgName},
+    })
+    if err != nil {
+        log.Fatalf("Failed to get instances for Auto Scaling Group %s: %v", asgName, err)
+    }
 
-			tableformat.Render(&asg.AutoScalingInstanceTable{
-				Instances:         instances,
-				SelectedColumns:   selectedColumns,
-			}, sortBy, list)
-		} else {
-			autoScalingGroups, err := svc.GetAutoScalingGroups(ctx)
-			if err != nil {
-				log.Fatalf("Failed to get Auto Scaling Groups: %v", err)
-			}
+    // Define columns for instances
+    columns := []tableformat.Column{
+        {ID: "Name", Visible: true, Sort: sortName},
+        {ID: "State", Visible: true, Sort: false},
+        {ID: "Instance Type", Visible: true, Sort: false},
+        {ID: "Launch Template/Configuration", Visible: true, Sort: false},
+        {ID: "Availability Zone", Visible: true, Sort: false},
+        {ID: "Health", Visible: true, Sort: false},
+    }
+    selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
-			// Define columns for Auto Scaling Groups
-			columns := []tableformat.Column{
-				{ID: "Name", Visible: true, Sort: sortName},
-				{ID: "Instances", Visible: true, Sort: sortInstances},
-				{ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
-				{ID: "Min", Visible: true, Sort: sortMinCapacity},
-				{ID: "Max", Visible: true, Sort: sortMaxCapacity},
-			}
-			selectedColumns, sortBy := tableformat.BuildColumns(columns)
+    tableformat.Render(&asg.AutoScalingInstanceTable{
+        Instances:         instances,
+        SelectedColumns:   selectedColumns,
+    }, sortBy, list)
+}
 
-			tableformat.Render(&asg.AutoScalingTable{
-				AutoScalingGroups: autoScalingGroups,
-				SelectedColumns:   selectedColumns,
-			}, sortBy, list)
-		}
-	},
+func ListAutoScalingGroups(svc *asg.AutoScalingService) {
+    ctx := context.TODO()
+    autoScalingGroups, err := svc.GetAutoScalingGroups(ctx)
+    if err != nil {
+            log.Fatalf("Failed to get Auto Scaling Groups: %v", err)
+    }
+
+    // Define columns for Auto Scaling Groups
+    columns := []tableformat.Column{
+        {ID: "Name", Visible: true, Sort: sortName},
+        {ID: "Instances", Visible: true, Sort: sortInstances},
+        {ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
+        {ID: "Min", Visible: true, Sort: sortMinCapacity},
+        {ID: "Max", Visible: true, Sort: sortMaxCapacity},
+    }
+    selectedColumns, sortBy := tableformat.BuildColumns(columns)
+
+    tableformat.Render(&asg.AutoScalingTable{
+        AutoScalingGroups: autoScalingGroups,
+    SelectedColumns:   selectedColumns,
+    }, sortBy, list)
 }
 
 func init() {
@@ -96,4 +104,6 @@ func init() {
 	lsCmd.Flags().BoolP("sort-min-capacity", "m", false, "Sort by descending min capacity.")
 	lsCmd.Flags().BoolP("sort-max-capacity", "M", false, "Sort by descending max capacity.")
 	lsCmd.Flags().SortFlags = false
+
+    lsCmd.AddCommand(lsSchedulesCmd)
 }

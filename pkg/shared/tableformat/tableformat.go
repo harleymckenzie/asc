@@ -61,3 +61,40 @@ func BuildColumns(columns []Column) ([]string, string) {
 	}
 	return columnIDs, sortBy
 }
+
+func RemoveEmptyColumns(header table.Row, rows []table.Row) (table.Row, []table.Row) {
+	if len(header) == 0 || len(rows) == 0 {
+		return header, rows
+	}
+
+	// Track which columns have non-empty values
+	hasValues := make([]bool, len(header))
+	for _, row := range rows {
+		for colIdx, value := range row {
+			if str, ok := value.(string); ok && str != "" {
+				hasValues[colIdx] = true
+			}
+		}
+	}
+
+	// Create new header and rows with only non-empty columns
+	newHeader := table.Row{}
+	for colIdx, value := range header {
+		if hasValues[colIdx] {
+			newHeader = append(newHeader, value)
+		}
+	}
+
+	newRows := make([]table.Row, len(rows))
+	for i, row := range rows {
+		newRow := table.Row{}
+		for colIdx, value := range row {
+			if hasValues[colIdx] {
+				newRow = append(newRow, value)
+			}
+		}
+		newRows[i] = newRow
+	}
+
+	return newHeader, newRows
+}

@@ -23,12 +23,22 @@ type AutoScalingInstanceTable struct {
 	SelectedColumns []string
 }
 
+type AutoScalingSchedulesTable struct {
+	Schedules       []types.ScheduledUpdateGroupAction
+	SelectedColumns []string
+}
+
 type GetInstancesInput struct {
 	AutoScalingGroupNames []string
 }
 
+type GetSchedulesInput struct {
+	AutoScalingGroupName string
+}
+
 type AutoScalingClientAPI interface {
 	DescribeAutoScalingGroups(ctx context.Context, params *autoscaling.DescribeAutoScalingGroupsInput, optFns ...func(*autoscaling.Options)) (*autoscaling.DescribeAutoScalingGroupsOutput, error)
+	DescribeScheduledActions(ctx context.Context, params *autoscaling.DescribeScheduledActionsInput, optFns ...func(*autoscaling.Options)) (*autoscaling.DescribeScheduledActionsOutput, error)
 }
 
 // AutoScalingService is a struct that holds the AutoScaling client.
@@ -43,6 +53,10 @@ type columnDef struct {
 
 type instanceColumnDef struct {
 	GetValue func(*types.Instance) string
+}
+
+type scheduleColumnDef struct {
+	GetValue func(*types.ScheduledUpdateGroupAction) string
 }
 
 // availableColumns returns a map of column definitions for Auto Scaling Groups
@@ -121,6 +135,64 @@ func availableInstanceColumns() map[string]instanceColumnDef {
 	}
 }
 
+func availableSchedulesColumns() map[string]scheduleColumnDef {
+	return map[string]scheduleColumnDef{
+		"Name": {
+			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
+				return aws.ToString(i.ScheduledActionName)
+			},
+		},
+		"Recurrence": {
+			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
+				if i.Recurrence == nil {
+					return ""
+				}
+				return aws.ToString(i.Recurrence)
+			},
+		},
+		"Start Time": {
+			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
+				if i.StartTime == nil {
+					return ""
+				}
+				return i.StartTime.Local().Format("2006-01-02 15:04:05 MST")
+			},
+		},
+		"End Time": {
+			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
+				if i.EndTime == nil {
+					return ""
+				}
+				return i.EndTime.Local().Format("2006-01-02 15:04:05 MST")
+			},
+		},
+		"Desired Capacity": {
+			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
+				if i.DesiredCapacity == nil {
+					return ""
+				}
+				return strconv.Itoa(int(*i.DesiredCapacity))
+			},
+		},
+		"Min": {
+			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
+				if i.MinSize == nil {
+					return ""
+				}
+				return strconv.Itoa(int(*i.MinSize))
+			},
+		},
+		"Max": {
+			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
+				if i.MaxSize == nil {
+					return ""
+				}
+				return strconv.Itoa(int(*i.MaxSize))
+			},
+		},
+	}
+}
+
 // Header and Row functions for Auto Scaling Groups
 func (et *AutoScalingTable) Headers() table.Row {
 	return tableformat.BuildHeaders(et.SelectedColumns)
@@ -179,6 +251,31 @@ func (et *AutoScalingInstanceTable) TableStyle() table.Style {
 	return table.StyleRounded
 }
 
+// Header and Row functions for Schedules
+func (et *AutoScalingSchedulesTable) Headers() table.Row {
+	return tableformat.BuildHeaders(et.SelectedColumns)
+}
+
+func (et *AutoScalingSchedulesTable) Rows() []table.Row {
+	rows := []table.Row{}
+	for _, schedule := range et.Schedules {
+		row := table.Row{}
+		for _, colID := range et.SelectedColumns {
+			row = append(row, availableSchedulesColumns()[colID].GetValue(&schedule))
+		}
+		rows = append(rows, row)
+	}
+	return rows
+}
+
+func (et *AutoScalingSchedulesTable) ColumnConfigs() []table.ColumnConfig {
+	return []table.ColumnConfig{}
+}
+
+func (et *AutoScalingSchedulesTable) TableStyle() table.Style {
+	return table.StyleRounded
+}
+
 func NewAutoScalingService(ctx context.Context, profile string, region string) (*AutoScalingService, error) {
 	var cfg aws.Config
 	var err error
@@ -227,4 +324,21 @@ func (svc *AutoScalingService) GetInstances(ctx context.Context, input *GetInsta
 		instances = append(instances, autoScalingGroups.Instances...)
 	}
 	return instances, nil
+}
+
+func (svc *AutoScalingService) GetSchedules(ctx context.Context, input *GetSchedulesInput) ([]types.ScheduledUpdateGroupAction, error) {
+
+	describeScheduledActionsInput := &autoscaling.DescribeScheduledActionsInput{}
+	if input.AutoScalingGroupName != "" {
+		describeScheduledActionsInput.AutoScalingGroupName = &input.AutoScalingGroupName
+	}
+
+	output, err := svc.Client.DescribeScheduledActions(ctx, describeScheduledActionsInput)
+	if err != nil {
+		return nil, err
+	}
+
+	var schedules []types.ScheduledUpdateGroupAction
+	schedules = append(schedules, output.ScheduledUpdateGroupActions...)
+	return schedules, nil
 }
