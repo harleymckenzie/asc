@@ -1,9 +1,24 @@
 # asc
 AWS Simple CLI (asc) - A simplified interface for AWS operations
 
-# What is asc?
+## What is asc?
 
-asc is a CLI tool that allows you to interact with AWS services in a simplified way. It is designed to be easy to use and understand, and to provide a consistent interface for interacting with AWS services.
+asc is a CLI tool designed to help me upskill in Go while building a tool that I use daily. The goal
+is to simplify common AWS operations in a bash-like way that is easy to remember and use.
+
+This is a personal passion project — I am not a software developer, and am using asc as a way to improve my skills in Go.
+Because of this:
+- Some features may initially be slightly experimental or rough around the edges.
+- I will always do my best to test features thoroughly before including them in a release.
+
+Service features will be added gradually, based either on:
+- What I find myself needing the most day-to-day, or
+- What I feel like working on at the time.
+
+My aim is to implement functionality in a way that feels natural and efficient, rather than overly rigid.
+For example:
+- Traversing SSM Parameters in a filesystem-like way (e.g., navigating parameters as folders).
+- Creating an ASG scheduled action quickly via CLI — ideally faster and less painful than doing it manually in the AWS console.
 
 ## Installation
 
@@ -12,41 +27,173 @@ brew tap harleymckenzie/asc
 brew install asc
 ```
 
-# Subcommands
-- `ec2` - EC2 operations
-- `rds` - RDS operations
-- `elasticache` - ElastiCache operations
-- `asg` - ASG operations
 
-# Examples
+## Service Implementation Table
 
-List all EC2 instances, diplaying and sorting by time created:
+Below is a table of of the commands that I plan to implement, and the status of each command.
+
+| Service        | Command / Subcommand | Status | Notes / Features |
+|:---------------|:---------------------|:------:|:------|
+| ASG            | ls                   | ✓      | List ASGs |
+| ASG            | modify               | ✗      | Modify ASGs |
+| ASG            | schedule add         | ✓      | Add schedule to ASG, supports human friendly time input |
+| ASG            | schedule ls          | ✓      | List ASG schedules |
+| ASG            | schedule rm          | ✓      | Remove schedule from ASG |
+| ASG            | show / describe      | ✗      | Show ASG details |
+| CloudFormation | ls                   | ✗      | List CloudFormation stacks |
+| CloudFormation | rm                   | ✗      | Delete CloudFormation stacks |
+| CloudFormation | parameter ls         | ✗      | List CloudFormation stack parameters |
+| CloudFormation | parameter edit       | ✗      | Edit CloudFormation stack parameters |
+| EC2            | ls                   | ✓      | List EC2 instances |
+| EC2            | modify               | ✗      | Modify EC2 instances |
+| EC2            | show / describe      | ✗      | Show EC2 instance details |
+| EC2            | start                | ✗      | Start EC2 instances |
+| EC2            | stop                 | ✗      | Stop EC2 instances |
+| EC2            | restart              | ✗      | Restart EC2 instances |
+| EC2            | rm / terminate       | ✗      | Terminate EC2 instances |
+| ECS            | ls                   | ✗      | List ECS clusters, services, tasks |
+| ECS            | modify               | ✗      | Modify ECS clusters and services |
+| ECS            | rm / terminate       | ✗      | Terminate ECS tasks |
+| ECS            | schedule add         | ✗      | Add schedule to ECS services |
+| ECS            | schedule ls          | ✗      | List ECS schedules |
+| ECS            | schedule rm          | ✗      | Remove schedule from ECS services |
+| ElastiCache    | ls                   | ✓      | List ElastiCache clusters |
+| ElastiCache    | modify               | ✗      | Modify ElastiCache clusters |
+| ElastiCache    | rm / terminate       | ✗      | Terminate ElastiCache clusters |
+| ElastiCache    | show / describe      | ✗      | Show ElastiCache instance details |
+| RDS            | ls                   | ✓      | List RDS instances |
+| RDS            | modify               | ✗      | Modify RDS instances |
+| RDS            | rm                   | ✗      | Terminate RDS instances |
+| RDS            | show / describe      | ✗      | Show RDS instance details |
+| S3             | cp                   | ✗      | Copy S3 objects |
+| S3             | ls                   | ✗      | List S3 buckets |
+| S3             | mv                   | ✗      | Move S3 objects |
+| S3             | rm                   | ✗      | Delete S3 buckets |
+| S3             | show / describe      | ✗      | Show S3 bucket or object details |
+| SSM            | document ls          | ✗      | List SSM documents |
+| SSM            | document run         | ✗      | Run SSM documents |
+| SSM            | document rm          | ✗      | Delete SSM documents |
+| SSM            | document show        | ✗      | Show SSM document details |
+| SSM            | parameter add        | ✗      | Add SSM parameters |
+| SSM            | parameter cp         | ✗      | Copy SSM parameters, supports wildcards |
+| SSM            | parameter edit       | ✗      | Edit SSM parameters |
+| SSM            | parameter ls         | ✗      | List SSM parameters, supports wildcards |
+| SSM            | parameter mv         | ✗      | Move SSM parameters, supports wildcards |
+| SSM            | parameter rm         | ✗      | Delete SSM parameters, supports wildcards |
+| SSM            | parameter show       | ✗      | Show SSM parameter details |
+| SSM            | session ls           | ✗      | List SSM sessions |
+| SSM            | session start        | ✗      | Start SSM sessions |
+| SSM            | session stop         | ✗      | Stop SSM sessions |
+| SSM            | session rm           | ✗      | Delete SSM sessions |
+| SSM            | session show         | ✗      | Show SSM session details |
+
+
+## Output Format
+
+By default, most `asc` commands output results in a **table format** for easier readability.
+Many commands also support a `--list` flag to produce a **simpler list-style output** if preferred.
+
+Example:
+```sh
+asc ec2 ls
+```
+_(Outputs EC2 instances in a table.)_
 
 ```sh
-asc ec2 ls -Lt
+asc ec2 ls --list
+```
+_(Outputs EC2 instances in a basic list format.)_
+
+### Example Output
+
+Example output from listing RDS clusters and instances:
+
+```
+╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ RDS Clusters and Instances                                                                                        │
+├────────────────────┬─────────────────────────────────────────┬───────────┬──────────────┬────────────────┬────────┤
+│ CLUSTER IDENTIFIER │ IDENTIFIER                              │ STATUS    │ ENGINE       │ SIZE           │ ROLE   │
+├────────────────────┼─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
+│ prod-aurora        │ prod-aurora-eu1a                        │ available │ aurora-mysql │ db.r6g.2xlarge │ Writer │
+│                    ├─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
+│                    │ prod-aurora-eu1c                        │ available │ aurora-mysql │ db.r6g.2xlarge │ Reader │
+│                    ├─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
+│                    │ aurora-reader-cluster                   │ available │ aurora-mysql │ db.t4g.large   │ Reader │
+├────────────────────┼─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
+│ testing-cluster    │ aurora-testing                          │ available │ aurora-mysql │ db.t3.medium   │ Writer │
+├────────────────────┼─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
+│ legacy-cluster     │ legacy-reporting-aurora                 │ available │ aurora-mysql │ db.t3.medium   │ Reader │
+│                    ├─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
+│                    │ aurora-legacy-cluster                   │ available │ aurora-mysql │ db.t4g.medium  │ Writer │
+╰────────────────────┴─────────────────────────────────────────┴───────────┴──────────────┴────────────────┴────────╯
 ```
 
-List all RDS resources, sorted by instance identifier:
 
+## Examples
+
+### EC2
+
+#### List all EC2 instances
 ```sh
-asc rds ls -n
+asc ec2 ls
 ```
 
-List all ElastiCache clusters, sorted by type:
-
+#### List all EC2 instances showing AMI ID and private IP
 ```sh
-asc elasticache ls -T
+asc ec2 ls --ami --private-ip
 ```
 
-List all ASGs, sorted by name:
-
+#### List all EC2 instances sorted by launch time
 ```sh
-asc asg ls -n
+asc ec2 ls --sort-launch-time
 ```
 
-List all instances in an ASG:
-
+#### Output EC2 instances in a simple list format
 ```sh
-asc asg ls <asg-name>
+asc ec2 ls --list
+```
+
+### Auto Scaling Groups (ASG)
+
+#### List all Auto Scaling Groups
+```sh
+asc asg ls
+```
+
+#### List all Auto Scaling Groups showing ARNs
+```sh
+asc asg ls --arn
+```
+
+#### List all Auto Scaling Groups sorted by number of instances
+```sh
+asc asg ls --sort-instances
+```
+
+#### List instances in a specific Auto Scaling Group
+```sh
+asc asg ls my-asg-name
+```
+
+### ASG Schedules
+
+#### List all schedules across all Auto Scaling Groups
+```sh
+asc asg ls schedules
+```
+
+#### List schedules for a specific Auto Scaling Group
+```sh
+asc asg ls schedules my-asg-name
+```
+
+#### Add a schedule to an Auto Scaling Group with minimum size set, at Friday 10:00am
+```sh
+asc asg schedule add my-schedule --asg-name my-asg --min-size 4 --start-time 'Friday 10:00'
+```
+
+#### Add a schedule to an Auto Scaling Group with desired capacity set, at 10:00am on 25th April 2025
+```sh
+asc asg schedule add my-schedule --asg-name my-asg --desired-capacity 8 --start-time '10:00am 25/04/2025'
 ```
 
