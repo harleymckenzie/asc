@@ -1,0 +1,62 @@
+name: Bump Tag Version
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  versionbump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check for changes to cmd/root.go
+        run: |
+          # Check to see if cmd/root.go has been updated
+          if ! git diff --name-only HEAD~1 HEAD | grep -q "cmd/root.go"; then
+            echo "No version bump found in cmd/root.go"
+            exit 0
+          else
+            echo "Version bump found in cmd/root.go"
+            echo "APP_VERSION_UPDATED=true" >> $GITHUB_ENV
+
+            APP_VERSION=$(grep -oP 'Version = "\K[^"]+' cmd/root.go)
+            echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          fi
+
+      - name: Compare app version to tag version
+        if: ${{ env.APP_VERSION_UPDATED }}
+        id: get_latest_version
+        run: |
+          LATEST_TAG=$(git tag -l --sort=-version:refname | head -n 1)
+          TAG_VERSION="${LATEST_TAG#v}"
+          APP_VERSION=${{ env.APP_VERSION }}
+          echo "Tag version: $TAG_VERSION"
+          echo "App version: $APP_VERSION"
+          
+          # Check if APP_VERSION is greater than TAG_VERSION
+          # First, sort them and get the highest
+          sorted_versions=$(printf '%s\n%s\n' "$APP_VERSION" "$TAG_VERSION" | sort -V)
+          lowest_version=$(echo "$sorted_versions" | head -n 1)
+
+          if [ "$lowest_version" = "$TAG_VERSION" ] && [ "$APP_VERSION" != "$TAG_VERSION" ]; then
+            echo "APP_VERSION is greater than TAG_VERSION"
+            echo "NEW_TAG_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          else
+            echo "APP_VERSION is not greater than TAG_VERSION (equal or lower)"
+            exit 0
+          fi
+
+      - name: Create new tag
+        if: ${{ env.NEW_TAG_VERSION }}
+        run: |
+          NEW_TAG="v${{ env.NEW_TAG_VERSION }}"
+          echo "Creating new tag: $NEW_TAG"
+          git tag $NEW_TAG
+          git push origin $NEW_TAG
