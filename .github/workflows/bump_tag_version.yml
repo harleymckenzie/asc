@@ -54,6 +54,8 @@ jobs:
           fi
 
       - name: Create new tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTH_TOKEN }}
         if: ${{ env.NEW_TAG_VERSION }}
         run: |
           NEW_TAG="v${{ env.NEW_TAG_VERSION }}"
