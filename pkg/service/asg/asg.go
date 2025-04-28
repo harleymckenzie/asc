@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 
+	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -28,17 +29,11 @@ type AutoScalingSchedulesTable struct {
 	SelectedColumns []string
 }
 
-type GetInstancesInput struct {
-	AutoScalingGroupNames []string
-}
-
-type GetSchedulesInput struct {
-	AutoScalingGroupName string
-}
-
 type AutoScalingClientAPI interface {
 	DescribeAutoScalingGroups(ctx context.Context, params *autoscaling.DescribeAutoScalingGroupsInput, optFns ...func(*autoscaling.Options)) (*autoscaling.DescribeAutoScalingGroupsOutput, error)
 	DescribeScheduledActions(ctx context.Context, params *autoscaling.DescribeScheduledActionsInput, optFns ...func(*autoscaling.Options)) (*autoscaling.DescribeScheduledActionsOutput, error)
+	PutScheduledUpdateGroupAction(ctx context.Context, params *autoscaling.PutScheduledUpdateGroupActionInput, optFns ...func(*autoscaling.Options)) (*autoscaling.PutScheduledUpdateGroupActionOutput, error)
+	DeleteScheduledAction(ctx context.Context, params *autoscaling.DeleteScheduledActionInput, optFns ...func(*autoscaling.Options)) (*autoscaling.DeleteScheduledActionOutput, error)
 }
 
 // AutoScalingService is a struct that holds the AutoScaling client.
@@ -46,22 +41,9 @@ type AutoScalingService struct {
 	Client AutoScalingClientAPI
 }
 
-// ColumnDef is a definition of a column to display in the table
-type columnDef struct {
-	GetValue func(*types.AutoScalingGroup) string
-}
-
-type instanceColumnDef struct {
-	GetValue func(*types.Instance) string
-}
-
-type scheduleColumnDef struct {
-	GetValue func(*types.ScheduledUpdateGroupAction) string
-}
-
 // availableColumns returns a map of column definitions for Auto Scaling Groups
-func availableColumns() map[string]columnDef {
-	return map[string]columnDef{
+func availableColumns() map[string]ascTypes.ColumnDef {
+	return map[string]ascTypes.ColumnDef{
 		"Name": {
 			GetValue: func(i *types.AutoScalingGroup) string {
 				return aws.ToString(i.AutoScalingGroupName)
@@ -97,8 +79,8 @@ func availableColumns() map[string]columnDef {
 }
 
 // availableInstanceColumns returns a map of column definitions for instances
-func availableInstanceColumns() map[string]instanceColumnDef {
-	return map[string]instanceColumnDef{
+func availableInstanceColumns() map[string]ascTypes.InstanceColumnDef {
+	return map[string]ascTypes.InstanceColumnDef{
 		"Name": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.InstanceId)
@@ -135,8 +117,8 @@ func availableInstanceColumns() map[string]instanceColumnDef {
 	}
 }
 
-func availableSchedulesColumns() map[string]scheduleColumnDef {
-	return map[string]scheduleColumnDef{
+func availableSchedulesColumns() map[string]ascTypes.ScheduleColumnDef {
+	return map[string]ascTypes.ScheduleColumnDef{
 		"Auto Scaling Group": {
 			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
 				return aws.ToString(i.AutoScalingGroupName)
@@ -307,6 +289,25 @@ func NewAutoScalingService(ctx context.Context, profile string, region string) (
 	return &AutoScalingService{Client: client}, nil
 }
 
+func (svc *AutoScalingService) AddSchedule(ctx context.Context, input *ascTypes.AddScheduleInput) error {
+	putScheduledUpdateGroupActionInput := &autoscaling.PutScheduledUpdateGroupActionInput{
+		AutoScalingGroupName: &input.AutoScalingGroupName,
+		ScheduledActionName:  &input.ScheduledActionName,
+		MinSize:              input.MinSize,
+		MaxSize:              input.MaxSize,
+		DesiredCapacity:      input.DesiredCapacity,
+		Recurrence:           input.Recurrence,
+		StartTime:            input.StartTime,
+		EndTime:              input.EndTime,
+	}
+
+	_, err := svc.Client.PutScheduledUpdateGroupAction(ctx, putScheduledUpdateGroupActionInput)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (svc *AutoScalingService) GetAutoScalingGroups(ctx context.Context) ([]types.AutoScalingGroup, error) {
 	output, err := svc.Client.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{})
 	if err != nil {
@@ -318,7 +319,7 @@ func (svc *AutoScalingService) GetAutoScalingGroups(ctx context.Context) ([]type
 	return autoScalingGroups, nil
 }
 
-func (svc *AutoScalingService) GetInstances(ctx context.Context, input *GetInstancesInput) ([]types.Instance, error) {
+func (svc *AutoScalingService) GetInstances(ctx context.Context, input *ascTypes.GetInstancesInput) ([]types.Instance, error) {
 	output, err := svc.Client.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: input.AutoScalingGroupNames,
 	})
@@ -333,7 +334,7 @@ func (svc *AutoScalingService) GetInstances(ctx context.Context, input *GetInsta
 	return instances, nil
 }
 
-func (svc *AutoScalingService) GetSchedules(ctx context.Context, input *GetSchedulesInput) ([]types.ScheduledUpdateGroupAction, error) {
+func (svc *AutoScalingService) GetSchedules(ctx context.Context, input *ascTypes.GetSchedulesInput) ([]types.ScheduledUpdateGroupAction, error) {
 
 	describeScheduledActionsInput := &autoscaling.DescribeScheduledActionsInput{}
 	if input.AutoScalingGroupName != "" {
@@ -348,4 +349,15 @@ func (svc *AutoScalingService) GetSchedules(ctx context.Context, input *GetSched
 	var schedules []types.ScheduledUpdateGroupAction
 	schedules = append(schedules, output.ScheduledUpdateGroupActions...)
 	return schedules, nil
+}
+
+func (svc *AutoScalingService) RemoveSchedule(ctx context.Context, input *ascTypes.RemoveScheduleInput) error {
+	_, err := svc.Client.DeleteScheduledAction(ctx, &autoscaling.DeleteScheduledActionInput{
+		AutoScalingGroupName: &input.AutoScalingGroupName,
+		ScheduledActionName:  &input.ScheduledActionName,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
