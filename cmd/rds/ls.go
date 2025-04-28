@@ -58,11 +58,17 @@ var lsCmd = &cobra.Command{
 		}
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
+		opts := tableformat.RenderOptions{
+			SortBy: sortBy,
+			List:   list,
+			Title:  "RDS Clusters and Instances",
+		}
+
 		tableformat.Render(&rds.RDSTable{
 			Instances:       instances,
 			Clusters:        clusters,
 			SelectedColumns: selectedColumns,
-		}, sortBy, list)
+		}, opts)
 	},
 }
 

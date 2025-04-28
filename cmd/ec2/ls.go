@@ -52,10 +52,16 @@ var lsCmd = &cobra.Command{
 		}
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
+		opts := tableformat.RenderOptions{
+			SortBy: sortBy,
+			List:   list,
+			Title:  "EC2 Instances",
+		}
+
 		tableformat.Render(&ec2.EC2Table{
 			Instances:       instances,
 			SelectedColumns: selectedColumns,
-		}, sortBy, list)
+		}, opts)
 	},
 }
 

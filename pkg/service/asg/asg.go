@@ -137,6 +137,11 @@ func availableInstanceColumns() map[string]instanceColumnDef {
 
 func availableSchedulesColumns() map[string]scheduleColumnDef {
 	return map[string]scheduleColumnDef{
+		"Auto Scaling Group": {
+			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
+				return aws.ToString(i.AutoScalingGroupName)
+			},
+		},
 		"Name": {
 			GetValue: func(i *types.ScheduledUpdateGroupAction) string {
 				return aws.ToString(i.ScheduledActionName)
@@ -269,7 +274,9 @@ func (et *AutoScalingSchedulesTable) Rows() []table.Row {
 }
 
 func (et *AutoScalingSchedulesTable) ColumnConfigs() []table.ColumnConfig {
-	return []table.ColumnConfig{}
+	return []table.ColumnConfig{
+		{Name: "Auto Scaling Group", AutoMerge: true},
+	}
 }
 
 func (et *AutoScalingSchedulesTable) TableStyle() table.Style {

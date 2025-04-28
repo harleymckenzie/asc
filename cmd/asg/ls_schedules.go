@@ -24,34 +24,75 @@ var lsSchedulesCmd = &cobra.Command{
 
         // If an argument is provided, use it as the Auto Scaling Group name,
         // otherwise dont provide a name to GetSchedules
-        var asgName string
         if len(args) > 0 {
-            asgName = args[0]
+            ListAutoScalingGroupSchedules(svc, args[0])
+        } else {
+            ListAllAutoScalingGroupSchedules(svc)
         }
-        schedules, err := svc.GetSchedules(ctx, &asg.GetSchedulesInput{
-            AutoScalingGroupName: asgName,
-        })
-        if err != nil {
-            log.Fatalf("Failed to get schedules for Auto Scaling Group %s: %v", asgName, err)
-        }
-
-        // Define columns for schedules
-        columns := []tableformat.Column{
-            {ID: "Name", Visible: true, Sort: sortName},
-            {ID: "Recurrence", Visible: true, Sort: false},
-            {ID: "Start Time", Visible: true, Sort: false},
-            {ID: "End Time", Visible: true, Sort: false},
-            {ID: "Desired Capacity", Visible: true, Sort: false},
-            {ID: "Min", Visible: true, Sort: false},
-            {ID: "Max", Visible: true, Sort: false},
-        }
-        selectedColumns, sortBy := tableformat.BuildColumns(columns)
-
-        tableformat.Render(&asg.AutoScalingSchedulesTable{
-            Schedules: schedules,
-            SelectedColumns: selectedColumns,
-        }, sortBy, list)
 	},
+}
+
+func ListAutoScalingGroupSchedules(svc *asg.AutoScalingService, asgName string) {
+	ctx := context.TODO()
+	schedules, err := svc.GetSchedules(ctx, &asg.GetSchedulesInput{
+		AutoScalingGroupName: asgName,
+	})
+	if err != nil {
+		log.Fatalf("Failed to get schedules for Auto Scaling Group %s: %v", asgName, err)
+	}
+
+    // Define columns for schedules
+    columns := []tableformat.Column{
+        {ID: "Name", Visible: true, Sort: sortName},
+        {ID: "Recurrence", Visible: true, Sort: false},
+        {ID: "Start Time", Visible: true, Sort: false},
+        {ID: "End Time", Visible: true, Sort: false},
+        {ID: "Desired Capacity", Visible: true, Sort: false},
+        {ID: "Min", Visible: true, Sort: false},
+        {ID: "Max", Visible: true, Sort: false},
+    }
+    selectedColumns, sortBy := tableformat.BuildColumns(columns)
+
+    opts := tableformat.RenderOptions{
+        SortBy: sortBy,
+        List:   list,
+    }
+
+    tableformat.Render(&asg.AutoScalingSchedulesTable{
+        Schedules: schedules,
+        SelectedColumns: selectedColumns,
+    }, opts)
+}
+
+func ListAllAutoScalingGroupSchedules(svc *asg.AutoScalingService) {
+	ctx := context.TODO()
+	schedules, err := svc.GetSchedules(ctx, &asg.GetSchedulesInput{})
+	if err != nil {
+		log.Fatalf("Failed to get schedules for all Auto Scaling Groups: %v", err)
+	}
+
+    // Define columns for schedules
+    columns := []tableformat.Column{
+        {ID: "Auto Scaling Group", Visible: true, Sort: false},
+        {ID: "Name", Visible: true, Sort: sortName},
+        {ID: "Recurrence", Visible: true, Sort: false},
+        {ID: "Start Time", Visible: true, Sort: false},
+        {ID: "End Time", Visible: true, Sort: false},
+        {ID: "Desired Capacity", Visible: true, Sort: false},
+        {ID: "Min", Visible: true, Sort: false},
+        {ID: "Max", Visible: true, Sort: false},
+    }
+    selectedColumns, sortBy := tableformat.BuildColumns(columns)
+
+    opts := tableformat.RenderOptions{
+        SortBy: sortBy,
+        List:   list,
+    }
+
+    tableformat.Render(&asg.AutoScalingSchedulesTable{
+        Schedules: schedules,
+        SelectedColumns: selectedColumns,
+    }, opts)
 }
 
 func init() {

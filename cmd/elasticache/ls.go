@@ -46,10 +46,16 @@ var lsCmd = &cobra.Command{
 		}
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
+		opts := tableformat.RenderOptions{
+			SortBy: sortBy,
+			List:   list,
+			Title:  "Elasticache Clusters",
+		}
+
 		tableformat.Render(&elasticache.ElasticacheTable{
 			Instances:       instances,
 			SelectedColumns: selectedColumns,
-		}, sortBy, list)
+		}, opts)
 	},
 }
 
