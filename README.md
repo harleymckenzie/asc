@@ -100,7 +100,7 @@ asc ec2 ls
 _(Outputs EC2 instances in a table.)_
 
 ```sh
-asc ec2 ls --list
+asc ec2 ls -l
 ```
 _(Outputs EC2 instances in a basic list format.)_
 
@@ -118,16 +118,17 @@ Example output from listing RDS clusters and instances:
 │                    ├─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
 │                    │ prod-aurora-eu1c                        │ available │ aurora-mysql │ db.r6g.2xlarge │ Reader │
 │                    ├─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
-│                    │ aurora-reader-cluster                   │ available │ aurora-mysql │ db.t4g.large   │ Reader │
+│                    │ reporting-aurora                        │ available │ aurora-mysql │ db.t4g.large   │ Reader │
 ├────────────────────┼─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
 │ testing-cluster    │ aurora-testing                          │ available │ aurora-mysql │ db.t3.medium   │ Writer │
+│                    ├─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
+│                    │ aurora-legacy-cluster                   │ available │ aurora-mysql │ db.t4g.medium  │ Writer │
 ├────────────────────┼─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
 │ legacy-cluster     │ legacy-reporting-aurora                 │ available │ aurora-mysql │ db.t3.medium   │ Reader │
 │                    ├─────────────────────────────────────────┼───────────┼──────────────┼────────────────┼────────┤
-│                    │ aurora-legacy-cluster                   │ available │ aurora-mysql │ db.t4g.medium  │ Writer │
+│                    │ legacy-upgrade-dry-run-cluster          │ available │ aurora-mysql │ db.t4g.medium  │ Writer │
 ╰────────────────────┴─────────────────────────────────────────┴───────────┴──────────────┴────────────────┴────────╯
 ```
-
 
 ## Examples
 
@@ -140,17 +141,17 @@ asc ec2 ls
 
 #### List all EC2 instances showing AMI ID and private IP
 ```sh
-asc ec2 ls --ami --private-ip
+asc ec2 ls -A -P
 ```
 
 #### List all EC2 instances sorted by launch time
 ```sh
-asc ec2 ls --sort-launch-time
+asc ec2 ls -t
 ```
 
 #### Output EC2 instances in a simple list format
 ```sh
-asc ec2 ls --list
+asc ec2 ls -l
 ```
 
 ### Auto Scaling Groups (ASG)
@@ -167,7 +168,7 @@ asc asg ls --arn
 
 #### List all Auto Scaling Groups sorted by number of instances
 ```sh
-asc asg ls --sort-instances
+asc asg ls -i
 ```
 
 #### List instances in a specific Auto Scaling Group
@@ -187,13 +188,13 @@ asc asg ls schedules
 asc asg ls schedules my-asg-name
 ```
 
-#### Add a schedule to an Auto Scaling Group with minimum size set, at Friday 10:00am
+#### Add a schedule to an Auto Scaling Group with minimum and maximum size set, at 10:00am on 25th April 2025
 ```sh
-asc asg schedule add my-schedule --asg-name my-asg --min-size 4 --start-time 'Friday 10:00'
+asc asg schedule add my-schedule -a my-asg -m 4 -M 8 -s 'Friday 10:00'
 ```
 
 #### Add a schedule to an Auto Scaling Group with desired capacity set, at 10:00am on 25th April 2025
 ```sh
-asc asg schedule add my-schedule --asg-name my-asg --desired-capacity 8 --start-time '10:00am 25/04/2025'
+asc asg schedule add my-schedule -a my-asg -d 8 -s '10:00am 25/04/2025'
 ```
 
