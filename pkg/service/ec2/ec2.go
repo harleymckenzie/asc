@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -73,7 +72,7 @@ func availableColumns() map[string]columnDef {
 		},
 		"Launch Time": {
 			GetValue: func(i *types.Instance) string {
-				return i.LaunchTime.Format(time.RFC3339)
+				return i.LaunchTime.Local().Format("2006-01-02 15:04:05 MST")
 			},
 		},
 	}

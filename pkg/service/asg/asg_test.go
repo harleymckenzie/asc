@@ -12,6 +12,7 @@ import (
 
 type mockASGClient struct {
 	describeAutoScalingGroupsOutput *autoscaling.DescribeAutoScalingGroupsOutput
+	describeScheduledActionsOutput  *autoscaling.DescribeScheduledActionsOutput
 	err                             error
 }
 
@@ -24,6 +25,17 @@ func (m *mockASGClient) DescribeAutoScalingGroups(
 		return nil, m.err
 	}
 	return m.describeAutoScalingGroupsOutput, nil
+}
+
+func (m *mockASGClient) DescribeScheduledActions(
+	_ context.Context,
+	_ *autoscaling.DescribeScheduledActionsInput,
+	_ ...func(*autoscaling.Options),
+) (*autoscaling.DescribeScheduledActionsOutput, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return m.describeScheduledActionsOutput, nil
 }
 
 func TestListInstances(t *testing.T) {
