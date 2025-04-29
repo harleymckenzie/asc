@@ -15,8 +15,11 @@ var (
 )
 
 var stopCmd = &cobra.Command{
-	Use:   "stop",
-	Short: "Stop an EC2 instance",
+	Use:     "stop",
+	Short:   "Stop an EC2 instance",
+	Aliases: []string{"shutdown", "halt"},
+	Example: "asc ec2 stop i-1234567890abcdef0\n" +
+		"asc ec2 stop i-1234567890abcdef0 --force",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")

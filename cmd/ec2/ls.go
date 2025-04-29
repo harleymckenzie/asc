@@ -32,6 +32,10 @@ var (
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all EC2 instances",
+	Aliases: []string{"list"},
+	Example: "asc ec2 ls -A           # List all EC2 instances with the AMI ID\n" +
+		"asc ec2 ls -Lt          # List all EC2 instances, displaying and sorting by launch time\n" +
+		"asc ec2 ls -l           # List all EC2 instances in list format",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		// Define available columns and associated flags
 		columns := []tableformat.Column{

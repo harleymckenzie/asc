@@ -22,6 +22,7 @@ type EC2Table struct {
 
 type EC2ClientAPI interface {
 	DescribeInstances(ctx context.Context, params *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) (*ec2.DescribeInstancesOutput, error)
+	RebootInstances(ctx context.Context, params *ec2.RebootInstancesInput, optFns ...func(*ec2.Options)) (*ec2.RebootInstancesOutput, error)
 	StartInstances(ctx context.Context, params *ec2.StartInstancesInput, optFns ...func(*ec2.Options)) (*ec2.StartInstancesOutput, error)
 	StopInstances(ctx context.Context, params *ec2.StopInstancesInput, optFns ...func(*ec2.Options)) (*ec2.StopInstancesOutput, error)
 	TerminateInstances(ctx context.Context, params *ec2.TerminateInstancesInput, optFns ...func(*ec2.Options)) (*ec2.TerminateInstancesOutput, error)
@@ -173,11 +174,26 @@ func getInstanceName(instance types.Instance) string {
 	return name
 }
 
+func (svc *EC2Service) RestartInstance(ctx context.Context, input *ascTypes.RestartInstanceInput) error {
+	_, err := svc.Client.RebootInstances(ctx, &ec2.RebootInstancesInput{
+		InstanceIds: []string{input.InstanceID},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (svc *EC2Service) StartInstance(ctx context.Context, input *ascTypes.StartInstanceInput) error {
 	_, err := svc.Client.StartInstances(ctx, &ec2.StartInstancesInput{
 		InstanceIds: []string{input.InstanceID},
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (svc *EC2Service) StopInstance(ctx context.Context, input *ascTypes.StopInstanceInput) error {

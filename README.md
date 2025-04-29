@@ -49,10 +49,10 @@ Below is a table of of the commands that I plan to implement, and the status of 
 | EC2            | ls                   | ✓      | List EC2 instances                                                          |
 | EC2            | modify               | ✗      | Modify EC2 instances                                                        |
 | EC2            | show / describe      | ✗      | Show EC2 instance details                                                   |
-| EC2            | start                | ✗      | Start EC2 instances                                                         |
-| EC2            | stop                 | ✗      | Stop EC2 instances                                                          |
-| EC2            | restart              | ✗      | Restart EC2 instances                                                       |
-| EC2            | rm / terminate       | ✗      | Terminate EC2 instances                                                     |
+| EC2            | start                | ✓      | Start EC2 instances                                                         |
+| EC2            | stop                 | ✓      | Stop EC2 instances                                                          |
+| EC2            | restart              | ✓      | Restart EC2 instances                                                       |
+| EC2            | rm / terminate       | ✓      | Terminate EC2 instances                                                     |
 | ECS            | ls                   | ✗      | List ECS clusters, services, tasks                                          |
 | ECS            | modify               | ✗      | Modify ECS clusters and services                                            |
 | ECS            | rm / terminate       | ✗      | Terminate ECS tasks                                                         |

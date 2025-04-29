@@ -16,6 +16,12 @@ type GetInstancesInput struct {
 	InstanceIDs []string
 }
 
+type RestartInstanceInput struct {
+	
+	// The ID of the instance to restart
+	InstanceID string
+}
+
 type StartInstanceInput struct {
 	
 	// The ID of the instance to start

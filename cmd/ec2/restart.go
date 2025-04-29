@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/harleymckenzie/asc/pkg/service/ec2"
@@ -10,10 +11,11 @@ import (
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
 )
 
-var startCmd = &cobra.Command{
-	Use:     "start",
-	Short:   "Start an EC2 instance",
-	Example: "asc ec2 start i-1234567890abcdef0",
+var restartCmd = &cobra.Command{
+	Use:     "restart",
+	Short:   "Restart an EC2 instance",
+	Aliases: []string{"reboot"},
+	Example: "asc ec2 restart i-1234567890abcdef0",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
@@ -30,25 +32,19 @@ var startCmd = &cobra.Command{
 			log.Fatalf("Failed to initialize EC2 service: %v", err)
 		}
 
-		// Start the instance
-		err = svc.StartInstance(ctx, &ascTypes.StartInstanceInput{
+		err = svc.RestartInstance(ctx, &ascTypes.RestartInstanceInput{
 			InstanceID: args[0],
 		})
 		if err != nil {
-			log.Fatalf("Failed to start EC2 instance: %v", err)
+			log.Fatalf("Failed to restart EC2 instance: %v", err)
 		}
 
-		ListEC2Instances(cobraCmd, ListInstancesInput{
-			GetInstancesInput: &ascTypes.GetInstancesInput{
-				InstanceIDs: []string{args[0]},
-			},
-			SelectedColumns: []string{"Name", "Instance ID", "State"},
-		})
+		fmt.Printf("Reboot request sent to instance %s\n", args[0])
 	},
 }
 
-func addStartFlags(startCmd *cobra.Command) {}
+func addRestartFlags(restartCmd *cobra.Command) {}
 
 func init() {
-	addStartFlags(startCmd)
+	addRestartFlags(restartCmd)
 }
