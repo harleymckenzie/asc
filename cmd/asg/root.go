@@ -6,8 +6,9 @@ import (
 
 func NewASGRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "asg",
-		Short: "Perform Auto Scaling Group operations",
+		Use:     "asg",
+		Short:   "Perform Auto Scaling Group operations",
+		GroupID: "service",
 	}
 
 	// Action commands

@@ -20,8 +20,8 @@ var (
 )
 
 var lsCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "List Elasticache clusters",
+	Use:     "ls",
+	Short:   "List Elasticache clusters",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")

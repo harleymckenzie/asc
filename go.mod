@@ -27,6 +27,7 @@ require (
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.52.3
+	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.59.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.196.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.92.0

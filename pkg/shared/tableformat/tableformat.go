@@ -25,11 +25,11 @@ type Column struct {
 func ResourceState(state string) string {
 	stateLower := strings.ToLower(state)
 	switch stateLower {
-	case "running", "available", "active", "healthy":
+	case "running", "available", "active", "healthy", "create_complete", "update_complete", "import_complete":
 		return text.FgGreen.Sprint(state)
-	case "stopped", "failed", "deleting", "deleted", "terminated":
+	case "stopped", "failed", "deleting", "deleted", "terminated", "rollback_failed", "rollback_complete", "update_rollback_complete", "create_failed", "delete_in_progress", "delete_failed", "delete_complete", "import_rollback_in_progress", "import_rollback_complete", "import_rollback_failed":
 		return text.FgRed.Sprint(state)
-	case "pending", "creating", "stopping", "modifying", "rebooting":
+	case "pending", "creating", "stopping", "modifying", "rebooting", "create_in_progress", "rollback_in_progress", "update_in_progress", "update_complete_cleanup_in_progress", "update_rollback_in_progress", "update_rollback_complete_cleanup_in_progress", "import_in_progress":
 		return text.FgYellow.Sprint(state)
 	default:
 		return state

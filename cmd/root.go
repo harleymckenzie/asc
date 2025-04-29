@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/harleymckenzie/asc/cmd/asg"
+	"github.com/harleymckenzie/asc/cmd/cloudformation"
 	"github.com/harleymckenzie/asc/cmd/ec2"
 	"github.com/harleymckenzie/asc/cmd/elasticache"
 	"github.com/harleymckenzie/asc/cmd/rds"
@@ -18,19 +19,30 @@ var (
 )
 
 func NewRootCmd() *cobra.Command {
-	cmds := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "asc",
 		Short: "AWS Simple CLI (asc) - A simplified interface for AWS operations",
 	}
-	cmds.PersistentFlags().StringVarP(&Profile, "profile", "p", "", "AWS profile to use")
-	cmds.PersistentFlags().StringVarP(&Region, "region", "r", "", "AWS region to use")
-	cmds.Version = Version
+	cmd.PersistentFlags().StringVarP(&Profile, "profile", "p", "", "AWS profile to use")
+	cmd.PersistentFlags().StringVarP(&Region, "region", "r", "", "AWS region to use")
+	cmd.Version = Version
 
-	cmds.AddCommand(asg.NewASGRootCmd())
-	cmds.AddCommand(ec2.NewEC2RootCmd())
-	cmds.AddCommand(rds.NewRDSRootCmd())
-	cmds.AddCommand(elasticache.NewElasticacheRootCmd())
-	return cmds
+	// Add commands
+	cmd.AddCommand(asg.NewASGRootCmd())
+	cmd.AddCommand(cloudformation.NewCloudFormationRootCmd())
+	cmd.AddCommand(ec2.NewEC2RootCmd())
+	cmd.AddCommand(rds.NewRDSRootCmd())
+	cmd.AddCommand(elasticache.NewElasticacheRootCmd())
+
+	// Add groups
+	cmd.AddGroup(
+		&cobra.Group{
+			ID: "service",
+			Title: "Service Commands",
+		},
+	)
+
+	return cmd
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

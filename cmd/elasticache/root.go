@@ -7,8 +7,9 @@ import (
 
 func NewElasticacheRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "elasticache",
-		Short: "Perform Elasticache operations",
+		Use:     "elasticache",
+		Short:   "Perform Elasticache operations",
+		GroupID: "service",
 	}
 
 	cmd.AddCommand(lsCmd)

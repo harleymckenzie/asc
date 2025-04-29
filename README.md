@@ -40,8 +40,10 @@ Below is a table of of the commands that I plan to implement, and the status of 
 | ASG            | schedule ls          | ✓      | List ASG schedules                                                          |
 | ASG            | schedule rm          | ✓      | Remove schedule from ASG                                                    |
 | ASG            | show / describe      | ✗      | Show ASG details                                                            |
-| CloudFormation | ls                   | ✗      | List CloudFormation stacks                                                  |
+| CloudFormation | events               | ✗      | List CloudFormation stack events                                             |
+| CloudFormation | ls                   | ✓      | List CloudFormation stacks                                                  |
 | CloudFormation | rm                   | ✗      | Delete CloudFormation stacks                                                |
+| CloudFormation | show / describe      | ✗      | Show CloudFormation stack details                                            |
 | CloudFormation | parameter ls         | ✗      | List CloudFormation stack parameters                                        |
 | CloudFormation | parameter edit       | ✗      | Edit CloudFormation stack parameters                                        |
 | EC2            | ls                   | ✓      | List EC2 instances                                                          |

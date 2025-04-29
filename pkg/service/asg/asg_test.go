@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
@@ -36,6 +37,39 @@ func (m *mockASGClient) DescribeScheduledActions(
 		return nil, m.err
 	}
 	return m.describeScheduledActionsOutput, nil
+}
+
+func (m *mockASGClient) PutScheduledUpdateGroupAction(
+	_ context.Context,
+	_ *autoscaling.PutScheduledUpdateGroupActionInput,
+	_ ...func(*autoscaling.Options),
+) (*autoscaling.PutScheduledUpdateGroupActionOutput, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &autoscaling.PutScheduledUpdateGroupActionOutput{}, nil
+}
+
+func (m *mockASGClient) DeleteScheduledAction(
+	_ context.Context,
+	_ *autoscaling.DeleteScheduledActionInput,
+	_ ...func(*autoscaling.Options),
+) (*autoscaling.DeleteScheduledActionOutput, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &autoscaling.DeleteScheduledActionOutput{}, nil
+}
+
+func (m *mockASGClient) UpdateAutoScalingGroup(
+	_ context.Context,
+	_ *autoscaling.UpdateAutoScalingGroupInput,
+	_ ...func(*autoscaling.Options),
+) (*autoscaling.UpdateAutoScalingGroupOutput, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &autoscaling.UpdateAutoScalingGroupOutput{}, nil
 }
 
 func TestListInstances(t *testing.T) {
@@ -79,7 +113,7 @@ func TestListInstances(t *testing.T) {
 				},
 			}
 
-			instances, err := svc.GetInstances(context.Background(), &GetInstancesInput{
+			instances, err := svc.GetAutoScalingGroupInstances(context.Background(), &ascTypes.GetAutoScalingGroupInstancesInput{
 				AutoScalingGroupNames: []string{},
 			})
 			if (err != nil) != tc.wantErr {

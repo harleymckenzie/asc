@@ -189,6 +189,7 @@ func availableSchedulesColumns() map[string]ascTypes.ScheduleColumnDef {
 func (et *AutoScalingTable) Headers() table.Row {
 	return tableformat.BuildHeaders(et.SelectedColumns)
 }
+
 func (et *AutoScalingTable) Rows() []table.Row {
 	rows := []table.Row{}
 	for _, asg := range et.AutoScalingGroups {

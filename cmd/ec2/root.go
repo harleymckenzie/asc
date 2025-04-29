@@ -4,8 +4,9 @@ import "github.com/spf13/cobra"
 
 func NewEC2RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "ec2",
-		Short: "Perform EC2 operations",
+		Use:     "ec2",
+		Short:   "Perform EC2 operations",
+		GroupID: "service",
 	}
 
 	cmd.AddCommand(lsCmd)

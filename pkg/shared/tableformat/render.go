@@ -22,7 +22,6 @@ func Render(td TableData, opts RenderOptions) {
 
 	t.AppendHeader(headers)
 	t.AppendRows(rows)
-	t.SetColumnConfigs(td.ColumnConfigs())
 	t.SortBy([]table.SortBy{
 		{Name: opts.SortBy, Mode: table.Asc},
 	})
@@ -37,6 +36,7 @@ func Render(td TableData, opts RenderOptions) {
 		if opts.Title != "" {
 			t.SetTitle(opts.Title)
 		}
+		t.SetColumnConfigs(td.ColumnConfigs())
 		t.SetStyle(td.TableStyle())
 	}
 

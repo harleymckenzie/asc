@@ -6,8 +6,9 @@ import (
 
 func NewRDSRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rds",
-		Short: "Perform RDS operations",
+		Use:     "rds",
+		Short:   "Perform RDS operations",
+		GroupID: "service",
 	}
 
 	cmd.AddCommand(lsCmd)

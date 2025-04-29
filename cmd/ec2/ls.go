@@ -22,8 +22,8 @@ var (
 )
 
 var lsCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "List all EC2 instances",
+	Use:     "ls",
+	Short:   "List all EC2 instances",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
