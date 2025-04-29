@@ -10,6 +10,9 @@ func NewEC2RootCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(lsCmd)
+	cmd.AddCommand(startCmd)
+	cmd.AddCommand(stopCmd)
+	cmd.AddCommand(terminateCmd)
 
 	return cmd
 }

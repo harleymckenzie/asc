@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
+	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -21,6 +22,9 @@ type EC2Table struct {
 
 type EC2ClientAPI interface {
 	DescribeInstances(ctx context.Context, params *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) (*ec2.DescribeInstancesOutput, error)
+	StartInstances(ctx context.Context, params *ec2.StartInstancesInput, optFns ...func(*ec2.Options)) (*ec2.StartInstancesOutput, error)
+	StopInstances(ctx context.Context, params *ec2.StopInstancesInput, optFns ...func(*ec2.Options)) (*ec2.StopInstancesOutput, error)
+	TerminateInstances(ctx context.Context, params *ec2.TerminateInstancesInput, optFns ...func(*ec2.Options)) (*ec2.TerminateInstancesOutput, error)
 }
 
 // EC2Service is a struct that holds the EC2 client.
@@ -28,13 +32,8 @@ type EC2Service struct {
 	Client EC2ClientAPI
 }
 
-// ColumnDef is a definition of a column to display in the table
-type columnDef struct {
-	GetValue func(*types.Instance) string
-}
-
-func availableColumns() map[string]columnDef {
-	return map[string]columnDef{
+func availableColumns() map[string]ascTypes.ColumnDef {
+	return map[string]ascTypes.ColumnDef{
 		"Name": {
 			GetValue: func(i *types.Instance) string {
 				return getInstanceName(*i)
@@ -78,9 +77,14 @@ func availableColumns() map[string]columnDef {
 	}
 }
 
+//
+// Table functions
+//
+
 func (et *EC2Table) Headers() table.Row {
 	return tableformat.BuildHeaders(et.SelectedColumns)
 }
+
 func (et *EC2Table) Rows() []table.Row {
 	rows := []table.Row{}
 	for _, instance := range et.Instances {
@@ -111,6 +115,10 @@ func (et *EC2Table) TableStyle() table.Style {
 	return style
 }
 
+//
+// Service functions
+//
+
 func NewEC2Service(ctx context.Context, profile string, region string) (*EC2Service, error) {
 	var cfg aws.Config
 	var err error
@@ -136,8 +144,10 @@ func NewEC2Service(ctx context.Context, profile string, region string) (*EC2Serv
 }
 
 // GetInstances fetches EC2 instances and returns them directly.
-func (svc *EC2Service) GetInstances(ctx context.Context) ([]types.Instance, error) {
-	output, err := svc.Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
+func (svc *EC2Service) GetInstances(ctx context.Context, input *ascTypes.GetInstancesInput) ([]types.Instance, error) {
+	output, err := svc.Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
+		InstanceIds: input.InstanceIDs,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -161,4 +171,26 @@ func getInstanceName(instance types.Instance) string {
 	}
 
 	return name
+}
+
+func (svc *EC2Service) StartInstance(ctx context.Context, input *ascTypes.StartInstanceInput) error {
+	_, err := svc.Client.StartInstances(ctx, &ec2.StartInstancesInput{
+		InstanceIds: []string{input.InstanceID},
+	})
+	return err
+}
+
+func (svc *EC2Service) StopInstance(ctx context.Context, input *ascTypes.StopInstanceInput) error {
+	_, err := svc.Client.StopInstances(ctx, &ec2.StopInstancesInput{
+		InstanceIds: []string{input.InstanceID},
+		Force:       &input.Force,
+	})
+	return err
+}
+
+func (svc *EC2Service) TerminateInstance(ctx context.Context, input *ascTypes.TerminateInstanceInput) error {
+	_, err := svc.Client.TerminateInstances(ctx, &ec2.TerminateInstancesInput{
+		InstanceIds: []string{input.InstanceID},
+	})
+	return err
 }

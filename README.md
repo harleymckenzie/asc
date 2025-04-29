@@ -40,10 +40,10 @@ Below is a table of of the commands that I plan to implement, and the status of 
 | ASG            | schedule ls          | ✓      | List ASG schedules                                                          |
 | ASG            | schedule rm          | ✓      | Remove schedule from ASG                                                    |
 | ASG            | show / describe      | ✗      | Show ASG details                                                            |
-| CloudFormation | events               | ✗      | List CloudFormation stack events                                             |
+| CloudFormation | events               | ✗      | List CloudFormation stack events                                            |
 | CloudFormation | ls                   | ✓      | List CloudFormation stacks                                                  |
 | CloudFormation | rm                   | ✗      | Delete CloudFormation stacks                                                |
-| CloudFormation | show / describe      | ✗      | Show CloudFormation stack details                                            |
+| CloudFormation | show / describe      | ✗      | Show CloudFormation stack details                                           |
 | CloudFormation | parameter ls         | ✗      | List CloudFormation stack parameters                                        |
 | CloudFormation | parameter edit       | ✗      | Edit CloudFormation stack parameters                                        |
 | EC2            | ls                   | ✓      | List EC2 instances                                                          |
@@ -68,7 +68,7 @@ Below is a table of of the commands that I plan to implement, and the status of 
 | RDS            | rm                   | ✗      | Terminate RDS instances                                                     |
 | RDS            | show / describe      | ✗      | Show RDS instance details                                                   |
 | S3             | cp                   | ✗      | Copy S3 objects                                                             |
-| S3             | ls                   | ✗      | List S3 buckets                                                             |
+| S3             | ls                   | ✗      | List S3 buckets and objects                                                 |
 | S3             | mv                   | ✗      | Move S3 objects                                                             |
 | S3             | rm                   | ✗      | Delete S3 buckets                                                           |
 | S3             | show / describe      | ✗      | Show S3 bucket or object details                                            |

@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/jedib0t/go-pretty/v6/table"
+
+	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
 )
 
 type mockEC2Client struct {
@@ -25,6 +27,39 @@ func (m *mockEC2Client) DescribeInstances(
 		return nil, m.err
 	}
 	return m.describeInstancesOutput, nil
+}
+
+func (m *mockEC2Client) StartInstances(
+	_ context.Context,
+	_ *ec2.StartInstancesInput,
+	_ ...func(*ec2.Options),
+) (*ec2.StartInstancesOutput, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &ec2.StartInstancesOutput{}, nil
+}
+
+func (m *mockEC2Client) StopInstances(
+	_ context.Context,
+	_ *ec2.StopInstancesInput,
+	_ ...func(*ec2.Options),
+) (*ec2.StopInstancesOutput, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &ec2.StopInstancesOutput{}, nil
+}
+
+func (m *mockEC2Client) TerminateInstances(
+	_ context.Context,
+	_ *ec2.TerminateInstancesInput,
+	_ ...func(*ec2.Options),
+) (*ec2.TerminateInstancesOutput, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &ec2.TerminateInstancesOutput{}, nil
 }
 
 func TestListInstances(t *testing.T) {
@@ -98,7 +133,14 @@ func TestListInstances(t *testing.T) {
 				Client: mockClient,
 			}
 
-			instances, err := svc.GetInstances(context.Background())
+			var instanceIDs []string
+			if len(tc.instances) > 0 {
+				instanceIDs = []string{*tc.instances[0].InstanceId}
+			}
+
+			instances, err := svc.GetInstances(context.Background(), &ascTypes.GetInstancesInput{
+				InstanceIDs: instanceIDs,
+			})
 			if (err != nil) != tc.wantErr {
 				t.Errorf("ListInstances() error = %v, wantErr %v", err, tc.wantErr)
 			}
