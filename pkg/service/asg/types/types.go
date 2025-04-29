@@ -49,6 +49,9 @@ type GetAutoScalingGroupSchedulesInput struct {
 
 	// The name of the Auto Scaling Group to get schedules from
 	AutoScalingGroupName string
+
+	// The names of the scheduled actions to get
+	ScheduledActionNames []string
 }
 
 type ModifyAutoScalingGroupInput struct {

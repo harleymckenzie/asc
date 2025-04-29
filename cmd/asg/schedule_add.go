@@ -6,6 +6,7 @@ import (
 	"github.com/harleymckenzie/asc/pkg/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
 	"github.com/harleymckenzie/asc/pkg/shared/timeformat"
+	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/spf13/cobra"
 	"log"
 	"time"
@@ -19,6 +20,7 @@ var (
 	recurrence      string
 	startTimeStr    string
 	endTimeStr      string
+	tableOpts       tableformat.RenderOptions
 )
 
 var scheduleAddCmd = &cobra.Command{
@@ -101,6 +103,20 @@ func addSchedule(cobraCmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("Failed to add schedule: %v", err)
 	}
+
+	// List the schedule and print it
+	schedules, err := svc.GetAutoScalingGroupSchedules(ctx, &ascTypes.GetAutoScalingGroupSchedulesInput{
+		AutoScalingGroupName: asgName,
+		ScheduledActionNames: []string{scheduledActionName},
+	})
+	if err != nil {
+		log.Fatalf("Failed to get schedule: %v", err)
+	}
+
+	tableformat.Render(&asg.AutoScalingSchedulesTable{
+		Schedules:       schedules,
+		SelectedColumns: []string{"Auto Scaling Group", "Name", "Recurrence", "Start Time", "End Time", "Min", "Max", "Desired Capacity"},
+	}, tableOpts)
 }
 
 func addScheduleAddFlags(cobraCmd *cobra.Command) {

@@ -351,6 +351,9 @@ func (svc *AutoScalingService) GetAutoScalingGroupSchedules(ctx context.Context,
 	if input.AutoScalingGroupName != "" {
 		describeScheduledActionsInput.AutoScalingGroupName = &input.AutoScalingGroupName
 	}
+	if len(input.ScheduledActionNames) > 0 {
+		describeScheduledActionsInput.ScheduledActionNames = input.ScheduledActionNames
+	}
 
 	output, err := svc.Client.DescribeScheduledActions(ctx, describeScheduledActionsInput)
 	if err != nil {
