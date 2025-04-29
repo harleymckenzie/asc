@@ -17,27 +17,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Check for changes to cmd/root.go
-        run: |
-          # Check to see if cmd/root.go has been updated
-          if ! git diff --name-only HEAD~1 HEAD | grep -q "cmd/root.go"; then
-            echo "No version bump found in cmd/root.go"
-            exit 0
-          else
-            echo "Version bump found in cmd/root.go"
-            echo "APP_VERSION_UPDATED=true" >> $GITHUB_ENV
-
-            APP_VERSION=$(grep -oP 'Version = "\K[^"]+' cmd/root.go)
-            echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-          fi
-
       - name: Compare app version to tag version
-        if: ${{ env.APP_VERSION_UPDATED }}
         id: get_latest_version
         run: |
+          APP_VERSION=$(grep -oP 'Version = "\K[^"]+' cmd/root.go)
           LATEST_TAG=$(git tag -l --sort=-version:refname | head -n 1)
           TAG_VERSION="${LATEST_TAG#v}"
-          APP_VERSION=${{ env.APP_VERSION }}
+          
           echo "Tag version: $TAG_VERSION"
           echo "App version: $APP_VERSION"
           
