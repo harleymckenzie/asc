@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 )
 
-type AddScheduleInput struct {
+type AddAutoScalingGroupScheduleInput struct {
 
 	// The name of the Auto Scaling Group to add the schedule to
 	AutoScalingGroupName string
@@ -33,25 +33,46 @@ type AddScheduleInput struct {
 	EndTime *time.Time
 }
 
-type RemoveScheduleInput struct {
+type GetAutoScalingGroupsInput struct {
+
+	// The names of the Auto Scaling Groups to get
+	AutoScalingGroupNames []string
+}
+
+type GetAutoScalingGroupInstancesInput struct {
+
+	// The names of the Auto Scaling Groups to get instances from
+	AutoScalingGroupNames []string
+}
+
+type GetAutoScalingGroupSchedulesInput struct {
+
+	// The name of the Auto Scaling Group to get schedules from
+	AutoScalingGroupName string
+}
+
+type ModifyAutoScalingGroupInput struct {
+
+	// The name of the Auto Scaling Group to modify
+	AutoScalingGroupName string
+	
+	// The minimum size of the Auto Scaling Group
+	MinSize *int32
+
+	// The maximum size of the Auto Scaling Group
+	MaxSize *int32
+
+	// The desired capacity of the Auto Scaling Group
+	DesiredCapacity *int32
+}
+
+type RemoveAutoScalingGroupScheduleInput struct {
 
 	// The name of the Auto Scaling Group to remove the schedule from
 	AutoScalingGroupName string
 
 	// The name of the scheduled action to remove
 	ScheduledActionName string
-}
-
-type GetInstancesInput struct {
-
-	// The names of the Auto Scaling Groups to get instances from
-	AutoScalingGroupNames []string
-}
-
-type GetSchedulesInput struct {
-
-	// The name of the Auto Scaling Group to get schedules from
-	AutoScalingGroupName string
 }
 
 type ColumnDef struct {

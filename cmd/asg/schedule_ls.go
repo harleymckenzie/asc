@@ -38,7 +38,7 @@ func lsSchedule(cobraCmd *cobra.Command, args []string) {
 // ListAutoScalingGroupSchedules lists all schedules for a given Auto Scaling Group
 func ListAutoScalingGroupSchedules(svc *asg.AutoScalingService, asgName string) {
 	ctx := context.TODO()
-	schedules, err := svc.GetSchedules(ctx, &ascTypes.GetSchedulesInput{
+	schedules, err := svc.GetAutoScalingGroupSchedules(ctx, &ascTypes.GetAutoScalingGroupSchedulesInput{
 		AutoScalingGroupName: asgName,
 	})
 	if err != nil {
@@ -71,7 +71,7 @@ func ListAutoScalingGroupSchedules(svc *asg.AutoScalingService, asgName string) 
 // ListAllAutoScalingGroupSchedules lists all schedules for all Auto Scaling Groups
 func ListAllAutoScalingGroupSchedules(svc *asg.AutoScalingService) {
 	ctx := context.TODO()
-	schedules, err := svc.GetSchedules(ctx, &ascTypes.GetSchedulesInput{})
+	schedules, err := svc.GetAutoScalingGroupSchedules(ctx, &ascTypes.GetAutoScalingGroupSchedulesInput{})
 	if err != nil {
 		log.Fatalf("Failed to get schedules for all Auto Scaling Groups: %v", err)
 	}

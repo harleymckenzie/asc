@@ -34,6 +34,7 @@ type AutoScalingClientAPI interface {
 	DescribeScheduledActions(ctx context.Context, params *autoscaling.DescribeScheduledActionsInput, optFns ...func(*autoscaling.Options)) (*autoscaling.DescribeScheduledActionsOutput, error)
 	PutScheduledUpdateGroupAction(ctx context.Context, params *autoscaling.PutScheduledUpdateGroupActionInput, optFns ...func(*autoscaling.Options)) (*autoscaling.PutScheduledUpdateGroupActionOutput, error)
 	DeleteScheduledAction(ctx context.Context, params *autoscaling.DeleteScheduledActionInput, optFns ...func(*autoscaling.Options)) (*autoscaling.DeleteScheduledActionOutput, error)
+	UpdateAutoScalingGroup(ctx context.Context, params *autoscaling.UpdateAutoScalingGroupInput, optFns ...func(*autoscaling.Options)) (*autoscaling.UpdateAutoScalingGroupOutput, error)
 }
 
 // AutoScalingService is a struct that holds the AutoScaling client.
@@ -180,6 +181,10 @@ func availableSchedulesColumns() map[string]ascTypes.ScheduleColumnDef {
 	}
 }
 
+//
+// Table functions
+//
+
 // Header and Row functions for Auto Scaling Groups
 func (et *AutoScalingTable) Headers() table.Row {
 	return tableformat.BuildHeaders(et.SelectedColumns)
@@ -265,6 +270,10 @@ func (et *AutoScalingSchedulesTable) TableStyle() table.Style {
 	return table.StyleRounded
 }
 
+//
+// Service functions
+//
+
 func NewAutoScalingService(ctx context.Context, profile string, region string) (*AutoScalingService, error) {
 	var cfg aws.Config
 	var err error
@@ -289,7 +298,7 @@ func NewAutoScalingService(ctx context.Context, profile string, region string) (
 	return &AutoScalingService{Client: client}, nil
 }
 
-func (svc *AutoScalingService) AddSchedule(ctx context.Context, input *ascTypes.AddScheduleInput) error {
+func (svc *AutoScalingService) AddAutoScalingGroupSchedule(ctx context.Context, input *ascTypes.AddAutoScalingGroupScheduleInput) error {
 	putScheduledUpdateGroupActionInput := &autoscaling.PutScheduledUpdateGroupActionInput{
 		AutoScalingGroupName: &input.AutoScalingGroupName,
 		ScheduledActionName:  &input.ScheduledActionName,
@@ -308,8 +317,10 @@ func (svc *AutoScalingService) AddSchedule(ctx context.Context, input *ascTypes.
 	return nil
 }
 
-func (svc *AutoScalingService) GetAutoScalingGroups(ctx context.Context) ([]types.AutoScalingGroup, error) {
-	output, err := svc.Client.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{})
+func (svc *AutoScalingService) GetAutoScalingGroups(ctx context.Context, input *ascTypes.GetAutoScalingGroupsInput) ([]types.AutoScalingGroup, error) {
+	output, err := svc.Client.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: input.AutoScalingGroupNames,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +330,7 @@ func (svc *AutoScalingService) GetAutoScalingGroups(ctx context.Context) ([]type
 	return autoScalingGroups, nil
 }
 
-func (svc *AutoScalingService) GetInstances(ctx context.Context, input *ascTypes.GetInstancesInput) ([]types.Instance, error) {
+func (svc *AutoScalingService) GetAutoScalingGroupInstances(ctx context.Context, input *ascTypes.GetAutoScalingGroupInstancesInput) ([]types.Instance, error) {
 	output, err := svc.Client.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: input.AutoScalingGroupNames,
 	})
@@ -334,7 +345,7 @@ func (svc *AutoScalingService) GetInstances(ctx context.Context, input *ascTypes
 	return instances, nil
 }
 
-func (svc *AutoScalingService) GetSchedules(ctx context.Context, input *ascTypes.GetSchedulesInput) ([]types.ScheduledUpdateGroupAction, error) {
+func (svc *AutoScalingService) GetAutoScalingGroupSchedules(ctx context.Context, input *ascTypes.GetAutoScalingGroupSchedulesInput) ([]types.ScheduledUpdateGroupAction, error) {
 
 	describeScheduledActionsInput := &autoscaling.DescribeScheduledActionsInput{}
 	if input.AutoScalingGroupName != "" {
@@ -351,7 +362,22 @@ func (svc *AutoScalingService) GetSchedules(ctx context.Context, input *ascTypes
 	return schedules, nil
 }
 
-func (svc *AutoScalingService) RemoveSchedule(ctx context.Context, input *ascTypes.RemoveScheduleInput) error {
+func (svc *AutoScalingService) ModifyAutoScalingGroup(ctx context.Context, input *ascTypes.ModifyAutoScalingGroupInput) error {
+	modifyAutoScalingGroupInput := &autoscaling.UpdateAutoScalingGroupInput{
+		AutoScalingGroupName: &input.AutoScalingGroupName,
+		MinSize:              input.MinSize,
+		MaxSize:              input.MaxSize,
+		DesiredCapacity:      input.DesiredCapacity,
+	}
+	
+	_, err := svc.Client.UpdateAutoScalingGroup(ctx, modifyAutoScalingGroupInput)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc *AutoScalingService) RemoveAutoScalingGroupSchedule(ctx context.Context, input *ascTypes.RemoveAutoScalingGroupScheduleInput) error {
 	_, err := svc.Client.DeleteScheduledAction(ctx, &autoscaling.DeleteScheduledActionInput{
 		AutoScalingGroupName: &input.AutoScalingGroupName,
 		ScheduledActionName:  &input.ScheduledActionName,

@@ -27,7 +27,7 @@ func rmSchedule(cobraCmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to initialize Auto Scaling Group service: %v", err)
 	}
 
-	err = svc.RemoveSchedule(ctx, &ascTypes.RemoveScheduleInput{
+	err = svc.RemoveAutoScalingGroupSchedule(ctx, &ascTypes.RemoveAutoScalingGroupScheduleInput{
 		AutoScalingGroupName: asgName,
 		ScheduledActionName:  args[0],
 	})

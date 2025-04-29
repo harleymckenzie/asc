@@ -62,7 +62,7 @@ var lsScheduleCmd = &cobra.Command{
 
 func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) {
 	ctx := context.TODO()
-	instances, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{
+	instances, err := svc.GetAutoScalingGroupInstances(ctx, &ascTypes.GetAutoScalingGroupInstancesInput{
 		AutoScalingGroupNames: []string{asgName},
 	})
 	if err != nil {
@@ -93,7 +93,9 @@ func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) 
 
 func ListAutoScalingGroups(svc *asg.AutoScalingService) {
 	ctx := context.TODO()
-	autoScalingGroups, err := svc.GetAutoScalingGroups(ctx)
+	autoScalingGroups, err := svc.GetAutoScalingGroups(ctx, &ascTypes.GetAutoScalingGroupsInput{
+		AutoScalingGroupNames: []string{},
+	})
 	if err != nil {
 		log.Fatalf("Failed to get Auto Scaling Groups: %v", err)
 	}

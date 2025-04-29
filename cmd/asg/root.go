@@ -14,6 +14,7 @@ func NewASGRootCmd() *cobra.Command {
 	cmd.AddCommand(lsCmd)
 	cmd.AddCommand(addCmd)
 	cmd.AddCommand(rmCmd)
+	cmd.AddCommand(modifyCmd)
 
 	// Subcommands
 	cmd.AddCommand(scheduleCmd)

@@ -65,7 +65,7 @@ func addSchedule(cobraCmd *cobra.Command, args []string) {
 		fmt.Println("endTime: ", endTime)
 	}
 
-	input := &ascTypes.AddScheduleInput{
+	input := &ascTypes.AddAutoScalingGroupScheduleInput{
 		ScheduledActionName:  scheduledActionName,
 		AutoScalingGroupName: asgName,
 	}
@@ -97,7 +97,7 @@ func addSchedule(cobraCmd *cobra.Command, args []string) {
 		input.EndTime = endTime
 	}
 
-	err = svc.AddSchedule(ctx, input)
+	err = svc.AddAutoScalingGroupSchedule(ctx, input)
 	if err != nil {
 		log.Fatalf("Failed to add schedule: %v", err)
 	}

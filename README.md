@@ -32,61 +32,63 @@ brew install asc
 
 Below is a table of of the commands that I plan to implement, and the status of each command.
 
-| Service        | Command / Subcommand | Status | Notes / Features |
-|:---------------|:---------------------|:------:|:------|
-| ASG            | ls                   | ✓      | List ASGs |
-| ASG            | modify               | ✗      | Modify ASGs |
-| ASG            | schedule add         | ✓      | Add schedule to ASG, supports human friendly time input |
-| ASG            | schedule ls          | ✓      | List ASG schedules |
-| ASG            | schedule rm          | ✓      | Remove schedule from ASG |
-| ASG            | show / describe      | ✗      | Show ASG details |
-| CloudFormation | ls                   | ✗      | List CloudFormation stacks |
-| CloudFormation | rm                   | ✗      | Delete CloudFormation stacks |
-| CloudFormation | parameter ls         | ✗      | List CloudFormation stack parameters |
-| CloudFormation | parameter edit       | ✗      | Edit CloudFormation stack parameters |
-| EC2            | ls                   | ✓      | List EC2 instances |
-| EC2            | modify               | ✗      | Modify EC2 instances |
-| EC2            | show / describe      | ✗      | Show EC2 instance details |
-| EC2            | start                | ✗      | Start EC2 instances |
-| EC2            | stop                 | ✗      | Stop EC2 instances |
-| EC2            | restart              | ✗      | Restart EC2 instances |
-| EC2            | rm / terminate       | ✗      | Terminate EC2 instances |
-| ECS            | ls                   | ✗      | List ECS clusters, services, tasks |
-| ECS            | modify               | ✗      | Modify ECS clusters and services |
-| ECS            | rm / terminate       | ✗      | Terminate ECS tasks |
-| ECS            | schedule add         | ✗      | Add schedule to ECS services |
-| ECS            | schedule ls          | ✗      | List ECS schedules |
-| ECS            | schedule rm          | ✗      | Remove schedule from ECS services |
-| ElastiCache    | ls                   | ✓      | List ElastiCache clusters |
-| ElastiCache    | modify               | ✗      | Modify ElastiCache clusters |
-| ElastiCache    | rm / terminate       | ✗      | Terminate ElastiCache clusters |
-| ElastiCache    | show / describe      | ✗      | Show ElastiCache instance details |
-| RDS            | ls                   | ✓      | List RDS instances |
-| RDS            | modify               | ✗      | Modify RDS instances |
-| RDS            | rm                   | ✗      | Terminate RDS instances |
-| RDS            | show / describe      | ✗      | Show RDS instance details |
-| S3             | cp                   | ✗      | Copy S3 objects |
-| S3             | ls                   | ✗      | List S3 buckets |
-| S3             | mv                   | ✗      | Move S3 objects |
-| S3             | rm                   | ✗      | Delete S3 buckets |
-| S3             | show / describe      | ✗      | Show S3 bucket or object details |
-| SSM            | document ls          | ✗      | List SSM documents |
-| SSM            | document run         | ✗      | Run SSM documents |
-| SSM            | document rm          | ✗      | Delete SSM documents |
-| SSM            | document show        | ✗      | Show SSM document details |
-| SSM            | parameter add        | ✗      | Add SSM parameters |
-| SSM            | parameter cp         | ✗      | Copy SSM parameters, supports wildcards |
-| SSM            | parameter edit       | ✗      | Edit SSM parameters |
-| SSM            | parameter ls         | ✗      | List SSM parameters, supports wildcards |
-| SSM            | parameter mv         | ✗      | Move SSM parameters, supports wildcards |
-| SSM            | parameter rm         | ✗      | Delete SSM parameters, supports wildcards |
-| SSM            | parameter show       | ✗      | Show SSM parameter details |
-| SSM            | session ls           | ✗      | List SSM sessions |
-| SSM            | session start        | ✗      | Start SSM sessions |
-| SSM            | session stop         | ✗      | Stop SSM sessions |
-| SSM            | session rm           | ✗      | Delete SSM sessions |
-| SSM            | session show         | ✗      | Show SSM session details |
+| Service        | Command / Subcommand | Status | Notes / Features                                                            |
+|:---------------|:---------------------|:------:|:----------------------------------------------------------------------------|
+| ASG            | ls                   | ✓      | List ASGs                                                                   |
+| ASG            | modify               | ✓*     | Modify ASGs, supports relative and absolute values for min, max and desired capacity<br>_\* Currently supports min, max and desired capacity only_   |
+| ASG            | schedule add         | ✓      | Add schedule to ASG, supports human friendly time input                     |
+| ASG            | schedule ls          | ✓      | List ASG schedules                                                          |
+| ASG            | schedule rm          | ✓      | Remove schedule from ASG                                                    |
+| ASG            | show / describe      | ✗      | Show ASG details                                                            |
+| CloudFormation | ls                   | ✗      | List CloudFormation stacks                                                  |
+| CloudFormation | rm                   | ✗      | Delete CloudFormation stacks                                                |
+| CloudFormation | parameter ls         | ✗      | List CloudFormation stack parameters                                        |
+| CloudFormation | parameter edit       | ✗      | Edit CloudFormation stack parameters                                        |
+| EC2            | ls                   | ✓      | List EC2 instances                                                          |
+| EC2            | modify               | ✗      | Modify EC2 instances                                                        |
+| EC2            | show / describe      | ✗      | Show EC2 instance details                                                   |
+| EC2            | start                | ✗      | Start EC2 instances                                                         |
+| EC2            | stop                 | ✗      | Stop EC2 instances                                                          |
+| EC2            | restart              | ✗      | Restart EC2 instances                                                       |
+| EC2            | rm / terminate       | ✗      | Terminate EC2 instances                                                     |
+| ECS            | ls                   | ✗      | List ECS clusters, services, tasks                                          |
+| ECS            | modify               | ✗      | Modify ECS clusters and services                                            |
+| ECS            | rm / terminate       | ✗      | Terminate ECS tasks                                                         |
+| ECS            | schedule add         | ✗      | Add schedule to ECS services                                                |
+| ECS            | schedule ls          | ✗      | List ECS schedules                                                          |
+| ECS            | schedule rm          | ✗      | Remove schedule from ECS services                                           |
+| ElastiCache    | ls                   | ✓      | List ElastiCache clusters                                                   |
+| ElastiCache    | modify               | ✗      | Modify ElastiCache clusters                                                 |
+| ElastiCache    | rm / terminate       | ✗      | Terminate ElastiCache clusters                                              |
+| ElastiCache    | show / describe      | ✗      | Show ElastiCache instance details                                           |
+| RDS            | ls                   | ✓      | List RDS instances                                                          |
+| RDS            | modify               | ✗      | Modify RDS instances                                                        |
+| RDS            | rm                   | ✗      | Terminate RDS instances                                                     |
+| RDS            | show / describe      | ✗      | Show RDS instance details                                                   |
+| S3             | cp                   | ✗      | Copy S3 objects                                                             |
+| S3             | ls                   | ✗      | List S3 buckets                                                             |
+| S3             | mv                   | ✗      | Move S3 objects                                                             |
+| S3             | rm                   | ✗      | Delete S3 buckets                                                           |
+| S3             | show / describe      | ✗      | Show S3 bucket or object details                                            |
+| SSM            | document ls          | ✗      | List SSM documents                                                          |
+| SSM            | document run         | ✗      | Run SSM documents                                                           |
+| SSM            | document rm          | ✗      | Delete SSM documents                                                        |
+| SSM            | document show        | ✗      | Show SSM document details                                                   |
+| SSM            | parameter add        | ✗      | Add SSM parameters                                                          |
+| SSM            | parameter cp         | ✗      | Copy SSM parameters, supports wildcards and cross account copying           |
+| SSM            | parameter diff       | ✗      | Diff SSM parameters, supports wildcards and cross account diffing           |
+| SSM            | parameter edit       | ✗      | Edit SSM parameters                                                         |
+| SSM            | parameter ls         | ✗      | List SSM parameters, supports wildcards                                     |
+| SSM            | parameter mv         | ✗      | Move SSM parameters, supports wildcards and cross account moving            |
+| SSM            | parameter rm         | ✗      | Delete SSM parameters, supports wildcards                                   |
+| SSM            | parameter show       | ✗      | Show SSM parameter details                                                  |
+| SSM            | session ls           | ✗      | List SSM sessions                                                           |
+| SSM            | session start        | ✗      | Start SSM sessions                                                          |
+| SSM            | session stop         | ✗      | Stop SSM sessions                                                           |
+| SSM            | session rm           | ✗      | Delete SSM sessions                                                         |
+| SSM            | session show         | ✗      | Show SSM session details                                                    |
 
+_\* Partly implemented. Missing some features that I hope to add in the future_
 
 ## Output Format
 
