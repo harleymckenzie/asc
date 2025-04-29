@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 version: 2
 
 before:
@@ -68,6 +69,9 @@ brews:
 
     install: |
       bin.install "asc"
+
+    extra_install: |
+      generate_completions_from_executable(bin/"asc", "completion", shells: [:bash, :zsh, :fish])
 
     # Repository to push the generated files to.
     repository:
