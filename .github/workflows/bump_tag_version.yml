@@ -16,6 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.AUTH_TOKEN }}
           fetch-depth: 0
       - name: Compare app version to tag version
         id: get_latest_version
@@ -41,8 +42,6 @@ jobs:
           fi
 
       - name: Create new tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTH_TOKEN }}
         if: ${{ env.NEW_TAG_VERSION }}
         run: |
           NEW_TAG="v${{ env.NEW_TAG_VERSION }}"
