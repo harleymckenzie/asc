@@ -108,6 +108,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Filesystem-like navigation                                  | ✗      |                                                  |
 | Optional terminal UI                                        | ✗      |                                                  |
 | Export data to CSV, JSON, or other formats                  | ✗      |                                                  |
+| Service agnostic `show` command                             | ✗      |                                                  |
 
 
 ## Output Format

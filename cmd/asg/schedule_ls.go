@@ -10,15 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var scheduleLsCmd = &cobra.Command{
-	Use:   "schedules",
-	Short: "List all schedules for an Auto Scaling Group",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		lsSchedule(cobraCmd, args)
-	},
-}
-
-func lsSchedule(cobraCmd *cobra.Command, args []string) {
+func lsSchedules(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
@@ -103,8 +95,4 @@ func ListAllAutoScalingGroupSchedules(svc *asg.AutoScalingService) {
 func addScheduleLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
 	cobraCmd.Flags().SortFlags = false
-}
-
-func init() {
-	addScheduleLsFlags(scheduleLsCmd)
 }

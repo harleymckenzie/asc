@@ -2,12 +2,12 @@ package elb
 
 import (
 	"context"
-	"strconv"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"strconv"
+	"strings"
 
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
@@ -40,6 +40,55 @@ func availableColumns() map[string]ascTypes.LoadBalancerColumnDef {
 				return aws.ToString(i.LoadBalancerName)
 			},
 		},
+		"DNS Name": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return aws.ToString(i.DNSName)
+			},
+		},
+		"Scheme": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return string(i.Scheme)
+			},
+		},
+		"State": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return tableformat.ResourceState(string(i.State.Code))
+			},
+		},
+		"VPC ID": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return aws.ToString(i.VpcId)
+			},
+		},
+		"Availability Zones": {
+			GetValue: func(i *types.LoadBalancer) string {
+				azs := []string{}
+				for _, az := range i.AvailabilityZones {
+					azs = append(azs, aws.ToString(az.ZoneName))
+				}
+				return strings.Join(azs, ", ")
+			},
+		},
+		"Type": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return string(i.Type)
+			},
+		},
+		"IP Type": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return string(i.IpAddressType)
+			},
+		},
+		"Created Time": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return i.CreatedTime.Local().Format("2006-01-02 15:04:05 MST")
+			},
+		},
+		"ARN": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return aws.ToString(i.LoadBalancerArn)
+			},
+		},
 	}
 }
 
@@ -48,6 +97,36 @@ func availableTargetGroupColumns() map[string]ascTypes.TargetGroupColumnDef {
 		"Name": {
 			GetValue: func(i *types.TargetGroup) string {
 				return aws.ToString(i.TargetGroupName)
+			},
+		},
+		"Target Type": {
+			GetValue: func(i *types.TargetGroup) string {
+				return string(i.TargetType)
+			},
+		},
+		"Port": {
+			GetValue: func(i *types.TargetGroup) string {
+				return strconv.Itoa(int(*i.Port))
+			},
+		},
+		"Protocol": {
+			GetValue: func(i *types.TargetGroup) string {
+				return string(i.Protocol)
+			},
+		},
+		"ARN": {
+			GetValue: func(i *types.TargetGroup) string {
+				return aws.ToString(i.TargetGroupArn)
+			},
+		},
+		"VPC ID": {
+			GetValue: func(i *types.TargetGroup) string {
+				return aws.ToString(i.VpcId)
+			},
+		},
+		"Load Balancer": {
+			GetValue: func(i *types.TargetGroup) string {
+				return getTargetGroupLoadBalancer(*i)
 			},
 		},
 		"Health Check Enabled": {
@@ -91,21 +170,6 @@ func availableTargetGroupColumns() map[string]ascTypes.TargetGroupColumnDef {
 				return strconv.Itoa(int(*i.UnhealthyThresholdCount))
 			},
 		},
-		"Target Type": {
-			GetValue: func(i *types.TargetGroup) string {
-				return string(i.TargetType)
-			},
-		},
-		"Target Group ARN": {
-			GetValue: func(i *types.TargetGroup) string {
-				return aws.ToString(i.TargetGroupArn)
-			},
-		},
-		"VPC ID": {
-			GetValue: func(i *types.TargetGroup) string {
-				return aws.ToString(i.VpcId)
-			},
-		},
 	}
 }
 
@@ -132,7 +196,7 @@ func (et *ELBTable) Rows() []table.Row {
 
 func (et *ELBTable) ColumnConfigs() []table.ColumnConfig {
 	return []table.ColumnConfig{
-		{Name: "Name", WidthMin: 10, WidthMax: 10},
+		// {Name: "Name", WidthMin: 10, WidthMax: 10},
 	}
 }
 
@@ -217,4 +281,12 @@ func (svc *ELBService) GetTargetGroups(ctx context.Context, input *ascTypes.GetT
 	var targetGroups []types.TargetGroup
 	targetGroups = append(targetGroups, output.TargetGroups...)
 	return targetGroups, nil
+}
+
+func getTargetGroupLoadBalancer(targetGroup types.TargetGroup) string {
+	if len(targetGroup.LoadBalancerArns) > 0 {
+		name := strings.Split(string(targetGroup.LoadBalancerArns[0]), "/")
+		return name[len(name)-2]
+	}
+	return ""
 }

@@ -56,7 +56,7 @@ var lsScheduleCmd = &cobra.Command{
 	Use:   "schedules",
 	Short: "List schedules for an Auto Scaling Group",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		lsSchedule(cobraCmd, args)
+		lsSchedules(cobraCmd, args)
 	},
 }
 

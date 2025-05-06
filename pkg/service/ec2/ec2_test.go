@@ -62,6 +62,17 @@ func (m *mockEC2Client) TerminateInstances(
 	return &ec2.TerminateInstancesOutput{}, nil
 }
 
+func (m *mockEC2Client) RebootInstances(
+	_ context.Context,
+	_ *ec2.RebootInstancesInput,
+	_ ...func(*ec2.Options),
+) (*ec2.RebootInstancesOutput, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &ec2.RebootInstancesOutput{}, nil
+}
+
 func TestListInstances(t *testing.T) {
 	testCases := []struct {
 		name      string
