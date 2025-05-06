@@ -112,7 +112,7 @@ func availableInstanceColumns() map[string]ascTypes.InstanceColumnDef {
 		},
 		"Health": {
 			GetValue: func(i *types.Instance) string {
-				return tableformat.ResourceState(aws.ToString(i.HealthStatus))
+				return tableformat.FormatState(aws.ToString(i.HealthStatus))
 			},
 		},
 	}

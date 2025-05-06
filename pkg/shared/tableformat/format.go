@@ -34,6 +34,10 @@ var StateColours = map[string]text.Color{
 	"stopping":                    text.FgYellow,
 	"terminated":                  text.FgRed,
 	"update_complete":             text.FgGreen,
+	"update_in_progress":          text.FgBlue,
+	"update_rollback_complete":    text.FgRed,
+	"update_rollback_failed":      text.FgRed,
+	"update_rollback_in_progress": text.FgRed,
 }
 
 // FormatState formats AWS resource states with appropriate colors for table output
