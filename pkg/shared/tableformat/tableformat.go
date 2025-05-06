@@ -1,10 +1,7 @@
 package tableformat
 
 import (
-	"strings"
-
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 // TableData provides the data needed to render a generic table.
@@ -19,21 +16,6 @@ type Column struct {
 	ID      string
 	Visible bool
 	Sort    bool
-}
-
-// ResourceState formats AWS resource states with appropriate colors for table output
-func ResourceState(state string) string {
-	stateLower := strings.ToLower(state)
-	switch stateLower {
-	case "running", "available", "active", "healthy", "create_complete", "update_complete", "import_complete":
-		return text.FgGreen.Sprint(state)
-	case "pending", "creating", "stopping", "modifying", "rebooting", "create_in_progress", "rollback_in_progress", "update_in_progress", "update_complete_cleanup_in_progress", "update_rollback_in_progress", "update_rollback_complete_cleanup_in_progress", "import_in_progress", "provisioning", "active_impaired":
-		return text.FgYellow.Sprint(state)
-	case "stopped", "failed", "deleting", "deleted", "shutting-down", "terminated", "rollback_failed", "rollback_complete", "update_rollback_complete", "create_failed", "delete_in_progress", "delete_failed", "delete_complete", "import_rollback_in_progress", "import_rollback_complete", "import_rollback_failed":
-		return text.FgRed.Sprint(state)
-	default:
-		return state
-	}
 }
 
 // BuildHeaders returns a table.Row of column headers

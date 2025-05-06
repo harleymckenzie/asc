@@ -5,11 +5,11 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
+	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -276,26 +276,13 @@ func (et *AutoScalingSchedulesTable) TableStyle() table.Style {
 //
 
 func NewAutoScalingService(ctx context.Context, profile string, region string) (*AutoScalingService, error) {
-	var cfg aws.Config
-	var err error
-
-	opts := []func(*config.LoadOptions) error{}
-
-	if profile != "" {
-		opts = append(opts, config.WithSharedConfigProfile(profile))
-	}
-
-	if region != "" {
-		opts = append(opts, config.WithRegion(region))
-	}
-
-	cfg, err = config.LoadDefaultConfig(ctx, opts...)
-
+	cfg, err := awsutil.LoadDefaultConfig(ctx, profile, region)
 	if err != nil {
 		return nil, err
 	}
 
-	client := autoscaling.NewFromConfig(cfg)
+
+	client := autoscaling.NewFromConfig(cfg.Config)
 	return &AutoScalingService{Client: client}, nil
 }
 

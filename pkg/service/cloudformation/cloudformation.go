@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/cloudformation/types"
+	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -36,7 +36,7 @@ func availableColumns() map[string]ascTypes.ColumnDef {
 		},
 		"Status": {
 			GetValue: func(i *types.Stack) string {
-				return tableformat.ResourceState(string(i.StackStatus))
+				return tableformat.FormatState(string(i.StackStatus))
 			},
 		},
 		"Description": {
@@ -70,7 +70,6 @@ func (et *CloudFormationTable) Rows() []table.Row {
 func (et *CloudFormationTable) ColumnConfigs() []table.ColumnConfig {
 	return []table.ColumnConfig{
 		{Name: "Stack Name", WidthMax: 80},
-		// {Name: "Status", WidthMax: 15},
 	}
 }
 
@@ -83,13 +82,13 @@ func (et *CloudFormationTable) TableStyle() table.Style {
 //
 
 func NewCloudFormationService(ctx context.Context, profile string, region string) (*CloudFormationService, error) {
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(profile))
+	cfg, err := awsutil.LoadDefaultConfig(ctx, profile, region)
 	if err != nil {
 		return nil, err
 	}
 
 	return &CloudFormationService{
-		Client: cloudformation.NewFromConfig(cfg),
+		Client: cloudformation.NewFromConfig(cfg.Config),
 	}, nil
 }
 

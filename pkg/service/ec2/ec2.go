@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
+	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -47,7 +47,7 @@ func availableColumns() map[string]ascTypes.ColumnDef {
 		},
 		"State": {
 			GetValue: func(i *types.Instance) string {
-				return tableformat.ResourceState(string(i.State.Name))
+				return tableformat.FormatState(string(i.State.Name))
 			},
 		},
 		"Instance Type": {
@@ -121,26 +121,12 @@ func (et *EC2Table) TableStyle() table.Style {
 //
 
 func NewEC2Service(ctx context.Context, profile string, region string) (*EC2Service, error) {
-	var cfg aws.Config
-	var err error
-
-	opts := []func(*config.LoadOptions) error{}
-
-	if profile != "" {
-		opts = append(opts, config.WithSharedConfigProfile(profile))
-	}
-
-	if region != "" {
-		opts = append(opts, config.WithRegion(region))
-	}
-
-	cfg, err = config.LoadDefaultConfig(ctx, opts...)
-
+	cfg, err := awsutil.LoadDefaultConfig(ctx, profile, region)
 	if err != nil {
 		return nil, err
 	}
+	client := ec2.NewFromConfig(cfg.Config)
 
-	client := ec2.NewFromConfig(cfg)
 	return &EC2Service{Client: client}, nil
 }
 
@@ -157,7 +143,6 @@ func (svc *EC2Service) GetInstances(ctx context.Context, input *ascTypes.GetInst
 	for _, reservation := range output.Reservations {
 		instances = append(instances, reservation.Instances...)
 	}
-
 	return instances, nil
 }
 
@@ -170,7 +155,6 @@ func getInstanceName(instance types.Instance) string {
 			break
 		}
 	}
-
 	return name
 }
 
@@ -181,7 +165,6 @@ func (svc *EC2Service) RestartInstance(ctx context.Context, input *ascTypes.Rest
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -192,7 +175,6 @@ func (svc *EC2Service) StartInstance(ctx context.Context, input *ascTypes.StartI
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -201,12 +183,18 @@ func (svc *EC2Service) StopInstance(ctx context.Context, input *ascTypes.StopIns
 		InstanceIds: []string{input.InstanceID},
 		Force:       &input.Force,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (svc *EC2Service) TerminateInstance(ctx context.Context, input *ascTypes.TerminateInstanceInput) error {
 	_, err := svc.Client.TerminateInstances(ctx, &ec2.TerminateInstancesInput{
 		InstanceIds: []string{input.InstanceID},
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }

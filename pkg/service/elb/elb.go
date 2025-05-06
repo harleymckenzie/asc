@@ -2,14 +2,15 @@ package elb
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
+	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -52,7 +53,7 @@ func availableColumns() map[string]ascTypes.LoadBalancerColumnDef {
 		},
 		"State": {
 			GetValue: func(i *types.LoadBalancer) string {
-				return tableformat.ResourceState(string(i.State.Code))
+				return tableformat.FormatState(string(i.State.Code))
 			},
 		},
 		"VPC ID": {
@@ -236,25 +237,12 @@ func (et *ELBTargetGroupTable) TableStyle() table.Style {
 //
 
 func NewELBService(ctx context.Context, profile string, region string) (*ELBService, error) {
-	var cfg aws.Config
-	var err error
-
-	opts := []func(*config.LoadOptions) error{}
-
-	if profile != "" {
-		opts = append(opts, config.WithSharedConfigProfile(profile))
-	}
-
-	if region != "" {
-		opts = append(opts, config.WithRegion(region))
-	}
-
-	cfg, err = config.LoadDefaultConfig(ctx, opts...)
+	cfg, err := awsutil.LoadDefaultConfig(ctx, profile, region)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ELBService{Client: elbv2.NewFromConfig(cfg)}, nil
+	return &ELBService{Client: elbv2.NewFromConfig(cfg.Config)}, nil
 }
 
 func (svc *ELBService) GetLoadBalancers(ctx context.Context, input *ascTypes.GetLoadBalancersInput) ([]types.LoadBalancer, error) {
