@@ -64,11 +64,11 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | ElastiCache    | modify               | ✗      | Modify ElastiCache clusters                                                 |
 | ElastiCache    | rm / terminate       | ✗      | Terminate ElastiCache clusters                                              |
 | ElastiCache    | show / describe      | ✗      | Show ElastiCache instance details                                           |
-| ELB            | ls                   | ✗      | List Elastic Load Balancers                                                 |
+| ELB            | ls                   | ✓      | List Elastic Load Balancers                                                 |
 | ELB            | modify               | ✗      | Modify Elastic Load Balancers                                               |
 | ELB            | rm                   | ✗      | Terminate Elastic Load Balancers                                            |
 | ELB            | show / describe      | ✗      | Show Elastic Load Balancer details                                          |
-| ELB            | target-group ls      | ✗      | List Elastic Load Balancer target groups                                    |
+| ELB            | target-group ls      | ✓      | List Elastic Load Balancer target groups                                    |
 | ELB            | target-group add     | ✗      | Add target to Elastic Load Balancer target group                            |
 | ELB            | target-group rm      | ✗      | Remove target from Elastic Load Balancer target group                       |
 | ELB            | target-group show    | ✗      | Show Elastic Load Balancer target group details                             |
@@ -108,6 +108,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Filesystem-like navigation                                  | ✗      |                                                  |
 | Optional terminal UI                                        | ✗      |                                                  |
 | Export data to CSV, JSON, or other formats                  | ✗      |                                                  |
+| Service agnostic `show` command                             | ✗      |                                                  |
 
 
 ## Output Format

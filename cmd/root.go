@@ -7,6 +7,7 @@ import (
 	"github.com/harleymckenzie/asc/cmd/cloudformation"
 	"github.com/harleymckenzie/asc/cmd/ec2"
 	"github.com/harleymckenzie/asc/cmd/elasticache"
+	"github.com/harleymckenzie/asc/cmd/elb"
 	"github.com/harleymckenzie/asc/cmd/rds"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +16,7 @@ import (
 var (
 	Profile string
 	Region  string
-	Version = "0.0.17"
+	Version = "0.0.18"
 )
 
 func NewRootCmd() *cobra.Command {
@@ -31,9 +32,9 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(asg.NewASGRootCmd())
 	cmd.AddCommand(cloudformation.NewCloudFormationRootCmd())
 	cmd.AddCommand(ec2.NewEC2RootCmd())
-	cmd.AddCommand(rds.NewRDSRootCmd())
 	cmd.AddCommand(elasticache.NewElasticacheRootCmd())
-
+	cmd.AddCommand(elb.NewELBRootCmd())
+	cmd.AddCommand(rds.NewRDSRootCmd())
 	// Add groups
 	cmd.AddGroup(
 		&cobra.Group{

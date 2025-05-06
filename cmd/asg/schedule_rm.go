@@ -8,15 +8,6 @@ import (
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
 )
 
-var scheduleRmCmd = &cobra.Command{
-	Use:   "rm",
-	Short: "Remove a scheduled action from an Auto Scaling Group",
-    Example: "asc asg rm schedule my-schedule --asg-name my-asg",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		rmSchedule(cobraCmd, args)
-	},
-}
-
 func rmSchedule(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
@@ -39,8 +30,4 @@ func rmSchedule(cobraCmd *cobra.Command, args []string) {
 func addScheduleRmFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group")
 	cobraCmd.MarkFlagRequired("asg-name")
-}
-
-func init() {
-	addScheduleRmFlags(scheduleRmCmd)
 }

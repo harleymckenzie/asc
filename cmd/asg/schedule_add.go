@@ -23,17 +23,6 @@ var (
 	tableOpts       tableformat.RenderOptions
 )
 
-var scheduleAddCmd = &cobra.Command{
-	Use:   "add [name]",
-	Short: "Add a scheduled action to an Auto Scaling Group",
-	Long:  "Add a scheduled action to an Auto Scaling Group\n",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		addSchedule(cobraCmd, args)
-	},
-	Example: "asc asg add schedule my-schedule --asg-name my-asg --min-size 4 --start-time 'Friday 10:00'\n" +
-		"asc asg add schedule my-schedule --asg-name my-asg --desired-capacity 8 --start-time '10:00am 25/04/2025'",
-}
-
 func addSchedule(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
@@ -128,8 +117,4 @@ func addScheduleAddFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
 	cobraCmd.Flags().StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
 	cobraCmd.Flags().StringVarP(&endTimeStr, "end-time", "e", "", "The end time of the schedule.")
-}
-
-func init() {
-	addScheduleAddFlags(scheduleAddCmd)
 }
