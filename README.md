@@ -28,10 +28,11 @@ brew install asc
 ```
 
 
-## Service Implementation Table
+## Service Implementation
 
-Below is a table of of the commands that I plan to implement, and the status of each command.
+Below is a table of service features and commands that I plan to implement, and their current status.
 
+_**\*** Partly implemented. Missing some features that I hope to add in the future_
 | Service        | Command / Subcommand | Status | Notes / Features                                                            |
 |:---------------|:---------------------|:------:|:----------------------------------------------------------------------------|
 | ASG            | ls                   | ✓      | List ASGs                                                                   |
@@ -63,6 +64,14 @@ Below is a table of of the commands that I plan to implement, and the status of 
 | ElastiCache    | modify               | ✗      | Modify ElastiCache clusters                                                 |
 | ElastiCache    | rm / terminate       | ✗      | Terminate ElastiCache clusters                                              |
 | ElastiCache    | show / describe      | ✗      | Show ElastiCache instance details                                           |
+| ELB            | ls                   | ✗      | List Elastic Load Balancers                                                 |
+| ELB            | modify               | ✗      | Modify Elastic Load Balancers                                               |
+| ELB            | rm                   | ✗      | Terminate Elastic Load Balancers                                            |
+| ELB            | show / describe      | ✗      | Show Elastic Load Balancer details                                          |
+| ELB            | target-group ls      | ✗      | List Elastic Load Balancer target groups                                    |
+| ELB            | target-group add     | ✗      | Add target to Elastic Load Balancer target group                            |
+| ELB            | target-group rm      | ✗      | Remove target from Elastic Load Balancer target group                       |
+| ELB            | target-group show    | ✗      | Show Elastic Load Balancer target group details                             |
 | RDS            | ls                   | ✓      | List RDS instances                                                          |
 | RDS            | modify               | ✗      | Modify RDS instances                                                        |
 | RDS            | rm                   | ✗      | Terminate RDS instances                                                     |
@@ -90,7 +99,16 @@ Below is a table of of the commands that I plan to implement, and the status of 
 | SSM            | session rm           | ✗      | Delete SSM sessions                                                         |
 | SSM            | session show         | ✗      | Show SSM session details                                                    |
 
-_\* Partly implemented. Missing some features that I hope to add in the future_
+### Service Implementation: Other Features
+| Description                                                 | Status | Notes / Features                                 |
+|:------------------------------------------------------------|:-------|:-------------------------------------------------|
+| Shell autocompletion                                        | ✓*     | [Brew Shell Completion](https://docs.brew.sh/Shell-Completion) configuration is required. |
+| Customise output fields/columns displayed in tables         | ✗      |                                                  |
+| Customise features via configuration file                   | ✗      |                                                  |
+| Filesystem-like navigation                                  | ✗      |                                                  |
+| Optional terminal UI                                        | ✗      |                                                  |
+| Export data to CSV, JSON, or other formats                  | ✗      |                                                  |
+
 
 ## Output Format
 
