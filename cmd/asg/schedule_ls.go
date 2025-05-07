@@ -80,11 +80,11 @@ func ListAllAutoScalingGroupSchedules(svc *asg.AutoScalingService) {
 		{ID: "Auto Scaling Group", Visible: true, Sort: false},
 		{ID: "Name", Visible: true, Sort: sortName},
 		{ID: "Recurrence", Visible: true, Sort: false},
-		{ID: "Start Time", Visible: true, Sort: false},
-		{ID: "End Time", Visible: true, Sort: false},
-		{ID: "Desired Capacity", Visible: true, Sort: false},
-		{ID: "Min", Visible: true, Sort: false},
-		{ID: "Max", Visible: true, Sort: false},
+		{ID: "Start Time", Visible: true, Sort: sortStartTime, DefaultSort: true},
+		{ID: "End Time", Visible: true, Sort: sortEndTime},
+		{ID: "Desired Capacity", Visible: true, Sort: sortDesiredCapacity},
+		{ID: "Min", Visible: true, Sort: sortMinSize},
+		{ID: "Max", Visible: true, Sort: sortMaxSize},
 	}
 	selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
