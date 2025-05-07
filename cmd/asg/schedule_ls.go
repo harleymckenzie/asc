@@ -50,7 +50,7 @@ func ListAutoScalingGroupSchedules(svc *asg.AutoScalingService, asgName string) 
 		{ID: "Recurrence", Visible: true, Sort: false},
 		{ID: "Start Time", Visible: true, Sort: sortStartTime, DefaultSort: true},
 		{ID: "End Time", Visible: true, Sort: sortEndTime},
-		{ID: "Desired Capacity", Visible: true, Sort: false},
+		{ID: "Desired Capacity", Visible: true, Sort: sortDesiredCapacity},
 		{ID: "Min", Visible: true, Sort: sortMinSize},
 		{ID: "Max", Visible: true, Sort: sortMaxSize},
 	}
