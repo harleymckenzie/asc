@@ -22,6 +22,19 @@ var (
 	sortRole    bool
 )
 
+func rdsColumns() []tableformat.Column {
+	return []tableformat.Column{
+		{ID: "Cluster Identifier", Visible: true, Sort: sortCluster},
+		{ID: "Identifier", Visible: true, Sort: sortName},
+		{ID: "Status", Visible: true, Sort: sortStatus},
+		{ID: "Engine", Visible: true, Sort: sortEngine},
+		{ID: "Engine Version", Visible: showEngineVersion, Sort: false},
+		{ID: "Size", Visible: true, Sort: false},
+		{ID: "Role", Visible: true, Sort: sortRole},
+		{ID: "Endpoint", Visible: showEndpoint, Sort: false},
+	}
+}
+
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all RDS clusters and instances",
@@ -46,17 +59,7 @@ var lsCmd = &cobra.Command{
 			log.Fatalf("Failed to list RDS clusters: %v", err)
 		}
 
-		// Define available columns and associated flags
-		columns := []tableformat.Column{
-			{ID: "Cluster Identifier", Visible: true, Sort: sortCluster},
-			{ID: "Identifier", Visible: true, Sort: sortName},
-			{ID: "Status", Visible: true, Sort: sortStatus},
-			{ID: "Engine", Visible: true, Sort: sortEngine},
-			{ID: "Engine Version", Visible: showEngineVersion, Sort: false},
-			{ID: "Size", Visible: true, Sort: false},
-			{ID: "Role", Visible: true, Sort: sortRole},
-			{ID: "Endpoint", Visible: showEndpoint, Sort: false},
-		}
+		columns := rdsColumns()
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 		opts := tableformat.RenderOptions{

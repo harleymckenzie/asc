@@ -13,41 +13,19 @@ var list bool
 var sortName bool
 var sortStatus bool
 
+func cloudformationColumns() []tableformat.Column {
+	return []tableformat.Column{
+		{ID: "Stack Name", Visible: true, Sort: sortName},
+		{ID: "Status", Visible: true, Sort: sortStatus},
+	}
+}
+
 var lsCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "List all CloudFormation stacks",
+	Use:     "ls",
+	Short:   "List all CloudFormation stacks",
 	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		ctx := context.TODO()
-		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-		region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
-
-		svc, err := cloudformation.NewCloudFormationService(ctx, profile, region)
-		if err != nil {
-			log.Fatalf("Failed to initialize CloudFormation service: %v", err)
-		}
-
-		stacks, err := svc.GetStacks(ctx)
-		if err != nil {
-			log.Fatalf("Failed to list CloudFormation stacks: %v", err)
-		}
-
-		columns := []tableformat.Column{
-			{ID: "Stack Name", Visible: true, Sort: sortName},
-			{ID: "Status", Visible: true, Sort: sortStatus},
-		}
-		selectedColumns, sortBy := tableformat.BuildColumns(columns)
-
-		opts := tableformat.RenderOptions{
-			List:  list,
-			Title: "CloudFormation Stacks",
-		}
-
-		tableformat.Render(&cloudformation.CloudFormationTable{
-			Stacks:          stacks,
-			SelectedColumns: selectedColumns,
-			SortBy:          sortBy,
-		}, opts)
+		ListCloudFormationStacks(cobraCmd, args)
 	},
 }
 
@@ -59,4 +37,38 @@ func addLsFlags(lsCmd *cobra.Command) {
 
 func init() {
 	addLsFlags(lsCmd)
+}
+
+//
+// Command functions
+//
+
+func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) {
+	ctx := context.TODO()
+	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
+	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+
+	svc, err := cloudformation.NewCloudFormationService(ctx, profile, region)
+	if err != nil {
+		log.Fatalf("Failed to initialize CloudFormation service: %v", err)
+	}
+
+	stacks, err := svc.GetStacks(ctx)
+	if err != nil {
+		log.Fatalf("Failed to list CloudFormation stacks: %v", err)
+	}
+
+	columns := cloudformationColumns()
+	selectedColumns, sortBy := tableformat.BuildColumns(columns)
+
+	opts := tableformat.RenderOptions{
+		List:  list,
+		Title: "CloudFormation Stacks",
+	}
+
+	tableformat.Render(&cloudformation.CloudFormationTable{
+		Stacks:          stacks,
+		SelectedColumns: selectedColumns,
+		SortBy:          sortBy,
+	}, opts)
 }

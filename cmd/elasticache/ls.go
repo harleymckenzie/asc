@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	list      bool
+	list         bool
 	showEndpoint bool
 
 	sortName   bool
@@ -18,6 +18,16 @@ var (
 	sortStatus bool
 	sortEngine bool
 )
+
+func elasticacheColumns() []tableformat.Column {
+	return []tableformat.Column{
+		{ID: "Cache Name", Visible: true, Sort: sortName},
+		{ID: "Status", Visible: true},
+		{ID: "Engine Version", Visible: true},
+		{ID: "Configuration", Visible: true},
+		{ID: "Endpoint", Visible: showEndpoint},
+	}
+}
 
 var lsCmd = &cobra.Command{
 	Use:     "ls",
@@ -38,13 +48,7 @@ var lsCmd = &cobra.Command{
 			log.Fatalf("Failed to list Elasticache instances: %v", err)
 		}
 
-		columns := []tableformat.Column{
-			{ID: "Cache Name", Visible: true},
-			{ID: "Status", Visible: true},
-			{ID: "Engine Version", Visible: true},
-			{ID: "Configuration", Visible: true},
-			{ID: "Endpoint", Visible: showEndpoint},
-		}
+		columns := elasticacheColumns()
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 		opts := tableformat.RenderOptions{

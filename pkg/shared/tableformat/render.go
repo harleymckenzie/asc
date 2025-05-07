@@ -18,12 +18,12 @@ func Render(td TableData, opts RenderOptions) {
 
 	headers := td.Headers()
 	rows := td.Rows()
-	headers, rows = RemoveEmptyColumns(headers, rows)	
+	headers, rows = RemoveEmptyColumns(headers, rows)
 
 	t.AppendHeader(headers)
 	t.AppendRows(rows)
 	t.SortBy([]table.SortBy{
-		{Name: opts.SortBy, Mode: table.Asc},
+		{Name: opts.SortBy, Mode: table.AscNumericAlpha},
 	})
 
 	// If the list flag is set, use a list style output

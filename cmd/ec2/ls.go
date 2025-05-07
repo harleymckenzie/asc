@@ -29,6 +29,24 @@ var (
 	sortLaunchTime bool
 )
 
+//
+// Column functions
+//
+
+func ec2Columns() []tableformat.Column {
+	return []tableformat.Column{
+		{ID: "Name", Visible: true, Sort: sortName},
+		{ID: "Instance ID", Visible: true, Sort: sortID},
+		{ID: "State", Visible: true, Sort: false},
+		{ID: "Instance Type", Visible: true, Sort: sortType},
+		{ID: "Public IP", Visible: true, Sort: false},
+		{ID: "AMI ID", Visible: showAMI, Sort: false},
+		{ID: "Launch Time", Visible: showLaunchTime, Sort: sortLaunchTime},
+		{ID: "Private IP", Visible: showPrivateIP, Sort: false},
+	}
+}
+
+// lsCmd is the command for listing EC2 instances
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all EC2 instances",
@@ -38,17 +56,9 @@ var lsCmd = &cobra.Command{
 		"asc ec2 ls -Lt          # List all EC2 instances, displaying and sorting by launch time\n" +
 		"asc ec2 ls -l           # List all EC2 instances in list format",
 	Run: func(cobraCmd *cobra.Command, args []string) {
+		
 		// Define available columns and associated flags
-		columns := []tableformat.Column{
-			{ID: "Name", Visible: true, Sort: sortName},
-			{ID: "Instance ID", Visible: true, Sort: sortID},
-			{ID: "State", Visible: true, Sort: false},
-			{ID: "Instance Type", Visible: true, Sort: sortType},
-			{ID: "Public IP", Visible: true, Sort: false},
-			{ID: "AMI ID", Visible: showAMI, Sort: false},
-			{ID: "Launch Time", Visible: showLaunchTime, Sort: sortLaunchTime},
-			{ID: "Private IP", Visible: showPrivateIP, Sort: false},
-		}
+		columns := ec2Columns()
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 		opts := tableformat.RenderOptions{
@@ -65,6 +75,7 @@ var lsCmd = &cobra.Command{
 	},
 }
 
+// newLsFlags is the function for adding flags to the ls command
 func newLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Output
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
@@ -84,6 +95,11 @@ func init() {
 	newLsFlags(lsCmd)
 }
 
+//
+// Command functions
+//
+
+// ListEC2Instances is the function for listing EC2 instances
 func ListEC2Instances(cobraCmd *cobra.Command, input ListInstancesInput) {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")

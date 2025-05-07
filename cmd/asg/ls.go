@@ -7,11 +7,11 @@ import (
 	"context"
 	"log"
 
+	"github.com/harleymckenzie/asc/cmd/asg/schedule"
 	"github.com/harleymckenzie/asc/pkg/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
-	"github.com/harleymckenzie/asc/cmd/asg/schedule"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/spf13/cobra"
 )
 
@@ -27,6 +27,33 @@ var (
 	sortMaxCapacity     bool
 )
 
+//
+// Column functions
+//
+
+func asgColumns() []tableformat.Column {
+	return []tableformat.Column{
+		{ID: "Name", Visible: true, Sort: sortName},
+		{ID: "Instances", Visible: true, Sort: sortInstances},
+		{ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
+		{ID: "Min", Visible: true, Sort: sortMinCapacity},
+		{ID: "Max", Visible: true, Sort: sortMaxCapacity},
+		{ID: "ARN", Visible: showARNs, Sort: false},
+	}
+}
+
+func asgInstanceColumns() []tableformat.Column {
+	return []tableformat.Column{
+		{ID: "Name", Visible: true, Sort: sortName, DefaultSort: true},
+		{ID: "State", Visible: true, Sort: false},
+		{ID: "Instance Type", Visible: true, Sort: false},
+		{ID: "Launch Template/Configuration", Visible: true, Sort: false},
+		{ID: "Availability Zone", Visible: true, Sort: false},
+		{ID: "Health", Visible: true, Sort: false},
+	}
+}
+
+// lsCmd is the command for listing Auto Scaling Groups, instances in an ASG, or schedules
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List Auto Scaling Groups, instances in an ASG, or schedules",
@@ -39,19 +66,21 @@ var lsCmd = &cobra.Command{
 	},
 }
 
+// newLsFlags is the function for adding flags to the ls command
 func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
-	cobraCmd.Flags().BoolVar(&showARNs, "arn", false, "Show ARNs for each Auto-Scaling Group.")
+	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Auto-Scaling Group.")
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending ASG name.")
-	cobraCmd.Flags().BoolVarP(&sortInstances, "sort-instances", "i", false, "Sort by descending number of instances.")
-	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity.")
-	cobraCmd.Flags().BoolVarP(&sortMinCapacity, "sort-min-capacity", "m", false, "Sort by descending min capacity.")
-	cobraCmd.Flags().BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity.")
+	cobraCmd.Flags().BoolVarP(&sortInstances, "sort-instances", "i", false, "Sort by descending number of instances. (ASG output only)")
+	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity. (ASG output only)")
+	cobraCmd.Flags().BoolVarP(&sortMinCapacity, "sort-min-capacity", "m", false, "Sort by descending min capacity. (ASG output only)")
+	cobraCmd.Flags().BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity. (ASG output only)")
 }
 
+// scheduleLsCmd is the command for listing schedules for an Auto Scaling Group
 var scheduleLsCmd = &cobra.Command{
-	Use:   "schedules",
-	Short: "List schedules for an Auto Scaling Group",
+	Use:     "schedules",
+	Short:   "List schedules for an Auto Scaling Group",
 	GroupID: "subcommands",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		schedule.ListSchedules(cobraCmd, args)
@@ -68,6 +97,10 @@ func init() {
 	// Add the lsSchedulesCmd to the lsCmd
 	schedule.NewLsFlags(scheduleLsCmd)
 }
+
+//
+// Command functions
+//
 
 func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()
@@ -89,14 +122,7 @@ func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) {
 			log.Fatalf("Failed to get Auto Scaling Groups: %v", err)
 		}
 
-		// Define columns for Auto Scaling Groups
-		columns := []tableformat.Column{
-			{ID: "Name", Visible: true, Sort: sortName},
-			{ID: "Instances", Visible: true, Sort: sortInstances},
-			{ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
-			{ID: "Min", Visible: true, Sort: sortMinCapacity},
-			{ID: "Max", Visible: true, Sort: sortMaxCapacity},
-		}
+		columns := asgColumns()
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 		opts := tableformat.RenderOptions{
@@ -112,6 +138,7 @@ func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) {
 	}
 }
 
+// ListAutoScalingGroupInstances is the function for listing instances in an Auto Scaling Group
 func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) {
 	ctx := context.TODO()
 	instances, err := svc.GetAutoScalingGroupInstances(ctx, &ascTypes.GetAutoScalingGroupInstancesInput{
@@ -122,14 +149,7 @@ func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) 
 	}
 
 	// Define columns for instances
-	columns := []tableformat.Column{
-		{ID: "Name", Visible: true, Sort: sortName},
-		{ID: "State", Visible: true, Sort: false},
-		{ID: "Instance Type", Visible: true, Sort: false},
-		{ID: "Launch Template/Configuration", Visible: true, Sort: false},
-		{ID: "Availability Zone", Visible: true, Sort: false},
-		{ID: "Health", Visible: true, Sort: false},
-	}
+	columns := asgInstanceColumns()
 	selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 	opts := tableformat.RenderOptions{

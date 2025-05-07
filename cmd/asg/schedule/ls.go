@@ -47,6 +47,10 @@ func init() {
 	NewLsFlags(lsCmd)
 }
 
+//
+// Command functions
+//
+
 // ListSchedules is the handler for the ls subcommand.
 func ListSchedules(cmd *cobra.Command, args []string) {
 	ctx := context.TODO()

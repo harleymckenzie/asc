@@ -53,6 +53,10 @@ func init() {
 	NewAddFlags(addCmd)
 }
 
+//
+// Command functions
+//
+
 // AddSchedule is the handler for the add schedule subcommand.
 func AddSchedule(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()

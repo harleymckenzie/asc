@@ -30,6 +30,21 @@ var (
 	sortVPCID       bool
 )
 
+func elbColumns() []tableformat.Column {
+	return []tableformat.Column{
+		{ID: "Name", Visible: true},
+		{ID: "DNS Name", Visible: showDNSName, Sort: sortDNSName},
+		{ID: "Scheme", Visible: showScheme, Sort: sortScheme},
+		{ID: "State", Visible: true},
+		{ID: "Type", Visible: true, Sort: sortType},
+		{ID: "IP Type", Visible: showIPAddressType},
+		{ID: "VPC ID", Visible: true, Sort: sortVPCID},
+		{ID: "Created Time", Visible: true, Sort: sortCreatedTime},
+		{ID: "ARN", Visible: showARNs, Sort: false},
+		{ID: "Availability Zones", Visible: showAZs},
+	}
+}
+
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List Elastic Load Balancers and target groups",
@@ -68,18 +83,7 @@ func ListELBs(svc *elb.ELBService) {
 		log.Fatalf("Failed to list Elastic Load Balancers: %v", err)
 	}
 
-	columns := []tableformat.Column{
-		{ID: "Name", Visible: true},
-		{ID: "DNS Name", Visible: showDNSName, Sort: sortDNSName},
-		{ID: "Scheme", Visible: showScheme, Sort: sortScheme},
-		{ID: "State", Visible: true},
-		{ID: "Type", Visible: true, Sort: sortType},
-		{ID: "IP Type", Visible: showIPAddressType},
-		{ID: "VPC ID", Visible: true, Sort: sortVPCID},
-		{ID: "Created Time", Visible: true, Sort: sortCreatedTime},
-		{ID: "ARN", Visible: showARNs, Sort: false},
-		{ID: "Availability Zones", Visible: showAZs},
-	}
+	columns := elbColumns()
 	selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 	opts := tableformat.RenderOptions{

@@ -18,9 +18,24 @@ var (
 	showHealthCheckPort    bool
 )
 
+func targetGroupColumns() []tableformat.Column {
+	return []tableformat.Column{
+		{ID: "Name", Visible: true, Sort: false},
+		{ID: "ARN", Visible: showARNs, Sort: false},
+		{ID: "Port", Visible: true, Sort: false},
+		{ID: "Protocol", Visible: true, Sort: false},
+		{ID: "Target Type", Visible: true, Sort: false},
+		{ID: "Load Balancer", Visible: true, Sort: false},
+		{ID: "VPC ID", Visible: true, Sort: false},
+		{ID: "Health Check Enabled", Visible: false, Sort: showHealthCheckEnabled},
+		{ID: "Health Check Path", Visible: false, Sort: showHealthCheckPath},
+		{ID: "Health Check Port", Visible: false, Sort: showHealthCheckPort},
+	}
+}
+
 var lsCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "List target groups",
+	Use:     "ls",
+	Short:   "List target groups",
 	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ListTargetGroups(cobraCmd, args)
@@ -62,19 +77,7 @@ func ListTargetGroups(cobraCmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to get target groups: %v", err)
 	}
 
-	// Define columns for target groups
-	columns := []tableformat.Column{
-		{ID: "Name", Visible: true, Sort: false},
-		{ID: "ARN", Visible: showARNs, Sort: false},
-		{ID: "Port", Visible: true, Sort: false},
-		{ID: "Protocol", Visible: true, Sort: false},
-		{ID: "Target Type", Visible: true, Sort: false},
-		{ID: "Load Balancer", Visible: true, Sort: false},
-		{ID: "VPC ID", Visible: true, Sort: false},
-		{ID: "Health Check Enabled", Visible: false, Sort: showHealthCheckEnabled},
-		{ID: "Health Check Path", Visible: false, Sort: showHealthCheckPath},
-		{ID: "Health Check Port", Visible: false, Sort: showHealthCheckPort},
-	}
+	columns := targetGroupColumns()
 	selectedColumns, sortBy := tableformat.BuildColumns(columns)
 
 	opts := tableformat.RenderOptions{

@@ -31,6 +31,10 @@ func init() {
 	NewRmFlags(rmCmd)
 }
 
+//
+// Command functions
+//
+
 // RemoveSchedule is the handler for the rm schedule subcommand.
 func RemoveSchedule(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()

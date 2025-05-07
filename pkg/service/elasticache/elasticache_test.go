@@ -143,7 +143,7 @@ func TestListInstances(t *testing.T) {
 					t.Errorf("ListInstances() returned instance %d with ID %s, want %s", i, *instance.CacheClusterId, *tc.clusters[i].CacheClusterId)
 				}
 			}
-			
+
 		})
 	}
 }
