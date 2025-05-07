@@ -4,25 +4,29 @@
 package asg
 
 import (
+	schedule "github.com/harleymckenzie/asc/cmd/asg/schedule"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
 var rmCmd = &cobra.Command{
-	Use:   "rm",
-	Short: "Remove scheduled actions from an Auto Scaling Group",
-	Run: func(cobraCmd *cobra.Command, args []string) {},
+	Use:     "rm",
+	Short:   "Remove scheduled actions from an Auto Scaling Group",
 	GroupID: "actions",
+	Run:     func(cobraCmd *cobra.Command, args []string) {},
 }
 
-var rmScheduleCmd = &cobra.Command{
+var scheduleRmCmd = &cobra.Command{
 	Use:   "schedule",
 	Short: "Remove scheduled actions from an Auto Scaling Group",
+	GroupID: "subcommands",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		rmSchedule(cobraCmd, args)
+		schedule.RemoveSchedule(cobraCmd, args)
 	},
 }
 
 func init() {
-	addScheduleRmFlags(rmScheduleCmd)
-	rmCmd.AddCommand(rmScheduleCmd)
+	rmCmd.AddCommand(scheduleRmCmd)
+	rmCmd.AddGroup(cmdutil.SubcommandGroups()...)
+	schedule.NewRmFlags(scheduleRmCmd)
 }

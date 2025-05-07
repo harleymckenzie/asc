@@ -25,6 +25,7 @@ var (
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all RDS clusters and instances",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")

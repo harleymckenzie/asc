@@ -1,4 +1,5 @@
-package asg
+// ls.go defines the 'ls' subcommand for schedule operations.
+package schedule
 
 import (
 	"context"
@@ -11,6 +12,7 @@ import (
 )
 
 var (
+<<<<<<< HEAD:cmd/asg/schedule_ls.go
 	sortStartTime bool
 	sortEndTime bool
 	sortMinSize bool
@@ -18,9 +20,37 @@ var (
 )
 
 func lsSchedules(cobraCmd *cobra.Command, args []string) {
+=======
+	list bool
+	sortName bool
+)
+
+// lsCmd is the cobra command for listing scheduled actions.
+var lsCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "List all scheduled actions for Auto Scaling Groups",
+	GroupID: "actions",
+	Run: func(cobraCmd *cobra.Command, args []string) {
+		ListSchedules(cobraCmd, args)
+	},
+}
+
+// NewLsFlags adds flags for the ls subcommand.
+func NewLsFlags(cobraCmd *cobra.Command) {
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
+	cobraCmd.Flags().SortFlags = false
+}
+
+func init() {
+	NewLsFlags(lsCmd)
+}
+
+// ListSchedules is the handler for the ls subcommand.
+func ListSchedules(cmd *cobra.Command, args []string) {
+>>>>>>> improvement/subcommand_restructure:cmd/asg/schedule/ls.go
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, _ := cmd.Root().PersistentFlags().GetString("profile")
+	region, _ := cmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {
@@ -28,14 +58,14 @@ func lsSchedules(cobraCmd *cobra.Command, args []string) {
 	}
 
 	if len(args) > 0 {
-		ListAutoScalingGroupSchedules(svc, args[0])
+		ListSchedulesForGroup(svc, args[0])
 	} else {
-		ListAllAutoScalingGroupSchedules(svc)
+		ListSchedulesForAllGroups(svc)
 	}
 }
 
-// ListAutoScalingGroupSchedules lists all schedules for a given Auto Scaling Group
-func ListAutoScalingGroupSchedules(svc *asg.AutoScalingService, asgName string) {
+// ListSchedulesForGroup lists all schedules for a given Auto Scaling Group.
+func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) {
 	ctx := context.TODO()
 	schedules, err := svc.GetAutoScalingGroupSchedules(ctx, &ascTypes.GetAutoScalingGroupSchedulesInput{
 		AutoScalingGroupName: asgName,
@@ -67,8 +97,8 @@ func ListAutoScalingGroupSchedules(svc *asg.AutoScalingService, asgName string) 
 	}, opts)
 }
 
-// ListAllAutoScalingGroupSchedules lists all schedules for all Auto Scaling Groups
-func ListAllAutoScalingGroupSchedules(svc *asg.AutoScalingService) {
+// ListSchedulesForAllGroups lists all schedules for all Auto Scaling Groups.
+func ListSchedulesForAllGroups(svc *asg.AutoScalingService) {
 	ctx := context.TODO()
 	schedules, err := svc.GetAutoScalingGroupSchedules(ctx, &ascTypes.GetAutoScalingGroupSchedulesInput{})
 	if err != nil {
@@ -98,6 +128,7 @@ func ListAllAutoScalingGroupSchedules(svc *asg.AutoScalingService) {
 		SelectedColumns: selectedColumns,
 	}, opts)
 }
+<<<<<<< HEAD:cmd/asg/schedule_ls.go
 
 func addScheduleLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
@@ -109,3 +140,5 @@ func addScheduleLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&sortMaxSize, "sort-max-size", "M", false, "Sort by descending max size (most frequent first).")
 	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-start-time", "sort-end-time", "sort-min-size", "sort-max-size", "sort-desired-capacity")
 }
+=======
+>>>>>>> improvement/subcommand_restructure:cmd/asg/schedule/ls.go

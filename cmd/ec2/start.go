@@ -14,6 +14,7 @@ var startCmd = &cobra.Command{
 	Use:     "start",
 	Short:   "Start an EC2 instance",
 	Example: "asc ec2 start i-1234567890abcdef0",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
@@ -47,8 +48,8 @@ var startCmd = &cobra.Command{
 	},
 }
 
-func addStartFlags(startCmd *cobra.Command) {}
+func newStartFlags(cobraCmd *cobra.Command) {}
 
 func init() {
-	addStartFlags(startCmd)
+	newStartFlags(startCmd)
 }

@@ -16,6 +16,7 @@ var sortStatus bool
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all CloudFormation stacks",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")

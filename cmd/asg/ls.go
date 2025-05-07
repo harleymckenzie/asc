@@ -9,7 +9,9 @@ import (
 
 	"github.com/harleymckenzie/asc/pkg/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
+	"github.com/harleymckenzie/asc/cmd/asg/schedule"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -28,36 +30,86 @@ var (
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List Auto Scaling Groups, instances in an ASG, or schedules",
-	Long: "List Auto Scaling Groups, instances in an ASG, or schedules\n" +
-		"  ls                      List all Auto Scaling Groups\n" +
+	Example: "  ls                      List all Auto Scaling Groups\n" +
 		"  ls [asg-name]           List instances in the specified ASG\n" +
 		"  ls schedules [asg-name] List schedules (optionally for specific ASG)",
 	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		ctx := context.TODO()
-		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-		region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
-
-		svc, err := asg.NewAutoScalingService(ctx, profile, region)
-		if err != nil {
-			log.Fatalf("Failed to initialize Auto Scaling Group service: %v", err)
-		}
-
-		// If an argument is provided that isn't a subcommand, show instance details using GetInstances
-		if len(args) > 0 {
-			ListAutoScalingGroupInstances(svc, args[0])
-		} else {
-			ListAutoScalingGroups(svc)
-		}
+		ListAutoScalingGroups(cobraCmd, args)
 	},
 }
 
-var lsScheduleCmd = &cobra.Command{
+func newLsFlags(cobraCmd *cobra.Command) {
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
+	cobraCmd.Flags().BoolVar(&showARNs, "arn", false, "Show ARNs for each Auto-Scaling Group.")
+	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending ASG name.")
+	cobraCmd.Flags().BoolVarP(&sortInstances, "sort-instances", "i", false, "Sort by descending number of instances.")
+	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity.")
+	cobraCmd.Flags().BoolVarP(&sortMinCapacity, "sort-min-capacity", "m", false, "Sort by descending min capacity.")
+	cobraCmd.Flags().BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity.")
+}
+
+var scheduleLsCmd = &cobra.Command{
 	Use:   "schedules",
 	Short: "List schedules for an Auto Scaling Group",
+	GroupID: "subcommands",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		lsSchedules(cobraCmd, args)
+		schedule.ListSchedules(cobraCmd, args)
 	},
+}
+
+func init() {
+	newLsFlags(lsCmd)
+
+	// Add the lsSchedulesCmd to the lsCmd
+	lsCmd.AddCommand(scheduleLsCmd)
+	lsCmd.AddGroup(cmdutil.SubcommandGroups()...)
+
+	// Add the lsSchedulesCmd to the lsCmd
+	schedule.NewLsFlags(scheduleLsCmd)
+}
+
+func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) {
+	ctx := context.TODO()
+	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
+	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+
+	svc, err := asg.NewAutoScalingService(ctx, profile, region)
+	if err != nil {
+		log.Fatalf("Failed to initialize Auto Scaling Group service: %v", err)
+	}
+
+	if len(args) > 0 {
+		ListAutoScalingGroupInstances(svc, args[0])
+	} else {
+		autoScalingGroups, err := svc.GetAutoScalingGroups(ctx, &ascTypes.GetAutoScalingGroupsInput{
+			AutoScalingGroupNames: []string{},
+		})
+		if err != nil {
+			log.Fatalf("Failed to get Auto Scaling Groups: %v", err)
+		}
+
+		// Define columns for Auto Scaling Groups
+		columns := []tableformat.Column{
+			{ID: "Name", Visible: true, Sort: sortName},
+			{ID: "Instances", Visible: true, Sort: sortInstances},
+			{ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
+			{ID: "Min", Visible: true, Sort: sortMinCapacity},
+			{ID: "Max", Visible: true, Sort: sortMaxCapacity},
+		}
+		selectedColumns, sortBy := tableformat.BuildColumns(columns)
+
+		opts := tableformat.RenderOptions{
+			SortBy: sortBy,
+			List:   list,
+			Title:  "Auto Scaling Groups",
+		}
+
+		tableformat.Render(&asg.AutoScalingTable{
+			AutoScalingGroups: autoScalingGroups,
+			SelectedColumns:   selectedColumns,
+		}, opts)
+	}
 }
 
 func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) {
@@ -89,53 +141,4 @@ func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) 
 		Instances:       instances,
 		SelectedColumns: selectedColumns,
 	}, opts)
-}
-
-func ListAutoScalingGroups(svc *asg.AutoScalingService) {
-	ctx := context.TODO()
-	autoScalingGroups, err := svc.GetAutoScalingGroups(ctx, &ascTypes.GetAutoScalingGroupsInput{
-		AutoScalingGroupNames: []string{},
-	})
-	if err != nil {
-		log.Fatalf("Failed to get Auto Scaling Groups: %v", err)
-	}
-
-	// Define columns for Auto Scaling Groups
-	columns := []tableformat.Column{
-		{ID: "Name", Visible: true, Sort: sortName},
-		{ID: "Instances", Visible: true, Sort: sortInstances},
-		{ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
-		{ID: "Min", Visible: true, Sort: sortMinCapacity},
-		{ID: "Max", Visible: true, Sort: sortMaxCapacity},
-	}
-	selectedColumns, sortBy := tableformat.BuildColumns(columns)
-
-	opts := tableformat.RenderOptions{
-		SortBy: sortBy,
-		List:   list,
-		Title:  "Auto Scaling Groups",
-	}
-
-	tableformat.Render(&asg.AutoScalingTable{
-		AutoScalingGroups: autoScalingGroups,
-		SelectedColumns:   selectedColumns,
-	}, opts)
-}
-
-func addLsFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
-	cobraCmd.Flags().BoolVar(&showARNs, "arn", false, "Show ARNs for each Auto-Scaling Group.")
-	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending ASG name.")
-	cobraCmd.Flags().BoolVarP(&sortInstances, "sort-instances", "i", false, "Sort by descending number of instances.")
-	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity.")
-	cobraCmd.Flags().BoolVarP(&sortMinCapacity, "sort-min-capacity", "m", false, "Sort by descending min capacity.")
-	cobraCmd.Flags().BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity.")
-}
-
-func init() {
-	// Add flags - Output
-	addLsFlags(lsCmd)
-
-	lsCmd.AddCommand(lsScheduleCmd)
-	addScheduleLsFlags(lsScheduleCmd)
 }
