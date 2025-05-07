@@ -12,17 +12,13 @@ import (
 )
 
 var (
-<<<<<<< HEAD:cmd/asg/schedule_ls.go
-	sortStartTime bool
-	sortEndTime bool
-	sortMinSize bool
-	sortMaxSize bool
-)
-
-func lsSchedules(cobraCmd *cobra.Command, args []string) {
-=======
 	list bool
 	sortName bool
+	sortStartTime bool
+	sortEndTime bool
+	sortDesiredCapacity bool
+	sortMinSize bool
+	sortMaxSize bool
 )
 
 // lsCmd is the cobra command for listing scheduled actions.
@@ -38,7 +34,13 @@ var lsCmd = &cobra.Command{
 // NewLsFlags adds flags for the ls subcommand.
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
-	cobraCmd.Flags().SortFlags = false
+	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending ASG name.")
+	cobraCmd.Flags().BoolVarP(&sortStartTime, "sort-start-time", "t", false, "Sort by descending start time (most recently started first).")
+	cobraCmd.Flags().BoolVarP(&sortEndTime, "sort-end-time", "e", false, "Sort by descending end time (most recently ended first).")
+	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity (most frequent first).")
+	cobraCmd.Flags().BoolVarP(&sortMinSize, "sort-min-size", "m", false, "Sort by descending min size (most frequent first).")
+	cobraCmd.Flags().BoolVarP(&sortMaxSize, "sort-max-size", "M", false, "Sort by descending max size (most frequent first).")
+	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-start-time", "sort-end-time", "sort-min-size", "sort-max-size", "sort-desired-capacity")
 }
 
 func init() {
@@ -47,7 +49,6 @@ func init() {
 
 // ListSchedules is the handler for the ls subcommand.
 func ListSchedules(cmd *cobra.Command, args []string) {
->>>>>>> improvement/subcommand_restructure:cmd/asg/schedule/ls.go
 	ctx := context.TODO()
 	profile, _ := cmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cmd.Root().PersistentFlags().GetString("region")
@@ -128,17 +129,3 @@ func ListSchedulesForAllGroups(svc *asg.AutoScalingService) {
 		SelectedColumns: selectedColumns,
 	}, opts)
 }
-<<<<<<< HEAD:cmd/asg/schedule_ls.go
-
-func addScheduleLsFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
-	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending ASG name.")
-	cobraCmd.Flags().BoolVarP(&sortStartTime, "sort-start-time", "t", false, "Sort by descending start time (most recently started first).")
-	cobraCmd.Flags().BoolVarP(&sortEndTime, "sort-end-time", "e", false, "Sort by descending end time (most recently ended first).")
-	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity (most frequent first).")
-	cobraCmd.Flags().BoolVarP(&sortMinSize, "sort-min-size", "m", false, "Sort by descending min size (most frequent first).")
-	cobraCmd.Flags().BoolVarP(&sortMaxSize, "sort-max-size", "M", false, "Sort by descending max size (most frequent first).")
-	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-start-time", "sort-end-time", "sort-min-size", "sort-max-size", "sort-desired-capacity")
-}
-=======
->>>>>>> improvement/subcommand_restructure:cmd/asg/schedule/ls.go
