@@ -109,6 +109,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Optional terminal UI                                        | ✗      |                                                  |
 | Export data to CSV, JSON, or other formats                  | ✗      |                                                  |
 | Service agnostic `show` command                             | ✗      |                                                  |
+| AWS Profile management                                      | ✗      |                                                  |
 
 
 ## Output Format
