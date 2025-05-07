@@ -52,7 +52,6 @@ func availableColumns() map[string]ascTypes.ColumnDef {
 		},
 		"Instances": {
 			GetValue: func(i *types.AutoScalingGroup) string {
-				// TODO: Return count of Instances (Instance[])
 				return strconv.Itoa(len(i.Instances))
 			},
 		},

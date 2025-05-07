@@ -13,9 +13,10 @@ type TableData interface {
 }
 
 type Column struct {
-	ID      string
-	Visible bool
-	Sort    bool
+	ID          string
+	Visible     bool
+	Sort        bool
+	DefaultSort bool
 }
 
 // BuildHeaders returns a table.Row of column headers
@@ -35,6 +36,9 @@ func BuildColumns(columns []Column) ([]string, string) {
 			columnIDs = append(columnIDs, col.ID)
 		}
 		if col.Sort {
+			sortBy = col.ID
+		}
+		if col.DefaultSort {
 			sortBy = col.ID
 		}
 	}
