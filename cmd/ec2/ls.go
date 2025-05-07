@@ -33,6 +33,7 @@ var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all EC2 instances",
 	Aliases: []string{"list"},
+	GroupID: "actions",
 	Example: "asc ec2 ls -A           # List all EC2 instances with the AMI ID\n" +
 		"asc ec2 ls -Lt          # List all EC2 instances, displaying and sorting by launch time\n" +
 		"asc ec2 ls -l           # List all EC2 instances in list format",
@@ -64,6 +65,25 @@ var lsCmd = &cobra.Command{
 	},
 }
 
+func newLsFlags(cobraCmd *cobra.Command) {
+	// Add flags - Output
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
+	cobraCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
+	cobraCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
+	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
+
+	// Add flags - Sorting
+	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending EC2 instance name.")
+	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
+	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
+	cobraCmd.Flags().BoolVarP(&sortLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
+	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-id", "sort-type", "sort-launch-time")
+}
+
+func init() {
+	newLsFlags(lsCmd)
+}
+
 func ListEC2Instances(cobraCmd *cobra.Command, input ListInstancesInput) {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
@@ -83,25 +103,4 @@ func ListEC2Instances(cobraCmd *cobra.Command, input ListInstancesInput) {
 		Instances:       instances,
 		SelectedColumns: input.SelectedColumns,
 	}, input.TableOpts)
-}
-
-func addLsFlags(lsCmd *cobra.Command) {
-	// Add flags - Output
-	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
-	lsCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
-	lsCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
-	lsCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
-
-	// Add flags - Sorting
-	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending EC2 instance name.")
-	lsCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
-	lsCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
-	lsCmd.Flags().BoolVarP(&sortLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
-	lsCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-id", "sort-type", "sort-launch-time")
-	
-	lsCmd.Flags().SortFlags = false
-}
-
-func init() {
-	addLsFlags(lsCmd)
 }

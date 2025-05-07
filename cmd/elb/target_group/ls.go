@@ -1,4 +1,4 @@
-package elb
+package target_group
 
 import (
 	"context"
@@ -11,12 +11,36 @@ import (
 )
 
 var (
+	list                   bool
+	showARNs               bool
 	showHealthCheckEnabled bool
 	showHealthCheckPath    bool
 	showHealthCheckPort    bool
 )
 
-func lsTargetGroups(cobraCmd *cobra.Command, args []string) {
+var lsCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "List target groups",
+	GroupID: "actions",
+	Run: func(cobraCmd *cobra.Command, args []string) {
+		ListTargetGroups(cobraCmd, args)
+	},
+}
+
+func NewLsFlags(cobraCmd *cobra.Command) {
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs target groups in list format.")
+	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each target group.")
+	cobraCmd.Flags().BoolVarP(&showHealthCheckEnabled, "health-check-enabled", "e", false, "Show health check enabled for each target group.")
+	cobraCmd.Flags().BoolVarP(&showHealthCheckPath, "health-check-path", "c", false, "Show health check path for each target group.")
+	cobraCmd.Flags().BoolVarP(&showHealthCheckPort, "health-check-port", "P", false, "Show health check port for each target group.")
+}
+
+func init() {
+	NewLsFlags(lsCmd)
+}
+
+// ListELBTargetGroups lists all target groups for a given ELB
+func ListTargetGroups(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
@@ -31,12 +55,6 @@ func lsTargetGroups(cobraCmd *cobra.Command, args []string) {
 		input.Names = []string{args[0]}
 	}
 
-	ListTargetGroups(svc, input)
-}
-
-// ListELBTargetGroups lists all target groups for a given ELB
-func ListTargetGroups(svc *elb.ELBService, input *ascTypes.ListTargetGroupsInput) {
-	ctx := context.TODO()
 	targetGroups, err := svc.GetTargetGroups(ctx, &ascTypes.GetTargetGroupsInput{
 		ListTargetGroupsInput: *input,
 	})
@@ -47,7 +65,7 @@ func ListTargetGroups(svc *elb.ELBService, input *ascTypes.ListTargetGroupsInput
 	// Define columns for target groups
 	columns := []tableformat.Column{
 		{ID: "Name", Visible: true, Sort: false},
-		{ID: "ARN", Visible: false, Sort: showARNs},
+		{ID: "ARN", Visible: showARNs, Sort: false},
 		{ID: "Port", Visible: true, Sort: false},
 		{ID: "Protocol", Visible: true, Sort: false},
 		{ID: "Target Type", Visible: true, Sort: false},
@@ -68,12 +86,4 @@ func ListTargetGroups(svc *elb.ELBService, input *ascTypes.ListTargetGroupsInput
 		TargetGroups:    targetGroups,
 		SelectedColumns: selectedColumns,
 	}, opts)
-}
-
-func addTargetGroupLsFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs target groups in list format.")
-	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each target group.")
-	cobraCmd.Flags().BoolVarP(&showHealthCheckEnabled, "health-check-enabled", "e", false, "Show health check enabled for each target group.")
-	cobraCmd.Flags().BoolVarP(&showHealthCheckPath, "health-check-path", "c", false, "Show health check path for each target group.")
-	cobraCmd.Flags().BoolVarP(&showHealthCheckPort, "health-check-port", "P", false, "Show health check port for each target group.")
 }

@@ -15,6 +15,7 @@ var terminateCmd = &cobra.Command{
 	Short:   "Terminate an EC2 instance",
 	Aliases: []string{"rm", "delete"},
 	Example: "asc ec2 terminate i-1234567890abcdef0",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")

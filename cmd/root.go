@@ -9,6 +9,7 @@ import (
 	"github.com/harleymckenzie/asc/cmd/elasticache"
 	"github.com/harleymckenzie/asc/cmd/elb"
 	"github.com/harleymckenzie/asc/cmd/rds"
+
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +17,7 @@ import (
 var (
 	Profile string
 	Region  string
-	Version = "0.0.18"
+	Version = "0.0.21"
 )
 
 func NewRootCmd() *cobra.Command {

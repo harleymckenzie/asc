@@ -2,6 +2,8 @@ package elb
 
 import (
 	"github.com/spf13/cobra"
+	tg "github.com/harleymckenzie/asc/cmd/elb/target_group"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 )
 
 func NewELBRootCmd() *cobra.Command {
@@ -19,19 +21,11 @@ func NewELBRootCmd() *cobra.Command {
 	// cmd.AddCommand(modifyCmd)
 	
 	// Subcommands
-	cmd.AddCommand(targetGroupCmd)
-	
-	// Groups
-	cmd.AddGroup(
-		&cobra.Group{
-			ID: "actions",
-			Title: "Elastic Load Balancer Action Commands",
-		},
-		&cobra.Group{
-			ID: "subcommands",
-			Title: "Elastic Load Balancer Subcommands",
-		},
-	)
+	cmd.AddCommand(tg.NewTargetGroupRootCmd())
+
+	// Add groups
+	cmd.AddGroup(cmdutil.ActionGroups()...)
+	cmd.AddGroup(cmdutil.SubcommandGroups()...)
 
 	return cmd
 }

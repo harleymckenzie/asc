@@ -22,6 +22,7 @@ var (
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List Elasticache clusters",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
@@ -59,17 +60,19 @@ var lsCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func newLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Output
-	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elasticache clusters in list format.")
-	lsCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elasticache clusters in list format.")
+	cobraCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
 
 	// Add flags - Sorting
-	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending Elasticache cluster name.")
-	lsCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elasticache cluster type.")
-	lsCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending Elasticache cluster status.")
-	lsCmd.Flags().BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending Elasticache cluster engine version.")
-	lsCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-type", "sort-status", "sort-engine")
+	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending Elasticache cluster name.")
+	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elasticache cluster type.")
+	cobraCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending Elasticache cluster status.")
+	cobraCmd.Flags().BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending Elasticache cluster engine version.")
+	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-type", "sort-status", "sort-engine")
+}
 
-	lsCmd.Flags().SortFlags = false
+func init() {
+	newLsFlags(lsCmd)
 }

@@ -13,7 +13,6 @@ import (
 
 var (
 	list bool
-
 	sortName bool
 )
 
@@ -21,9 +20,20 @@ var (
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all scheduled actions for Auto Scaling Groups",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ListSchedules(cobraCmd, args)
 	},
+}
+
+// NewLsFlags adds flags for the ls subcommand.
+func NewLsFlags(cobraCmd *cobra.Command) {
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
+	cobraCmd.Flags().SortFlags = false
+}
+
+func init() {
+	NewLsFlags(lsCmd)
 }
 
 // ListSchedules is the handler for the ls subcommand.
@@ -107,14 +117,4 @@ func ListSchedulesForAllGroups(svc *asg.AutoScalingService) {
 		Schedules:       schedules,
 		SelectedColumns: selectedColumns,
 	}, opts)
-}
-
-// addLsFlags adds flags for the ls subcommand.
-func addLsFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
-	cobraCmd.Flags().SortFlags = false
-}
-
-func init() {
-	addLsFlags(lsCmd)
 }

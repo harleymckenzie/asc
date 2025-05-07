@@ -20,6 +20,7 @@ var stopCmd = &cobra.Command{
 	Aliases: []string{"shutdown", "halt"},
 	Example: "asc ec2 stop i-1234567890abcdef0\n" +
 		"asc ec2 stop i-1234567890abcdef0 --force",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")

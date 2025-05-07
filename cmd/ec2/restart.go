@@ -16,6 +16,7 @@ var restartCmd = &cobra.Command{
 	Short:   "Restart an EC2 instance",
 	Aliases: []string{"reboot"},
 	Example: "asc ec2 restart i-1234567890abcdef0",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ctx := context.TODO()
 		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
@@ -43,8 +44,8 @@ var restartCmd = &cobra.Command{
 	},
 }
 
-func addRestartFlags(restartCmd *cobra.Command) {}
+func newRestartFlags(cobraCmd *cobra.Command) {}
 
 func init() {
-	addRestartFlags(restartCmd)
+	newRestartFlags(restartCmd)
 }

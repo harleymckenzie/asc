@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 
+	tg "github.com/harleymckenzie/asc/cmd/elb/target_group"
 	"github.com/harleymckenzie/asc/pkg/service/elb"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
@@ -56,7 +57,7 @@ var lsTargetGroupCmd = &cobra.Command{
 	Use:   "target-groups",
 	Short: "List target groups",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		lsTargetGroups(cobraCmd, args)
+		tg.ListTargetGroups(cobraCmd, args)
 	},
 }
 
@@ -114,5 +115,5 @@ func init() {
 	addLsFlags(lsCmd)
 
 	lsCmd.AddCommand(lsTargetGroupCmd)
-	addTargetGroupLsFlags(lsTargetGroupCmd)
+	tg.NewLsFlags(lsTargetGroupCmd)
 }

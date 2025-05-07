@@ -2,6 +2,7 @@ package asg
 
 import (
 	schedule "github.com/harleymckenzie/asc/cmd/asg/schedule"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -19,19 +20,11 @@ func NewASGRootCmd() *cobra.Command {
 	cmd.AddCommand(modifyCmd)
 
 	// Subcommands
-	cmd.AddCommand(schedule.ScheduleCmd)
+	cmd.AddCommand(schedule.NewScheduleRootCmd())
 
-	// Groups
-	cmd.AddGroup(
-		&cobra.Group{
-			ID:    "actions",
-			Title: "Auto Scaling Group Action Commands",
-		},
-		&cobra.Group{
-			ID:    "subcommands",
-			Title: "Auto Scaling Group Subcommands",
-		},
-	)
+	// Add groups
+	cmd.AddGroup(cmdutil.ActionGroups()...)
+	cmd.AddGroup(cmdutil.SubcommandGroups()...)
 
 	return cmd
 }

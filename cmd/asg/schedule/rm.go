@@ -15,9 +15,20 @@ var rmCmd = &cobra.Command{
 	Use:     "rm",
 	Short:   "Remove a scheduled action from an Auto Scaling Group",
 	Example: "asc asg rm schedule my-schedule --asg-name my-asg",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		RemoveSchedule(cobraCmd, args)
 	},
+}
+
+// NewRmFlags adds flags for the rm subcommand.
+func NewRmFlags(cobraCmd *cobra.Command) {
+	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group")
+	cobraCmd.MarkFlagRequired("asg-name")
+}
+
+func init() {
+	NewRmFlags(rmCmd)
 }
 
 // RemoveSchedule is the handler for the rm schedule subcommand.
@@ -38,14 +49,4 @@ func RemoveSchedule(cobraCmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("Failed to remove schedule: %v", err)
 	}
-}
-
-// addRmFlags adds flags for the rm subcommand.
-func addRmFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group")
-	cobraCmd.MarkFlagRequired("asg-name")
-}
-
-func init() {
-	addRmFlags(rmCmd)
 }

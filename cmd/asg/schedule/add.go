@@ -29,12 +29,28 @@ var (
 var addCmd = &cobra.Command{
 	Use:   "add [name]",
 	Short: "Add a scheduled action to an Auto Scaling Group",
-	Long:  "Add a scheduled action to an Auto Scaling Group\n",
 	Example: "asc asg add schedule my-schedule --asg-name my-asg --min-size 4 --start-time 'Friday 10:00'\n" +
 		"asc asg add schedule my-schedule --asg-name my-asg --desired-capacity 8 --start-time '10:00am 25/04/2025'",
+	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		AddSchedule(cobraCmd, args)
 	},
+}
+
+// NewAddFlags adds flags for the add subcommand.
+func NewAddFlags(cobraCmd *cobra.Command) {
+	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group to add the schedule to.")
+	cobraCmd.MarkFlagRequired("asg-name")
+	cobraCmd.Flags().IntVarP(&minSize, "min-size", "m", 0, "The minimum size of the Auto Scaling Group.")
+	cobraCmd.Flags().IntVarP(&maxSize, "max-size", "M", 0, "The maximum size of the Auto Scaling Group.")
+	cobraCmd.Flags().IntVarP(&desiredCapacity, "desired-capacity", "d", 0, "The desired capacity of the Auto Scaling Group.")
+	cobraCmd.Flags().StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
+	cobraCmd.Flags().StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
+	cobraCmd.Flags().StringVarP(&endTimeStr, "end-time", "e", "", "The end time of the schedule.")
+}
+
+func init() {
+	NewAddFlags(addCmd)
 }
 
 // AddSchedule is the handler for the add schedule subcommand.
@@ -121,20 +137,4 @@ func AddSchedule(cobraCmd *cobra.Command, args []string) {
 		Schedules:       schedules,
 		SelectedColumns: []string{"Auto Scaling Group", "Name", "Recurrence", "Start Time", "End Time", "Min", "Max", "Desired Capacity"},
 	}, tableOpts)
-}
-
-// addAddFlags adds flags for the add subcommand.
-func addAddFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group to add the schedule to.")
-	cobraCmd.MarkFlagRequired("asg-name")
-	cobraCmd.Flags().IntVarP(&minSize, "min-size", "m", 0, "The minimum size of the Auto Scaling Group.")
-	cobraCmd.Flags().IntVarP(&maxSize, "max-size", "M", 0, "The maximum size of the Auto Scaling Group.")
-	cobraCmd.Flags().IntVarP(&desiredCapacity, "desired-capacity", "d", 0, "The desired capacity of the Auto Scaling Group.")
-	cobraCmd.Flags().StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
-	cobraCmd.Flags().StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
-	cobraCmd.Flags().StringVarP(&endTimeStr, "end-time", "e", "", "The end time of the schedule.")
-}
-
-func init() {
-	addAddFlags(addCmd)
 }
