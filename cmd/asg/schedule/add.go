@@ -1,15 +1,17 @@
-package asg
+// add.go defines the 'add' subcommand for schedule operations.
+package schedule
 
 import (
 	"context"
 	"fmt"
-	"github.com/harleymckenzie/asc/pkg/service/asg"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
-	"github.com/harleymckenzie/asc/pkg/shared/timeformat"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/spf13/cobra"
 	"log"
 	"time"
+
+	"github.com/harleymckenzie/asc/pkg/service/asg"
+	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
+	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/pkg/shared/timeformat"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -23,7 +25,20 @@ var (
 	tableOpts       tableformat.RenderOptions
 )
 
-func addSchedule(cobraCmd *cobra.Command, args []string) {
+// addCmd defines the 'add' subcommand for schedule operations.
+var addCmd = &cobra.Command{
+	Use:   "add [name]",
+	Short: "Add a scheduled action to an Auto Scaling Group",
+	Long:  "Add a scheduled action to an Auto Scaling Group\n",
+	Example: "asc asg add schedule my-schedule --asg-name my-asg --min-size 4 --start-time 'Friday 10:00'\n" +
+		"asc asg add schedule my-schedule --asg-name my-asg --desired-capacity 8 --start-time '10:00am 25/04/2025'",
+	Run: func(cobraCmd *cobra.Command, args []string) {
+		AddSchedule(cobraCmd, args)
+	},
+}
+
+// AddSchedule is the handler for the add schedule subcommand.
+func AddSchedule(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
@@ -108,7 +123,8 @@ func addSchedule(cobraCmd *cobra.Command, args []string) {
 	}, tableOpts)
 }
 
-func addScheduleAddFlags(cobraCmd *cobra.Command) {
+// addAddFlags adds flags for the add subcommand.
+func addAddFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group to add the schedule to.")
 	cobraCmd.MarkFlagRequired("asg-name")
 	cobraCmd.Flags().IntVarP(&minSize, "min-size", "m", 0, "The minimum size of the Auto Scaling Group.")
@@ -117,4 +133,8 @@ func addScheduleAddFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
 	cobraCmd.Flags().StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
 	cobraCmd.Flags().StringVarP(&endTimeStr, "end-time", "e", "", "The end time of the schedule.")
+}
+
+func init() {
+	addAddFlags(addCmd)
 }
