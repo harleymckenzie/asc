@@ -1,3 +1,5 @@
+// The ls command lists all EC2 instances.
+
 package ec2
 
 import (
@@ -11,12 +13,7 @@ import (
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
 )
 
-type ListInstancesInput struct {
-	GetInstancesInput *ascTypes.GetInstancesInput
-	SelectedColumns   []string
-	TableOpts         tableformat.RenderOptions
-}
-
+// Variables
 var (
 	list           bool
 	showAMI        bool
@@ -29,10 +26,18 @@ var (
 	sortLaunchTime bool
 )
 
-//
-// Column functions
-//
+type ListInstancesInput struct {
+	GetInstancesInput *ascTypes.GetInstancesInput
+	SelectedColumns   []string
+	TableOpts         tableformat.RenderOptions
+}
 
+// Init function
+func init() {
+	newLsFlags(lsCmd)
+}
+
+// Column functions
 func ec2Columns() []tableformat.Column {
 	return []tableformat.Column{
 		{ID: "Name", Visible: true, Sort: sortName},
@@ -46,7 +51,7 @@ func ec2Columns() []tableformat.Column {
 	}
 }
 
-// lsCmd is the command for listing EC2 instances
+// Command variable
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all EC2 instances",
@@ -56,7 +61,6 @@ var lsCmd = &cobra.Command{
 		"asc ec2 ls -Lt          # List all EC2 instances, displaying and sorting by launch time\n" +
 		"asc ec2 ls -l           # List all EC2 instances in list format",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		
 		// Define available columns and associated flags
 		columns := ec2Columns()
 		selectedColumns, sortBy := tableformat.BuildColumns(columns)
@@ -75,7 +79,7 @@ var lsCmd = &cobra.Command{
 	},
 }
 
-// newLsFlags is the function for adding flags to the ls command
+// Flag function
 func newLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Output
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
@@ -91,14 +95,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-id", "sort-type", "sort-launch-time")
 }
 
-func init() {
-	newLsFlags(lsCmd)
-}
-
-//
 // Command functions
-//
-
 // ListEC2Instances is the function for listing EC2 instances
 func ListEC2Instances(cobraCmd *cobra.Command, input ListInstancesInput) {
 	ctx := context.TODO()

@@ -1,5 +1,4 @@
-// The ls command list Elastic Load Balancers, as well as an alias for the relevant subcommand.
-// It re-uses existing functions and flags from the relevant commands.
+// The ls command lists Elastic Load Balancers and target groups.
 
 package elb
 
@@ -14,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
 var (
 	list bool
 
@@ -30,6 +30,15 @@ var (
 	sortVPCID       bool
 )
 
+// Init function
+func init() {
+	addLsFlags(lsCmd)
+
+	lsCmd.AddCommand(lsTargetGroupCmd)
+	tg.NewLsFlags(lsTargetGroupCmd)
+}
+
+// Column functions
 func elbColumns() []tableformat.Column {
 	return []tableformat.Column{
 		{ID: "Name", Visible: true},
@@ -45,6 +54,7 @@ func elbColumns() []tableformat.Column {
 	}
 }
 
+// Command variable
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List Elastic Load Balancers and target groups",
@@ -67,7 +77,7 @@ var lsCmd = &cobra.Command{
 	},
 }
 
-// lsTargetGroupCmd calls the ListELBTargetGroups function, which is also used by the `target-group ls` command.
+// Subcommand variable
 var lsTargetGroupCmd = &cobra.Command{
 	Use:   "target-groups",
 	Short: "List target groups",
@@ -76,6 +86,25 @@ var lsTargetGroupCmd = &cobra.Command{
 	},
 }
 
+// Flag function
+func addLsFlags(cobraCmd *cobra.Command) {
+	// Output flags
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elastic Load Balancers in list format.")
+	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&showDNSName, "dns-name", "d", false, "Show the DNS name of the Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&showScheme, "scheme", "s", false, "Show the scheme for each Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&showAZs, "availability-zones", "z", false, "Show the availability zones for each Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&showIPAddressType, "ip-address-type", "i", false, "Show the IP address type for each Elastic Load Balancer.")
+
+	// Sorting flags
+	cobraCmd.Flags().BoolVarP(&sortDNSName, "sort-dns-name", "D", false, "Sort by descending DNS name.")
+	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elastic Load Balancer type.")
+	cobraCmd.Flags().BoolVarP(&sortCreatedTime, "sort-created-time", "t", false, "Sort by descending date created.")
+	cobraCmd.Flags().BoolVarP(&sortScheme, "sort-scheme", "S", false, "Sort by descending scheme.")
+	cobraCmd.Flags().BoolVarP(&sortVPCID, "sort-vpc-id", "V", false, "Sort by descending VPC ID.")
+}
+
+// Command functions
 func ListELBs(svc *elb.ELBService) {
 	ctx := context.TODO()
 	loadBalancers, err := svc.GetLoadBalancers(ctx, &ascTypes.GetLoadBalancersInput{})
@@ -96,28 +125,4 @@ func ListELBs(svc *elb.ELBService) {
 		LoadBalancers:   loadBalancers,
 		SelectedColumns: selectedColumns,
 	}, opts)
-}
-
-func addLsFlags(cobraCmd *cobra.Command) {
-	// Output flags
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elastic Load Balancers in list format.")
-	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Elastic Load Balancer.")
-	cobraCmd.Flags().BoolVarP(&showDNSName, "dns-name", "d", false, "Show the DNS name of the Elastic Load Balancer.")
-	cobraCmd.Flags().BoolVarP(&showScheme, "scheme", "s", false, "Show the scheme for each Elastic Load Balancer.")
-	cobraCmd.Flags().BoolVarP(&showAZs, "availability-zones", "z", false, "Show the availability zones for each Elastic Load Balancer.")
-	cobraCmd.Flags().BoolVarP(&showIPAddressType, "ip-address-type", "i", false, "Show the IP address type for each Elastic Load Balancer.")
-
-	// Sorting flags
-	cobraCmd.Flags().BoolVarP(&sortDNSName, "sort-dns-name", "D", false, "Sort by descending DNS name.")
-	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elastic Load Balancer type.")
-	cobraCmd.Flags().BoolVarP(&sortCreatedTime, "sort-created-time", "t", false, "Sort by descending date created.")
-	cobraCmd.Flags().BoolVarP(&sortScheme, "sort-scheme", "S", false, "Sort by descending scheme.")
-	cobraCmd.Flags().BoolVarP(&sortVPCID, "sort-vpc-id", "V", false, "Sort by descending VPC ID.")
-}
-
-func init() {
-	addLsFlags(lsCmd)
-
-	lsCmd.AddCommand(lsTargetGroupCmd)
-	tg.NewLsFlags(lsTargetGroupCmd)
 }

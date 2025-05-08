@@ -27,6 +27,17 @@ var (
 	sortMaxCapacity     bool
 )
 
+func init() {
+	newLsFlags(lsCmd)
+
+	// Add the lsSchedulesCmd to the lsCmd
+	lsCmd.AddCommand(scheduleLsCmd)
+	lsCmd.AddGroup(cmdutil.SubcommandGroups()...)
+
+	// Add the lsSchedulesCmd to the lsCmd
+	schedule.NewLsFlags(scheduleLsCmd)
+}
+
 //
 // Column functions
 //
@@ -85,17 +96,6 @@ var scheduleLsCmd = &cobra.Command{
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		schedule.ListSchedules(cobraCmd, args)
 	},
-}
-
-func init() {
-	newLsFlags(lsCmd)
-
-	// Add the lsSchedulesCmd to the lsCmd
-	lsCmd.AddCommand(scheduleLsCmd)
-	lsCmd.AddGroup(cmdutil.SubcommandGroups()...)
-
-	// Add the lsSchedulesCmd to the lsCmd
-	schedule.NewLsFlags(scheduleLsCmd)
 }
 
 //

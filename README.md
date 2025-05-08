@@ -36,7 +36,8 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Service        | Command / Subcommand | Status | Notes / Features                                                            |
 |:---------------|:---------------------|:------:|:----------------------------------------------------------------------------|
 | ASG            | ls                   | ✓      | List ASGs                                                                   |
-| ASG            | modify               | ✓*     | Modify ASGs, supports relative and absolute values for min, max and desired capacity<br>_\* Currently supports min, max and desired capacity only_   |
+| ASG            | modify               | ✓*     | Modify ASGs, supports relative and absolute values for min, max and desired capacity<br><sub>_\* Currently supports min, max and desired capacity only_</sub>   |
+| ASG            | detach               | ✗      | The specified instance will be removed from the ASG, but will not be terminated. |
 | ASG            | schedule add         | ✓      | Add schedule to ASG, supports human friendly time input                     |
 | ASG            | schedule ls          | ✓      | List ASG schedules                                                          |
 | ASG            | schedule rm          | ✓      | Remove schedule from ASG                                                    |
@@ -110,6 +111,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Export data to CSV, JSON, or other formats                  | ✗      |                                                  |
 | Service agnostic `show` command                             | ✗      |                                                  |
 | AWS Profile management                                      | ✗      |                                                  |
+| 'Select' resources to avoid repeating identifiers           | ✗      |                                                  |
 
 
 ## Output Format

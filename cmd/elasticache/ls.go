@@ -1,3 +1,5 @@
+// The ls command lists Elasticache clusters.
+
 package elasticache
 
 import (
@@ -9,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
 var (
 	list         bool
 	showEndpoint bool
@@ -19,6 +22,12 @@ var (
 	sortEngine bool
 )
 
+// Init function
+func init() {
+	newLsFlags(lsCmd)
+}
+
+// Column functions
 func elasticacheColumns() []tableformat.Column {
 	return []tableformat.Column{
 		{ID: "Cache Name", Visible: true, Sort: sortName},
@@ -29,6 +38,7 @@ func elasticacheColumns() []tableformat.Column {
 	}
 }
 
+// Command variable
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List Elasticache clusters",
@@ -64,6 +74,7 @@ var lsCmd = &cobra.Command{
 	},
 }
 
+// Flag function
 func newLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Output
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elasticache clusters in list format.")
@@ -75,8 +86,4 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending Elasticache cluster status.")
 	cobraCmd.Flags().BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending Elasticache cluster engine version.")
 	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-type", "sort-status", "sort-engine")
-}
-
-func init() {
-	newLsFlags(lsCmd)
 }

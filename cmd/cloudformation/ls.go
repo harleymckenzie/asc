@@ -1,3 +1,5 @@
+// The ls command lists all CloudFormation stacks.
+
 package cloudformation
 
 import (
@@ -9,10 +11,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var list bool
-var sortName bool
-var sortStatus bool
+// Variables
+var (
+	list       bool
+	sortName   bool
+	sortStatus bool
+)
 
+// Init function
+func init() {
+	addLsFlags(lsCmd)
+}
+
+// Column functions
 func cloudformationColumns() []tableformat.Column {
 	return []tableformat.Column{
 		{ID: "Stack Name", Visible: true, Sort: sortName},
@@ -20,6 +31,7 @@ func cloudformationColumns() []tableformat.Column {
 	}
 }
 
+// Command variable
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all CloudFormation stacks",
@@ -29,20 +41,14 @@ var lsCmd = &cobra.Command{
 	},
 }
 
+// Flag function
 func addLsFlags(lsCmd *cobra.Command) {
 	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs CloudFormation stacks in list format.")
 	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending CloudFormation stack name.")
 	lsCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending CloudFormation stack status.")
 }
 
-func init() {
-	addLsFlags(lsCmd)
-}
-
-//
 // Command functions
-//
-
 func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")

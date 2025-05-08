@@ -1,4 +1,4 @@
-// The ls command
+// The modify command allows updating min, max, or desired capacity for an Auto Scaling Group.
 
 package asg
 
@@ -12,12 +12,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
 var (
 	minSizeStr         string
 	maxSizeStr         string
 	desiredCapacityStr string
 )
 
+// Init function
+func init() {
+	addModifyFlags(modifyCmd)
+}
+
+// Command variable
 var modifyCmd = &cobra.Command{
 	Use:     "modify",
 	Short:   "Modify an Auto Scaling Group min, max, or desired capacity",
@@ -33,20 +40,14 @@ var modifyCmd = &cobra.Command{
 	},
 }
 
+// Flag function
 func addModifyFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().StringVarP(&minSizeStr, "min", "m", "", "The minimum capacity (absolute or relative, e.g. 3, +1, -2)")
 	cobraCmd.Flags().StringVarP(&maxSizeStr, "max", "M", "", "The maximum capacity (absolute or relative, e.g. 3, +3, -3)")
 	cobraCmd.Flags().StringVarP(&desiredCapacityStr, "desired", "d", "", "The desired capacity (absolute or relative, e.g. 3, +1, -2)")
 }
 
-func init() {
-	addModifyFlags(modifyCmd)
-}
-
-//
 // Command functions
-//
-
 func ModifyAutoScalingGroup(cobraCmd *cobra.Command, args []string) {
 	ctx := context.Background()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
