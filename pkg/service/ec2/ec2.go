@@ -11,6 +11,7 @@ import (
 	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 // EC2Table implements TableData interface
@@ -18,6 +19,11 @@ type EC2Table struct {
 	Instances       []types.Instance
 	SelectedColumns []string
 	SortBy          string
+}
+
+type EC2DetailTable struct {
+	Instance        types.Instance
+	SelectedColumns []string
 }
 
 type EC2ClientAPI interface {
@@ -82,10 +88,12 @@ func availableColumns() map[string]ascTypes.ColumnDef {
 // Table functions
 //
 
+// list headers
 func (et *EC2Table) Headers() table.Row {
 	return tableformat.BuildHeaders(et.SelectedColumns)
 }
 
+// list rows
 func (et *EC2Table) Rows() []table.Row {
 	rows := []table.Row{}
 	for _, instance := range et.Instances {
@@ -98,6 +106,7 @@ func (et *EC2Table) Rows() []table.Row {
 	return rows
 }
 
+// list column configs
 func (et *EC2Table) ColumnConfigs() []table.ColumnConfig {
 	return []table.ColumnConfig{
 		{Name: "Name", WidthMax: 40},
@@ -108,7 +117,47 @@ func (et *EC2Table) ColumnConfigs() []table.ColumnConfig {
 	}
 }
 
+// list table style
 func (et *EC2Table) TableStyle() table.Style {
+	style := table.StyleRounded
+	style.Options.SeparateRows = false
+	style.Options.SeparateColumns = true
+	style.Options.SeparateHeader = true
+	return style
+}
+
+// detail headers
+func (et *EC2DetailTable) Headers() table.Row {
+	return tableformat.BuildHeaders(et.SelectedColumns)
+}
+
+// detail rows
+func (et *EC2DetailTable) Rows() []table.Row {
+	rows := []table.Row{}
+	row := table.Row{}
+	for _, colID := range et.SelectedColumns {
+		row = append(row, availableColumns()[colID].GetValue(&et.Instance))
+	}
+	rows = append(rows, row)
+	return rows
+}
+
+// detail column configs
+func (et *EC2DetailTable) ColumnConfigs() []table.ColumnConfig {
+	return []table.ColumnConfig{
+		{Name: "Name", VAlign: text.VAlignMiddle},
+		{Name: "Instance ID", VAlign: text.VAlignBottom},
+		{Name: "State", VAlign: text.VAlignBottom},
+		{Name: "Instance Type", VAlign: text.VAlignBottom},
+		{Name: "Public IP", VAlign: text.VAlignBottom},
+		{Name: "AMI ID", VAlign: text.VAlignBottom},
+		{Name: "Launch Time", VAlign: text.VAlignBottom},
+		{Name: "Private IP", VAlign: text.VAlignBottom},
+	}
+}
+
+// detail table style
+func (et *EC2DetailTable) TableStyle() table.Style {
 	style := table.StyleRounded
 	style.Options.SeparateRows = false
 	style.Options.SeparateColumns = true
