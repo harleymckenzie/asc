@@ -32,9 +32,9 @@ var modifyCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	GroupID: "actions",
 	Aliases: []string{"edit", "update"},
-	Example: "modify my-asg --min 3         # Set the minimum capacity to 3\n" +
-		"modify my-asg --max -6        # Decrease the maximum capacity by 6\n" +
-		"modify my-asg --desired +5    # Increase the desired capacity by 5",
+	Example: "  asc asg modify my-asg --min 3         # Set the minimum capacity to 3\n" +
+		"  asc asg modify my-asg --max -6        # Decrease the maximum capacity by 6\n" +
+		"  asc asg modify my-asg --desired +5    # Increase the desired capacity by 5",
 	Run: func(cmd *cobra.Command, args []string) {
 		ModifyAutoScalingGroup(cmd, args)
 	},
@@ -42,6 +42,7 @@ var modifyCmd = &cobra.Command{
 
 // Flag function
 func addModifyFlags(cobraCmd *cobra.Command) {
+	cobraCmd.Flags().SortFlags = false
 	cobraCmd.Flags().StringVarP(&minSizeStr, "min", "m", "", "The minimum capacity (absolute or relative, e.g. 3, +1, -2)")
 	cobraCmd.Flags().StringVarP(&maxSizeStr, "max", "M", "", "The maximum capacity (absolute or relative, e.g. 3, +3, -3)")
 	cobraCmd.Flags().StringVarP(&desiredCapacityStr, "desired", "d", "", "The desired capacity (absolute or relative, e.g. 3, +1, -2)")
