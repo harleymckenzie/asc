@@ -12,11 +12,26 @@ type TableData interface {
 	TableStyle() table.Style
 }
 
+type TableDataDetail interface {
+	Headers() table.Row
+	AppendRows(t table.Writer)
+	ColumnConfigs() []table.ColumnConfig
+	TableStyle() table.Style
+}
+
 type Column struct {
 	ID          string
 	Visible     bool
 	Sort        bool
 	DefaultSort bool
+}
+
+type Field struct {
+	ID          string
+	Visible     bool
+	Sort        bool
+	DefaultSort bool
+	Header      bool
 }
 
 // BuildHeaders returns a table.Row of column headers
@@ -83,4 +98,28 @@ func RemoveEmptyColumns(header table.Row, rows []table.Row) (table.Row, []table.
 	}
 
 	return newHeader, newRows
+}
+
+func BuildDetailFields(fields []Field) ([]string, string, []string) {
+	fieldIDs := []string{}
+	sortBy := ""
+	headerFields := []string{}
+	for _, field := range fields {
+		if field.Visible {
+			fieldIDs = append(fieldIDs, field.ID)
+		}
+		if field.Sort {
+			sortBy = field.ID
+		}
+		if field.DefaultSort {
+			sortBy = field.ID
+		}
+		if field.Header {
+			headerFields = append(headerFields, field.ID)
+		}
+	}
+	if sortBy == "" {
+		sortBy = fieldIDs[0]
+	}
+	return fieldIDs, sortBy, headerFields
 }

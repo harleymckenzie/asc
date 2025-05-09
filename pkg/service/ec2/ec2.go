@@ -2,10 +2,10 @@ package ec2
 
 import (
 	"context"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"strconv"
 
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
 	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
@@ -22,8 +22,8 @@ type EC2Table struct {
 }
 
 type EC2DetailTable struct {
-	Instance        types.Instance
-	SelectedColumns []string
+	Instance types.Instance
+	Fields   []tableformat.Field
 }
 
 type EC2ClientAPI interface {
@@ -66,6 +66,11 @@ func availableColumns() map[string]ascTypes.ColumnDef {
 				return aws.ToString(i.ImageId)
 			},
 		},
+		"AMI Name": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString(i.ImageId)
+			},
+		},
 		"Public IP": {
 			GetValue: func(i *types.Instance) string {
 				return aws.ToString(i.PublicIpAddress)
@@ -79,6 +84,56 @@ func availableColumns() map[string]ascTypes.ColumnDef {
 		"Launch Time": {
 			GetValue: func(i *types.Instance) string {
 				return i.LaunchTime.Local().Format("2006-01-02 15:04:05 MST")
+			},
+		},
+		"Subnet ID": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString(i.SubnetId)
+			},
+		},
+		"Security Group(s)": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString(i.SecurityGroups[0].GroupId)
+			},
+		},
+		"Key Name": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString(i.KeyName)
+			},
+		},
+		"VPC ID": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString(i.VpcId)
+			},
+		},
+		"Placement Group": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString(i.Placement.GroupName)
+			},
+		},
+		"Availability Zone": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString(i.Placement.AvailabilityZone)
+			},
+		},
+		"Root Device Type": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString((*string)(&i.RootDeviceType))
+			},
+		},
+		"Root Device Name": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString(i.RootDeviceName)
+			},
+		},
+		"Virtualization Type": {
+			GetValue: func(i *types.Instance) string {
+				return aws.ToString((*string)(&i.VirtualizationType))
+			},
+		},
+		"vCPUs": {
+			GetValue: func(i *types.Instance) string {
+				return strconv.Itoa(int(*i.CpuOptions.CoreCount))
 			},
 		},
 	}
@@ -128,31 +183,33 @@ func (et *EC2Table) TableStyle() table.Style {
 
 // detail headers
 func (et *EC2DetailTable) Headers() table.Row {
-	return tableformat.BuildHeaders(et.SelectedColumns)
+	headers := []string{}
+	for _, field := range et.Fields {
+		headers = append(headers, field.ID)
+	}
+	return tableformat.BuildHeaders(headers)
 }
 
 // detail rows
-func (et *EC2DetailTable) Rows() []table.Row {
-	rows := []table.Row{}
-	row := table.Row{}
-	for _, colID := range et.SelectedColumns {
-		row = append(row, availableColumns()[colID].GetValue(&et.Instance))
+func (et *EC2DetailTable) AppendRows(t table.Writer) {
+
+	for _, field := range et.Fields {
+		if field.Header {
+			row := table.Row{field.ID, field.ID}
+			t.AppendSeparator()
+			t.AppendRow(row, table.RowConfig{AutoMerge: true})
+			t.AppendSeparator()
+		} else {
+			row := table.Row{field.ID, availableColumns()[field.ID].GetValue(&et.Instance)}
+			t.AppendRow(row)
+		}
 	}
-	rows = append(rows, row)
-	return rows
 }
 
 // detail column configs
 func (et *EC2DetailTable) ColumnConfigs() []table.ColumnConfig {
 	return []table.ColumnConfig{
-		{Name: "Name", VAlign: text.VAlignMiddle},
-		{Name: "Instance ID", VAlign: text.VAlignBottom},
-		{Name: "State", VAlign: text.VAlignBottom},
-		{Name: "Instance Type", VAlign: text.VAlignBottom},
-		{Name: "Public IP", VAlign: text.VAlignBottom},
-		{Name: "AMI ID", VAlign: text.VAlignBottom},
-		{Name: "Launch Time", VAlign: text.VAlignBottom},
-		{Name: "Private IP", VAlign: text.VAlignBottom},
+		{Number: 1, Colors: text.Colors{text.Bold}},
 	}
 }
 
