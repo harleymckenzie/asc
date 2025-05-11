@@ -112,6 +112,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Service agnostic `show` command                             | ✗      |                                                  |
 | AWS Profile management                                      | ✗      |                                                  |
 | 'Select' resources to avoid repeating identifiers           | ✗      |                                                  |
+| Display pricing information on supported resources          | ✗      |                                                  |
 
 
 ## Output Format

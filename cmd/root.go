@@ -26,7 +26,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "AWS Simple CLI (asc) - A simplified interface for AWS operations",
 	}
 	cmd.PersistentFlags().StringVarP(&Profile, "profile", "p", "", "AWS profile to use")
-	cmd.PersistentFlags().StringVarP(&Region, "region", "r", "", "AWS region to use")
+	cmd.PersistentFlags().StringVar(&Region, "region", "", "AWS region to use")
 	cmd.Version = Version
 
 	// Add commands
@@ -39,7 +39,7 @@ func NewRootCmd() *cobra.Command {
 	// Add groups
 	cmd.AddGroup(
 		&cobra.Group{
-			ID: "service",
+			ID:    "service",
 			Title: "Service Commands",
 		},
 	)

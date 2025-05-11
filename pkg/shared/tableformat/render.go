@@ -7,61 +7,44 @@ import (
 )
 
 type RenderOptions struct {
-	SortBy string
-	List   bool
 	Title  string
+	Style  string
+	SortBy []table.SortBy
 }
 
-func Render(td TableData, opts RenderOptions) {
+// RenderTableList renders a list table.
+func RenderTableList(tl ListTableRenderable, opts RenderOptions) {
 	t := table.NewWriter()
+	style := TableStyles[opts.Style]
+	sortBy := opts.SortBy
+
 	t.SetOutputMirror(os.Stdout)
+	t.SetTitle(opts.Title)
+	t.SetStyle(style)
+	tl.WriteHeaders(t)
+	tl.WriteRows(t)
+	t.SetColumnConfigs(tl.ColumnConfigs())
+	t.SortBy(sortBy)
 
-	headers := td.Headers()
-	rows := td.Rows()
-	headers, rows = RemoveEmptyColumns(headers, rows)
-
-	t.AppendHeader(headers)
-	t.AppendRows(rows)
-	t.SortBy([]table.SortBy{
-		{Name: opts.SortBy, Mode: table.AscNumericAlpha},
-	})
-
-	// If the list flag is set, use a list style output
-	if opts.List {
-		t.SetStyle(table.StyleRounded)
-		t.Style().Options.DrawBorder = false
-		t.Style().Options.SeparateColumns = false
-		t.Style().Options.SeparateHeader = false
-	} else {
-		if opts.Title != "" {
-			t.SetTitle(opts.Title)
-		}
-		t.SetColumnConfigs(td.ColumnConfigs())
-		t.SetStyle(td.TableStyle())
+	// Only suppress empty columns if there is at least one row of data
+	// This requires a type assertion to access Instances
+	if listTable, ok := tl.(*ListTable); ok && len(listTable.Instances) > 0 {
+		t.SuppressEmptyColumns()
 	}
-
 	t.Render()
 }
 
-func RenderDetail(td TableDataDetail, opts RenderOptions) {
+// RenderDetail renders a detailed table.
+func RenderTableDetail(td DetailTableRenderable, opts RenderOptions) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
-	td.AppendRows(t)
+	// td.WriteHeaders(t)
+	td.WriteRows(t)
 
-	// If the list flag is set, use a list style output
-	if opts.List {
-		t.SetStyle(table.StyleRounded)
-		t.Style().Options.DrawBorder = false
-		t.Style().Options.SeparateColumns = false
-		t.Style().Options.SeparateHeader = false
-	} else {
-		if opts.Title != "" {
-			t.SetTitle(opts.Title)
-		}
-		t.SetColumnConfigs(td.ColumnConfigs())
-		t.SetStyle(td.TableStyle())
-	}
+	t.SetTitle(opts.Title)
+	t.SetColumnConfigs(td.ColumnConfigs())
+	t.SetStyle(TableStyles[opts.Style])
 
 	t.Render()
 }

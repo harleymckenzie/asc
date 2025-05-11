@@ -7,6 +7,7 @@ import (
 	"github.com/harleymckenzie/asc/pkg/service/elb"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -16,11 +17,16 @@ var (
 	showHealthCheckEnabled bool
 	showHealthCheckPath    bool
 	showHealthCheckPort    bool
+	reverseSort            bool
 )
 
-func targetGroupColumns() []tableformat.Column {
-	return []tableformat.Column{
-		{ID: "Name", Visible: true, Sort: false},
+func init() {
+	NewLsFlags(lsCmd)
+}
+
+func targetGroupFields() []tableformat.Field {
+	return []tableformat.Field{
+		{ID: "Name", Visible: true, Sort: false, DefaultSort: true},
 		{ID: "ARN", Visible: showARNs, Sort: false},
 		{ID: "Port", Visible: true, Sort: false},
 		{ID: "Protocol", Visible: true, Sort: false},
@@ -45,13 +51,13 @@ var lsCmd = &cobra.Command{
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs target groups in list format.")
 	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each target group.")
-	cobraCmd.Flags().BoolVarP(&showHealthCheckEnabled, "health-check-enabled", "e", false, "Show health check enabled for each target group.")
-	cobraCmd.Flags().BoolVarP(&showHealthCheckPath, "health-check-path", "c", false, "Show health check path for each target group.")
-	cobraCmd.Flags().BoolVarP(&showHealthCheckPort, "health-check-port", "P", false, "Show health check port for each target group.")
-}
-
-func init() {
-	NewLsFlags(lsCmd)
+	cobraCmd.Flags().
+		BoolVarP(&showHealthCheckEnabled, "health-check-enabled", "e", false, "Show health check enabled for each target group.")
+	cobraCmd.Flags().
+		BoolVarP(&showHealthCheckPath, "health-check-path", "c", false, "Show health check path for each target group.")
+	cobraCmd.Flags().
+		BoolVarP(&showHealthCheckPort, "health-check-port", "P", false, "Show health check port for each target group.")
+	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 }
 
 // ListELBTargetGroups lists all target groups for a given ELB
@@ -77,16 +83,23 @@ func ListTargetGroups(cobraCmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to get target groups: %v", err)
 	}
 
-	columns := targetGroupColumns()
-	selectedColumns, sortBy := tableformat.BuildColumns(columns)
+	fields := targetGroupFields()
 
 	opts := tableformat.RenderOptions{
-		SortBy: sortBy,
-		List:   list,
+		Title:  "Target Groups",
+		Style:  "rounded",
+		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}
 
-	tableformat.Render(&elb.ELBTargetGroupTable{
-		TargetGroups:    targetGroups,
-		SelectedColumns: selectedColumns,
+	if list {
+		opts.Style = "list"
+	}
+
+	tableformat.RenderTableList(&tableformat.ListTable{
+		Instances: utils.SlicesToAny(targetGroups),
+		Fields:    fields,
+		GetAttribute: func(fieldID string, instance any) string {
+			return elb.GetTargetGroupAttributeValue(fieldID, instance)
+		},
 	}, opts)
 }

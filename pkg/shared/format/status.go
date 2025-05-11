@@ -1,4 +1,4 @@
-package tableformat
+package format
 
 import (
 	"strings"
@@ -6,13 +6,23 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-// StateColours maps AWS resource states to appropriate colours for table output
+// Status formats the provided state with the appropriate colour.
+// If the state is not found in the StateColours map, the state is returned unchanged.
+func Status(state string) string {
+	if colour, exists := StateColours[strings.ToLower(state)]; exists {
+		return colour.Sprint(state)
+	}
+	return state
+}
+
+// StateColours is a map of state to colour.
 var StateColours = map[string]text.Color{
 	"active":                      text.FgGreen,
 	"available":                   text.FgGreen,
 	"create_complete":             text.FgGreen,
 	"create_in_progress":          text.FgYellow,
 	"creating":                    text.FgYellow,
+	"delete_failed":               text.FgRed,
 	"deleted":                     text.FgRed,
 	"deleting":                    text.FgRed,
 	"failed":                      text.FgRed,
@@ -38,12 +48,4 @@ var StateColours = map[string]text.Color{
 	"update_rollback_complete":    text.FgRed,
 	"update_rollback_failed":      text.FgRed,
 	"update_rollback_in_progress": text.FgRed,
-}
-
-// FormatState formats AWS resource states with appropriate colors for table output
-func FormatState(state string) string {
-	if colour, exists := StateColours[strings.ToLower(state)]; exists {
-		return colour.Sprint(state)
-	}
-	return state
 }

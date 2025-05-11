@@ -8,14 +8,19 @@ import (
 
 	"github.com/harleymckenzie/asc/pkg/service/cloudformation"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
 )
 
 // Variables
 var (
-	list       bool
-	sortName   bool
-	sortStatus bool
+	list            bool
+	showLastUpdated bool
+	showDescription bool
+	sortName        bool
+	sortStatus      bool
+	sortLastUpdate  bool
+	reverseSort     bool
 )
 
 // Init function
@@ -24,10 +29,18 @@ func init() {
 }
 
 // Column functions
-func cloudformationColumns() []tableformat.Column {
-	return []tableformat.Column{
+func cloudformationListFields() []tableformat.Field {
+	return []tableformat.Field{
 		{ID: "Stack Name", Visible: true, Sort: sortName},
 		{ID: "Status", Visible: true, Sort: sortStatus},
+		{ID: "Description", Visible: showDescription},
+		{
+			ID:            "Last Updated",
+			Visible:       true,
+			Sort:          sortLastUpdate,
+			DefaultSort:   true,
+			SortDirection: "dsc",
+		},
 	}
 }
 
@@ -43,9 +56,20 @@ var lsCmd = &cobra.Command{
 
 // Flag function
 func addLsFlags(lsCmd *cobra.Command) {
-	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs CloudFormation stacks in list format.")
-	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending CloudFormation stack name.")
-	lsCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending CloudFormation stack status.")
+	lsCmd.Flags().
+		BoolVarP(&list, "list", "l", false, "Outputs CloudFormation stacks in list format.")
+	lsCmd.Flags().
+		BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
+	lsCmd.Flags().
+		BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending CloudFormation stack name.")
+	lsCmd.Flags().
+		BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending CloudFormation stack status.")
+	lsCmd.Flags().
+		BoolVarP(&sortLastUpdate, "sort-last-update", "u", false, "Sort by descending CloudFormation stack last updated date.")
+	lsCmd.Flags().
+		BoolVarP(&showDescription, "show-description", "d", false, "Show the description of the CloudFormation stack.")
+	lsCmd.Flags().
+		BoolVarP(&showLastUpdated, "show-last-updated", "U", false, "Show the last updated date of the CloudFormation stack.")
 }
 
 // Command functions
@@ -64,17 +88,23 @@ func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to list CloudFormation stacks: %v", err)
 	}
 
-	columns := cloudformationColumns()
-	selectedColumns, sortBy := tableformat.BuildColumns(columns)
+	fields := cloudformationListFields()
 
 	opts := tableformat.RenderOptions{
-		List:  list,
-		Title: "CloudFormation Stacks",
+		Title:  "Stacks",
+		Style:  "rounded",
+		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}
 
-	tableformat.Render(&cloudformation.CloudFormationTable{
-		Stacks:          stacks,
-		SelectedColumns: selectedColumns,
-		SortBy:          sortBy,
+	if list {
+		opts.Style = "list"
+	}
+
+	tableformat.RenderTableList(&tableformat.ListTable{
+		Instances: utils.SlicesToAny(stacks),
+		Fields:    fields,
+		GetAttribute: func(fieldID string, instance any) string {
+			return cloudformation.GetAttributeValue(fieldID, instance)
+		},
 	}, opts)
 }

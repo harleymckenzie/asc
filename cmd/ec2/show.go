@@ -4,10 +4,12 @@ package ec2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/aws/smithy-go"
 	"github.com/harleymckenzie/asc/pkg/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
@@ -17,7 +19,10 @@ import (
 )
 
 // Variables
-var ()
+var (
+	apiErr smithy.APIError
+	oe     *smithy.OperationError
+)
 
 // Init function
 func init() {
@@ -77,31 +82,51 @@ func ShowEC2Instance(cobraCmd *cobra.Command, args []string) {
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 	fields := ec2ShowFields()
-	// selectedFields, sortBy, headerFields := tableformat.BuildFields(fields)
-
-	opts := tableformat.RenderOptions{
-		List:  list,
-		Title: "EC2 Instance Details",
-	}
 
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize EC2 service: %v", err)
+		var oe *smithy.OperationError
+		if errors.As(err, &oe) {
+			log.Fatalf("Failed to get EC2 service: %s", oe.Unwrap())
+		} else {
+			log.Fatalf("Failed to get EC2 service: %s", err.Error())
+		}
+		return
 	}
 
 	instance, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{
 		InstanceIDs: args,
 	})
 	if err != nil {
-		log.Fatalf("Failed to get EC2 instance: %v", err)
+		var oe *smithy.OperationError
+		if errors.As(err, &oe) {
+			log.Fatalf("Failed to get EC2 instance: %s", oe.Unwrap())
+		} else {
+			log.Fatalf("Failed to get EC2 instance: %s", err.Error())
+		}
+		return
 	}
 
-	tableformat.RenderDetail(&ec2.EC2DetailTable{
+	opts := tableformat.RenderOptions{
+		Title: "EC2 Instance Details",
+		Style: "rounded",
+	}
+
+	if list {
+		opts.Style = "list"
+	}
+
+	tableformat.RenderTableDetail(&tableformat.DetailTable{
 		Instance: instance[0],
 		Fields:   fields,
+		GetAttribute: func(fieldID string, instance any) string {
+			return ec2.GetAttributeValue(fieldID, instance)
+		},
 	}, opts)
 }
 
+// printInstanceDetailsStyle1 is a function that was created to preview a concept for the table format
+// It is not currently used, but is kept here for reference
 func printInstanceDetailsStyle1() {
 	instance_id := "i-0123456789abcdefg"
 	instance_name := "Test Instance"
@@ -131,71 +156,29 @@ func printInstanceDetailsStyle1() {
 	t.Style().Color.RowAlternate = text.Colors{text.Bold}
 	t.Style().Format.Header = text.FormatDefault
 	t.SetColumnConfigs([]table.ColumnConfig{
-		{Name: "Instance ID", WidthMin: 25, WidthMax: 25, Align: text.AlignCenter, AlignHeader: text.AlignCenter},
-		{Name: "Public IP(s)", WidthMin: 25, WidthMax: 25, Align: text.AlignCenter, AlignHeader: text.AlignCenter},
-		{Name: "Private IP(s)", WidthMin: 25, WidthMax: 25, Align: text.AlignCenter, AlignHeader: text.AlignCenter},
+		{
+			Name:        "Instance ID",
+			WidthMin:    25,
+			WidthMax:    25,
+			Align:       text.AlignCenter,
+			AlignHeader: text.AlignCenter,
+		},
+		{
+			Name:        "Public IP(s)",
+			WidthMin:    25,
+			WidthMax:    25,
+			Align:       text.AlignCenter,
+			AlignHeader: text.AlignCenter,
+		},
+		{
+			Name:        "Private IP(s)",
+			WidthMin:    25,
+			WidthMax:    25,
+			Align:       text.AlignCenter,
+			AlignHeader: text.AlignCenter,
+		},
 	})
 
 	t.Render()
 
 }
-
-func printInstanceDetailsStyle2() {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.SetStyle(table.StyleRounded)
-	t.Style().Options.DrawBorder = true
-	t.Style().Options.SeparateColumns = true
-	t.Style().Options.SeparateHeader = true
-	t.Style().Options.SeparateRows = false
-	t.SetTitle("Instance details")
-
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{Number: 1, Colors: text.Colors{text.Bold}},
-	})
-
-	t.AppendRow(table.Row{"Instance details", "Instance details"}, table.RowConfig{AutoMerge: true})
-	t.AppendSeparator()
-	t.AppendRow(table.Row{"Instance ID", "i-0123456789abcdefg"})
-	t.AppendRow(table.Row{"State", "running"})
-	t.AppendRow(table.Row{"Instance Type", "t3.micro"})
-	t.AppendRow(table.Row{"Public IP", "1.2.3.4"})
-	t.AppendRow(table.Row{"Private IP", "1.2.3.4"})
-	t.AppendRow(table.Row{"AMI ID", "ami-0123456789abcdefg"})
-	t.AppendRow(table.Row{"Launch Time", "Tue Sep 05 2017 13:10:17 GMT+0100 (British Summer Time) (over 7 years)"}, table.RowConfig{AutoMerge: true})
-	t.AppendRow(table.Row{"Subnet ID", "subnet-0123456789abcdefg"})
-	t.AppendRow(table.Row{"Security Group(s)", "sg-0123456789abcdefg"})
-	t.AppendRow(table.Row{"Key Name", "my-key-pair"})
-	t.AppendRow(table.Row{"VPC ID", "vpc-0123456789abcdefg"})
-	t.AppendRow(table.Row{"IAM Role", "ec2-user"})
-	t.AppendRow(table.Row{"Placement Group", "default"})
-	t.AppendRow(table.Row{"Availability Zone", "us-east-1a"})
-	t.AppendRow(table.Row{"Root Device Type", "ebs"})
-	t.AppendRow(table.Row{"Root Device Name", "/dev/sda1"})
-
-	t.AppendSeparator()
-
-	// Section 2: Host and placement group
-	t.AppendRow(table.Row{"Host and placement group", "Host and placement group"}, table.RowConfig{AutoMerge: true})
-	t.AppendSeparator()
-	t.AppendRow(table.Row{"Virtualization type", "hvm"})
-	t.AppendRow(table.Row{"vCPUs", "1"})
-
-	t.Render()
-}
-
-// Brainstorming
-// - Detail table should be made up of 3 columns, with no headers
-// - Each row represents a key-value pair
-// - The first column is the keys (eg,. Name, Instance Id, State)
-// - The second column is the value (eg,. my-instance, i-0123456789abcdefg, running)
-// - The third column is the key (eg,. Instance Type, Public IP, AMI ID, Launch Time, Private IP)
-// - The fourth column is the value (eg,. t3.micro, 1.2.3.4, ami-0123456789abcdefg, 2021-01-01 12:00:00, 1.2.3.4)
-
-// How this data would look:
-// []table.Row{
-// 	{"Name","Instance ID","State"},
-// 	{"my-instance","i-0123456789abcdefg","running"},
-// 	{"Instance Type","Public IP","AMI ID","Launch Time","Private IP"},
-// 	{"t3.micro","1.2.3.4","ami-0123456789abcdefg","2021-01-01 12:00:00","1.2.3.4"},
-// }
