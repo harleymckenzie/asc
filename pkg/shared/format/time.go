@@ -1,4 +1,4 @@
-package timeformat
+package format
 
 import (
 	"fmt"
@@ -22,7 +22,6 @@ var durationMap = map[string]string{
 }
 
 func ParseTime(timeStr string) (time.Time, error) {
-	
     // Try parsing as human-readable duration (e.g., "2 hours")
     fields := strings.Fields(timeStr)
     if len(fields) == 2 {

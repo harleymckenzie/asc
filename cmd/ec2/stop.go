@@ -45,12 +45,7 @@ var stopCmd = &cobra.Command{
 			log.Fatalf("Failed to stop EC2 instance: %v", err)
 		}
 
-		ListEC2Instances(cobraCmd, ListInstancesInput{
-			GetInstancesInput: &ascTypes.GetInstancesInput{
-				InstanceIDs: []string{args[0]},
-			},
-			SelectedColumns: []string{"Name", "Instance ID", "State"},
-		})
+		ListEC2Instances(cobraCmd, []string{args[0]})
 	},
 }
 

@@ -23,3 +23,12 @@ func ApplyRelativeOrAbsolute(input string, currentValue int32) (int32, error) {
     }
 	return int32(newValue), nil
 }
+
+// SlicesToAny converts a slice of any type to a slice of any.
+func SlicesToAny[T any](slices []T) []any {
+	anySlices := make([]any, len(slices))
+	for i, v := range slices {
+		anySlices[i] = v
+	}
+	return anySlices
+}

@@ -9,8 +9,9 @@ import (
 
 	"github.com/harleymckenzie/asc/pkg/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
+	"github.com/harleymckenzie/asc/pkg/shared/format"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/timeformat"
+	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -74,7 +75,7 @@ func AddSchedule(cobraCmd *cobra.Command, args []string) {
 	scheduledActionName := args[0]
 
 	if startTimeStr != "" {
-		t, err := timeformat.ParseTime(startTimeStr)
+		t, err := format.ParseTime(startTimeStr)
 		if err != nil {
 			log.Fatalf("Failed to parse start time: %v", err)
 		}
@@ -83,7 +84,7 @@ func AddSchedule(cobraCmd *cobra.Command, args []string) {
 	}
 
 	if endTimeStr != "" {
-		t, err := timeformat.ParseTime(endTimeStr)
+		t, err := format.ParseTime(endTimeStr)
 		if err != nil {
 			log.Fatalf("Failed to parse end time: %v", err)
 		}
@@ -137,8 +138,11 @@ func AddSchedule(cobraCmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to get schedule: %v", err)
 	}
 
-	tableformat.Render(&asg.AutoScalingSchedulesTable{
-		Schedules:       schedules,
-		SelectedColumns: []string{"Auto Scaling Group", "Name", "Recurrence", "Start Time", "End Time", "Min", "Max", "Desired Capacity"},
+	tableformat.RenderTableList(&tableformat.ListTable{
+		Instances: utils.SlicesToAny(schedules),
+		Fields:    asgScheduleFields(),
+		GetAttribute: func(fieldID string, instance any) string {
+			return asg.GetAttributeValue(fieldID, instance)
+		},
 	}, tableOpts)
 }

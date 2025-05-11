@@ -10,6 +10,7 @@ import (
 	"github.com/harleymckenzie/asc/pkg/service/elb"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +29,8 @@ var (
 	sortCreatedTime bool
 	sortScheme      bool
 	sortVPCID       bool
+
+	reverseSort bool
 )
 
 // Init function
@@ -39,8 +42,8 @@ func init() {
 }
 
 // Column functions
-func elbColumns() []tableformat.Column {
-	return []tableformat.Column{
+func elbFields() []tableformat.Field {
+	return []tableformat.Field{
 		{ID: "Name", Visible: true},
 		{ID: "DNS Name", Visible: showDNSName, Sort: sortDNSName},
 		{ID: "Scheme", Visible: showScheme, Sort: sortScheme},
@@ -64,16 +67,7 @@ var lsCmd = &cobra.Command{
 		"  ls target-groups             List all target groups",
 	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		ctx := context.TODO()
-		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-		region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
-
-		svc, err := elb.NewELBService(ctx, profile, region)
-		if err != nil {
-			log.Fatalf("Failed to initialize Elastic Load Balancing service: %v", err)
-		}
-
-		ListELBs(svc)
+		ListELBs(cobraCmd, args)
 	},
 }
 
@@ -89,40 +83,65 @@ var lsTargetGroupCmd = &cobra.Command{
 // Flag function
 func addLsFlags(cobraCmd *cobra.Command) {
 	// Output flags
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elastic Load Balancers in list format.")
-	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Elastic Load Balancer.")
-	cobraCmd.Flags().BoolVarP(&showDNSName, "dns-name", "d", false, "Show the DNS name of the Elastic Load Balancer.")
-	cobraCmd.Flags().BoolVarP(&showScheme, "scheme", "s", false, "Show the scheme for each Elastic Load Balancer.")
-	cobraCmd.Flags().BoolVarP(&showAZs, "availability-zones", "z", false, "Show the availability zones for each Elastic Load Balancer.")
-	cobraCmd.Flags().BoolVarP(&showIPAddressType, "ip-address-type", "i", false, "Show the IP address type for each Elastic Load Balancer.")
+	cobraCmd.Flags().
+		BoolVarP(&list, "list", "l", false, "Outputs Elastic Load Balancers in list format.")
+	cobraCmd.Flags().
+		BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Elastic Load Balancer.")
+	cobraCmd.Flags().
+		BoolVarP(&showDNSName, "dns-name", "d", false, "Show the DNS name of the Elastic Load Balancer.")
+	cobraCmd.Flags().
+		BoolVarP(&showScheme, "scheme", "s", false, "Show the scheme for each Elastic Load Balancer.")
+	cobraCmd.Flags().
+		BoolVarP(&showAZs, "availability-zones", "z", false, "Show the availability zones for each Elastic Load Balancer.")
+	cobraCmd.Flags().
+		BoolVarP(&showIPAddressType, "ip-address-type", "i", false, "Show the IP address type for each Elastic Load Balancer.")
 
 	// Sorting flags
-	cobraCmd.Flags().BoolVarP(&sortDNSName, "sort-dns-name", "D", false, "Sort by descending DNS name.")
-	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elastic Load Balancer type.")
-	cobraCmd.Flags().BoolVarP(&sortCreatedTime, "sort-created-time", "t", false, "Sort by descending date created.")
+	cobraCmd.Flags().
+		BoolVarP(&sortDNSName, "sort-dns-name", "D", false, "Sort by descending DNS name.")
+	cobraCmd.Flags().
+		BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elastic Load Balancer type.")
+	cobraCmd.Flags().
+		BoolVarP(&sortCreatedTime, "sort-created-time", "t", false, "Sort by descending date created.")
 	cobraCmd.Flags().BoolVarP(&sortScheme, "sort-scheme", "S", false, "Sort by descending scheme.")
 	cobraCmd.Flags().BoolVarP(&sortVPCID, "sort-vpc-id", "V", false, "Sort by descending VPC ID.")
+	cobraCmd.Flags().
+		BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 }
 
 // Command functions
-func ListELBs(svc *elb.ELBService) {
+func ListELBs(cobraCmd *cobra.Command, args []string) {
 	ctx := context.TODO()
+	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
+	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+
+	svc, err := elb.NewELBService(ctx, profile, region)
+	if err != nil {
+		log.Fatalf("Failed to initialize Elastic Load Balancing service: %v", err)
+	}
+
 	loadBalancers, err := svc.GetLoadBalancers(ctx, &ascTypes.GetLoadBalancersInput{})
 	if err != nil {
 		log.Fatalf("Failed to list Elastic Load Balancers: %v", err)
 	}
 
-	columns := elbColumns()
-	selectedColumns, sortBy := tableformat.BuildColumns(columns)
+	fields := elbFields()
 
 	opts := tableformat.RenderOptions{
-		SortBy: sortBy,
-		List:   list,
 		Title:  "Elastic Load Balancers",
+		Style:  "rounded",
+		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}
 
-	tableformat.Render(&elb.ELBTable{
-		LoadBalancers:   loadBalancers,
-		SelectedColumns: selectedColumns,
+	if list {
+		opts.Style = "list"
+	}
+
+	tableformat.RenderTableList(&tableformat.ListTable{
+		Instances: utils.SlicesToAny(loadBalancers),
+		Fields:    fields,
+		GetAttribute: func(fieldID string, instance any) string {
+			return elb.GetAttributeValue(fieldID, instance)
+		},
 	}, opts)
 }

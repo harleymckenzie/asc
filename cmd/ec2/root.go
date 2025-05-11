@@ -14,6 +14,7 @@ func NewEC2RootCmd() *cobra.Command {
 
 	// Add commands
 	cmd.AddCommand(lsCmd)
+	cmd.AddCommand(showCmd)
 	cmd.AddCommand(restartCmd)
 	cmd.AddCommand(startCmd)
 	cmd.AddCommand(stopCmd)

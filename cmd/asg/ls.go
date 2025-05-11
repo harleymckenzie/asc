@@ -5,6 +5,7 @@ package asg
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/harleymckenzie/asc/cmd/asg/schedule"
@@ -12,6 +13,7 @@ import (
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
 	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +27,8 @@ var (
 	sortDesiredCapacity bool
 	sortMinCapacity     bool
 	sortMaxCapacity     bool
+
+	reverseSort bool
 )
 
 func init() {
@@ -42,8 +46,8 @@ func init() {
 // Column functions
 //
 
-func asgColumns() []tableformat.Column {
-	return []tableformat.Column{
+func asgFields() []tableformat.Field {
+	return []tableformat.Field{
 		{ID: "Name", Visible: true, Sort: sortName},
 		{ID: "Instances", Visible: true, Sort: sortInstances},
 		{ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
@@ -53,8 +57,8 @@ func asgColumns() []tableformat.Column {
 	}
 }
 
-func asgInstanceColumns() []tableformat.Column {
-	return []tableformat.Column{
+func asgInstanceFields() []tableformat.Field {
+	return []tableformat.Field{
 		{ID: "Name", Visible: true, Sort: sortName, DefaultSort: true},
 		{ID: "State", Visible: true, Sort: false},
 		{ID: "Instance Type", Visible: true, Sort: false},
@@ -79,13 +83,20 @@ var lsCmd = &cobra.Command{
 
 // newLsFlags is the function for adding flags to the ls command
 func newLsFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
-	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Auto-Scaling Group.")
-	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", true, "Sort by descending ASG name.")
-	cobraCmd.Flags().BoolVarP(&sortInstances, "sort-instances", "i", false, "Sort by descending number of instances. (ASG output only)")
-	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity. (ASG output only)")
-	cobraCmd.Flags().BoolVarP(&sortMinCapacity, "sort-min-capacity", "m", false, "Sort by descending min capacity. (ASG output only)")
-	cobraCmd.Flags().BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity. (ASG output only)")
+	cobraCmd.Flags().
+		BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
+	cobraCmd.Flags().
+		BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Auto-Scaling Group.")
+	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending ASG name.")
+	cobraCmd.Flags().
+		BoolVarP(&sortInstances, "sort-instances", "i", false, "Sort by descending number of instances. (ASG output only)")
+	cobraCmd.Flags().
+		BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity. (ASG output only)")
+	cobraCmd.Flags().
+		BoolVarP(&sortMinCapacity, "sort-min-capacity", "m", false, "Sort by descending min capacity. (ASG output only)")
+	cobraCmd.Flags().
+		BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity. (ASG output only)")
+	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 }
 
 // scheduleLsCmd is the command for listing schedules for an Auto Scaling Group
@@ -113,27 +124,32 @@ func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) {
 	}
 
 	if len(args) > 0 {
+		fmt.Printf("Listing instances for Auto Scaling Group %s\n", args[0])
 		ListAutoScalingGroupInstances(svc, args[0])
 	} else {
-		autoScalingGroups, err := svc.GetAutoScalingGroups(ctx, &ascTypes.GetAutoScalingGroupsInput{
-			AutoScalingGroupNames: []string{},
-		})
+		autoScalingGroups, err := svc.GetAutoScalingGroups(ctx, &ascTypes.GetAutoScalingGroupsInput{})
 		if err != nil {
 			log.Fatalf("Failed to get Auto Scaling Groups: %v", err)
 		}
 
-		columns := asgColumns()
-		selectedColumns, sortBy := tableformat.BuildColumns(columns)
+		fields := asgFields()
 
 		opts := tableformat.RenderOptions{
-			SortBy: sortBy,
-			List:   list,
 			Title:  "Auto Scaling Groups",
+			Style:  "rounded",
+			SortBy: tableformat.GetSortByField(fields, reverseSort),
 		}
 
-		tableformat.Render(&asg.AutoScalingTable{
-			AutoScalingGroups: autoScalingGroups,
-			SelectedColumns:   selectedColumns,
+		if list {
+			opts.Style = "list"
+		}
+
+		tableformat.RenderTableList(&tableformat.ListTable{
+			Instances: utils.SlicesToAny(autoScalingGroups),
+			Fields:    fields,
+			GetAttribute: func(fieldID string, instance any) string {
+				return asg.GetAttributeValue(fieldID, instance)
+			},
 		}, opts)
 	}
 }
@@ -141,24 +157,34 @@ func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) {
 // ListAutoScalingGroupInstances is the function for listing instances in an Auto Scaling Group
 func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) {
 	ctx := context.TODO()
-	instances, err := svc.GetAutoScalingGroupInstances(ctx, &ascTypes.GetAutoScalingGroupInstancesInput{
-		AutoScalingGroupNames: []string{asgName},
-	})
+	instances, err := svc.GetAutoScalingGroupInstances(
+		ctx,
+		&ascTypes.GetAutoScalingGroupInstancesInput{
+			AutoScalingGroupNames: []string{asgName},
+		},
+	)
 	if err != nil {
 		log.Fatalf("Failed to get instances for Auto Scaling Group %s: %v", asgName, err)
 	}
 
 	// Define columns for instances
-	columns := asgInstanceColumns()
-	selectedColumns, sortBy := tableformat.BuildColumns(columns)
+	fields := asgInstanceFields()
 
 	opts := tableformat.RenderOptions{
-		SortBy: sortBy,
-		List:   list,
+		Title:  "Auto Scaling Group Instances",
+		Style:  "rounded",
+		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}
 
-	tableformat.Render(&asg.AutoScalingInstanceTable{
-		Instances:       instances,
-		SelectedColumns: selectedColumns,
+	if list {
+		opts.Style = "list"
+	}
+
+	tableformat.RenderTableList(&tableformat.ListTable{
+		Instances: utils.SlicesToAny(instances),
+		Fields:    fields,
+		GetAttribute: func(fieldID string, instance any) string {
+			return asg.GetInstanceAttributeValue(fieldID, instance)
+		},
 	}, opts)
 }

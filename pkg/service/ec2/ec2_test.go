@@ -2,253 +2,133 @@ package ec2
 
 import (
 	"context"
-	"errors"
+	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
 )
 
-type mockEC2Client struct {
-	describeInstancesOutput *ec2.DescribeInstancesOutput
-	err                     error
+// MockEC2Client is a mock implementation of EC2ClientAPI for unit tests.
+type MockEC2Client struct {
+	mock.Mock
 }
 
-func (m *mockEC2Client) DescribeInstances(
-	_ context.Context,
+func (m *MockEC2Client) DescribeInstances(
+	ctx context.Context,
 	params *ec2.DescribeInstancesInput,
-	_ ...func(*ec2.Options),
+	optFns ...func(*ec2.Options),
 ) (*ec2.DescribeInstancesOutput, error) {
-	if m.err != nil {
-		return nil, m.err
-	}
-	return m.describeInstancesOutput, nil
+	args := m.Called(ctx, params)
+	return args.Get(0).(*ec2.DescribeInstancesOutput), args.Error(1)
 }
 
-func (m *mockEC2Client) StartInstances(
-	_ context.Context,
-	_ *ec2.StartInstancesInput,
-	_ ...func(*ec2.Options),
-) (*ec2.StartInstancesOutput, error) {
-	if m.err != nil {
-		return nil, m.err
-	}
-	return &ec2.StartInstancesOutput{}, nil
-}
-
-func (m *mockEC2Client) StopInstances(
-	_ context.Context,
-	_ *ec2.StopInstancesInput,
-	_ ...func(*ec2.Options),
-) (*ec2.StopInstancesOutput, error) {
-	if m.err != nil {
-		return nil, m.err
-	}
-	return &ec2.StopInstancesOutput{}, nil
-}
-
-func (m *mockEC2Client) TerminateInstances(
-	_ context.Context,
-	_ *ec2.TerminateInstancesInput,
-	_ ...func(*ec2.Options),
-) (*ec2.TerminateInstancesOutput, error) {
-	if m.err != nil {
-		return nil, m.err
-	}
-	return &ec2.TerminateInstancesOutput{}, nil
-}
-
-func (m *mockEC2Client) RebootInstances(
-	_ context.Context,
-	_ *ec2.RebootInstancesInput,
-	_ ...func(*ec2.Options),
+func (m *MockEC2Client) RebootInstances(
+	ctx context.Context,
+	params *ec2.RebootInstancesInput,
+	optFns ...func(*ec2.Options),
 ) (*ec2.RebootInstancesOutput, error) {
-	if m.err != nil {
-		return nil, m.err
-	}
-	return &ec2.RebootInstancesOutput{}, nil
+	args := m.Called(ctx, params)
+	return &ec2.RebootInstancesOutput{}, args.Error(1)
 }
 
-func TestListInstances(t *testing.T) {
-	testCases := []struct {
-		name      string
-		instances []types.Instance
-		err       error
-		wantErr   bool
-	}{
-		{
-			name: "mixed instance types and properties",
-			instances: []types.Instance{
-				{
-					InstanceId:   aws.String("i-1234567890abcdef0"),
-					InstanceType: types.InstanceType("t3.micro"),
-					State: &types.InstanceState{
-						Name: types.InstanceStateName("running"),
-					},
-					Tags: []types.Tag{
-						{
-							Key:   aws.String("Name"),
-							Value: aws.String("test-instance"),
-						},
-					},
-				},
-				{
-					InstanceId:   aws.String("i-1234567890abcdef1"),
-					InstanceType: types.InstanceType("t3.small"),
-					State: &types.InstanceState{
-						Name: types.InstanceStateName("stopped"),
-					},
-					Tags: []types.Tag{
-						{
-							Key:   aws.String("Name"),
-							Value: aws.String("test-instance-2"),
-						},
-					},
-				},
-			},
-			err:     nil,
-			wantErr: false,
-		},
-		{
-			name:      "empty response",
-			instances: []types.Instance{},
-			err:       nil,
-			wantErr:   false,
-		},
-		{
-			name:      "api error",
-			instances: nil,
-			err:       errors.New("Invalid instance ID"),
-			wantErr:   true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockClient := &mockEC2Client{
-				describeInstancesOutput: &ec2.DescribeInstancesOutput{
-					Reservations: []types.Reservation{
-						{
-							Instances: tc.instances,
-						},
-					},
-				},
-				err: tc.err,
-			}
-
-			svc := &EC2Service{
-				Client: mockClient,
-			}
-
-			var instanceIDs []string
-			if len(tc.instances) > 0 {
-				instanceIDs = []string{*tc.instances[0].InstanceId}
-			}
-
-			instances, err := svc.GetInstances(context.Background(), &ascTypes.GetInstancesInput{
-				InstanceIDs: instanceIDs,
-			})
-			if (err != nil) != tc.wantErr {
-				t.Errorf("ListInstances() error = %v, wantErr %v", err, tc.wantErr)
-			}
-
-			if len(instances) != len(tc.instances) {
-				t.Errorf("ListInstances() returned %d instances, want %d", len(instances), len(tc.instances))
-			}
-
-			for i, instance := range instances {
-				if instance.InstanceId != tc.instances[i].InstanceId {
-					t.Errorf("ListInstances() returned instance %d with ID %s, want %s", i, *instance.InstanceId, *tc.instances[i].InstanceId)
-				}
-			}
-		})
-	}
+func (m *MockEC2Client) StartInstances(
+	ctx context.Context,
+	params *ec2.StartInstancesInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.StartInstancesOutput, error) {
+	args := m.Called(ctx, params)
+	return &ec2.StartInstancesOutput{}, args.Error(1)
 }
 
-func TestTableOutput(t *testing.T) {
-	instances := []types.Instance{
-		{
-			InstanceId:   aws.String("i-1234567890abcdef0"),
-			InstanceType: types.InstanceType("t3.micro"),
-			State: &types.InstanceState{
-				Name: types.InstanceStateName("running"),
-			},
-			Tags: []types.Tag{
-				{
-					Key:   aws.String("Name"),
-					Value: aws.String("test-instance"),
-				},
-			},
-		},
-		{
-			InstanceId:   aws.String("i-1234567890abcdef1"),
-			InstanceType: types.InstanceType("t3.small"),
-			State: &types.InstanceState{
-				Name: types.InstanceStateName("stopped"),
-			},
-			Tags: []types.Tag{
-				{
-					Key:   aws.String("Name"),
-					Value: aws.String("test-instance-2"),
-				},
-			},
-		},
+func (m *MockEC2Client) StopInstances(
+	ctx context.Context,
+	params *ec2.StopInstancesInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.StopInstancesOutput, error) {
+	args := m.Called(ctx, params)
+	return &ec2.StopInstancesOutput{}, args.Error(1)
+}
+
+func (m *MockEC2Client) TerminateInstances(
+	ctx context.Context,
+	params *ec2.TerminateInstancesInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.TerminateInstancesOutput, error) {
+	args := m.Called(ctx, params)
+	return &ec2.TerminateInstancesOutput{}, args.Error(1)
+}
+
+// Unit test for GetInstances
+func TestGetInstances(t *testing.T) {
+	mockClient := new(MockEC2Client)
+	input := &ascTypes.GetInstancesInput{InstanceIDs: []string{"i-123"}}
+	mockOutput := &ec2.DescribeInstancesOutput{
+		Reservations: []types.Reservation{{Instances: []types.Instance{{InstanceId: &input.InstanceIDs[0]}}}},
 	}
+	mockClient.On("DescribeInstances", mock.Anything, mock.Anything).Return(mockOutput, nil)
 
-	testCases := []struct {
-		name            string
-		selectedColumns []string
-		wantHeaders     table.Row
-		wantRowCount    int
-	}{
-		{
-			name:            "basic instance details",
-			selectedColumns: []string{"Name", "Instance ID", "State", "Instance Type"},
-			wantHeaders:     table.Row{"Name", "Instance ID", "State", "Instance Type"},
-			wantRowCount:    2,
-		},
-		{
-			name:            "minimal columns",
-			selectedColumns: []string{"Name", "State"},
-			wantHeaders:     table.Row{"Name", "State"},
-			wantRowCount:    2,
-		},
+	svc := &EC2Service{Client: mockClient}
+	instances, err := svc.GetInstances(context.Background(), input)
+	assert.NoError(t, err)
+	assert.Len(t, instances, 1)
+	assert.Equal(t, "i-123", *instances[0].InstanceId)
+}
+
+// Unit test for StartInstance
+func TestStartInstance(t *testing.T) {
+	mockClient := new(MockEC2Client)
+	input := &ascTypes.StartInstanceInput{InstanceID: "i-123"}
+	mockClient.On("StartInstances", mock.Anything, mock.Anything).Return(&ec2.StartInstancesOutput{}, nil)
+
+	svc := &EC2Service{Client: mockClient}
+	err := svc.StartInstance(context.Background(), input)
+	assert.NoError(t, err)
+}
+
+// Unit test for StopInstance
+func TestStopInstance(t *testing.T) {
+	mockClient := new(MockEC2Client)
+	input := &ascTypes.StopInstanceInput{InstanceID: "i-123", Force: true}
+	mockClient.On("StopInstances", mock.Anything, mock.Anything).Return(&ec2.StopInstancesOutput{}, nil)
+
+	svc := &EC2Service{Client: mockClient}
+	err := svc.StopInstance(context.Background(), input)
+	assert.NoError(t, err)
+}
+
+// Unit test for RestartInstance
+func TestRestartInstance(t *testing.T) {
+	mockClient := new(MockEC2Client)
+	input := &ascTypes.RestartInstanceInput{InstanceID: "i-123"}
+	mockClient.On("RebootInstances", mock.Anything, mock.Anything).Return(&ec2.RebootInstancesOutput{}, nil)
+
+	svc := &EC2Service{Client: mockClient}
+	err := svc.RestartInstance(context.Background(), input)
+	assert.NoError(t, err)
+}
+
+// Unit test for TerminateInstance
+func TestTerminateInstance(t *testing.T) {
+	mockClient := new(MockEC2Client)
+	input := &ascTypes.TerminateInstanceInput{InstanceID: "i-123"}
+	mockClient.On("TerminateInstances", mock.Anything, mock.Anything).Return(&ec2.TerminateInstancesOutput{}, nil)
+
+	svc := &EC2Service{Client: mockClient}
+	err := svc.TerminateInstance(context.Background(), input)
+	assert.NoError(t, err)
+}
+
+// Integration test for NewEC2Service (skipped unless EC2_INTEGRATION=1)
+func TestNewEC2Service_Integration(t *testing.T) {
+	if os.Getenv("INTEGRATION") != "1" {
+		t.Skip("skipping integration test; set INTEGRATION=1 to run")
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ec2Table := &EC2Table{
-				Instances:       instances,
-				SelectedColumns: tc.selectedColumns,
-			}
-
-			// Test Headers
-			headers := ec2Table.Headers()
-			if len(headers) != len(tc.wantHeaders) {
-				t.Errorf("Headers() returned %d columns, want %d", len(headers), len(tc.wantHeaders))
-			}
-			for i, h := range headers {
-				if h != tc.wantHeaders[i] {
-					t.Errorf("Headers()[%d] = %v, want %v", i, h, tc.wantHeaders[i])
-				}
-			}
-
-			// Test Rows
-			rows := ec2Table.Rows()
-			if len(rows) != tc.wantRowCount {
-				t.Errorf("Rows() returned %d rows, want %d", len(rows), tc.wantRowCount)
-			}
-
-			// Print the actual table output for visual inspection
-			tw := table.NewWriter()
-			tw.AppendHeader(headers)
-			tw.AppendRows(rows)
-			tw.SetStyle(ec2Table.TableStyle())
-			t.Logf("\nTable Output:\n%s", tw.Render())
-		})
-	}
+	svc, err := NewEC2Service(context.Background(), "", "eu-west-1")
+	assert.NoError(t, err)
+	assert.NotNil(t, svc)
 }

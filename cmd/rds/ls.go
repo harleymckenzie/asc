@@ -8,6 +8,7 @@ import (
 
 	"github.com/harleymckenzie/asc/pkg/service/rds"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +24,8 @@ var (
 	sortEngine  bool
 	sortStatus  bool
 	sortRole    bool
+
+	reverseSort bool
 )
 
 // Init function
@@ -31,15 +34,15 @@ func init() {
 }
 
 // Column functions
-func rdsColumns() []tableformat.Column {
-	return []tableformat.Column{
-		{ID: "Cluster Identifier", Visible: true, Sort: sortCluster},
+func rdsFields() []tableformat.Field {
+	return []tableformat.Field{
+		{ID: "Cluster Identifier", Visible: true, Sort: sortCluster, Merge: true},
 		{ID: "Identifier", Visible: true, Sort: sortName},
 		{ID: "Status", Visible: true, Sort: sortStatus},
+		{ID: "Role", Visible: true, Sort: sortRole},
 		{ID: "Engine", Visible: true, Sort: sortEngine},
 		{ID: "Engine Version", Visible: showEngineVersion, Sort: false},
 		{ID: "Size", Visible: true, Sort: false},
-		{ID: "Role", Visible: true, Sort: sortRole},
 		{ID: "Endpoint", Visible: showEndpoint, Sort: false},
 	}
 }
@@ -50,39 +53,7 @@ var lsCmd = &cobra.Command{
 	Short:   "List all RDS clusters and instances",
 	GroupID: "actions",
 	Run: func(cobraCmd *cobra.Command, args []string) {
-		ctx := context.TODO()
-		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-		region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
-
-		svc, err := rds.NewRDSService(ctx, profile, region)
-		if err != nil {
-			log.Fatalf("Failed to initialize RDS service: %v", err)
-		}
-
-		instances, err := svc.GetInstances(ctx)
-		if err != nil {
-			log.Fatalf("Failed to list EC2 instances: %v", err)
-		}
-
-		clusters, err := svc.GetClusters(ctx)
-		if err != nil {
-			log.Fatalf("Failed to list RDS clusters: %v", err)
-		}
-
-		columns := rdsColumns()
-		selectedColumns, sortBy := tableformat.BuildColumns(columns)
-
-		opts := tableformat.RenderOptions{
-			SortBy: sortBy,
-			List:   list,
-			Title:  "RDS Clusters and Instances",
-		}
-
-		tableformat.Render(&rds.RDSTable{
-			Instances:       instances,
-			Clusters:        clusters,
-			SelectedColumns: selectedColumns,
-		}, opts)
+		ListRDSClusters(cobraCmd, args)
 	},
 }
 
@@ -102,5 +73,50 @@ func addLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&sortRole, "sort-role", "R", false, "Sort by descending RDS instance role.")
 	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-cluster", "sort-type", "sort-engine", "sort-status", "sort-role")
 
+	// Add flags - Reverse Sort
+	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
+
 	cobraCmd.Flags().SortFlags = false
+}
+
+// ListRDSClusters is the function for listing RDS clusters and instances
+func ListRDSClusters(cobraCmd *cobra.Command, args []string) {
+	ctx := context.TODO()
+	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
+	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+
+	svc, err := rds.NewRDSService(ctx, profile, region)
+	if err != nil {
+		log.Fatalf("Failed to initialize RDS service: %v", err)
+	}
+
+	instances, err := svc.GetInstances(ctx)
+	if err != nil {
+		log.Fatalf("Failed to list RDS instances: %v", err)
+	}
+
+	clusters, err := svc.GetClusters(ctx)
+	if err != nil {
+		log.Fatalf("Failed to list RDS clusters: %v", err)
+	}
+
+	fields := rdsFields()
+
+	opts := tableformat.RenderOptions{
+		Title:  "Databases",
+		Style:  "rounded-separated",
+		SortBy: tableformat.GetSortByField(fields, reverseSort),
+	}
+
+	if list {
+		opts.Style = "list"
+	}
+
+	tableformat.RenderTableList(&tableformat.ListTable{
+		Instances: utils.SlicesToAny(instances),
+		Fields:    fields,
+		GetAttribute: func(fieldID string, instance any) string {
+			return rds.GetAttributeValue(fieldID, instance, clusters)
+		},
+	}, opts)
 }

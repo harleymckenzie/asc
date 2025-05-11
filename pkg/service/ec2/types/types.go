@@ -1,14 +1,7 @@
 package types
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
-
-type ColumnDef struct {
-	
-    // The function to get the value of the column
-    GetValue func(*types.Instance) string
-}
 
 type GetInstancesInput struct {
 	
