@@ -92,6 +92,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 }
 
 // Command functions
+
 // ListEC2Instances is the function for listing EC2 instances
 func ListEC2Instances(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
@@ -100,12 +101,12 @@ func ListEC2Instances(cobraCmd *cobra.Command, args []string) error {
 
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
-		return fmt.Errorf("Failed to initialize EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
 	instances, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{})
 	if err != nil {
-		return fmt.Errorf("Failed to list EC2 instances: %w", err)
+		return fmt.Errorf("list ec2 instances: %w", err)
 	}
 
 	fields := ec2ListFields()
@@ -126,8 +127,5 @@ func ListEC2Instances(cobraCmd *cobra.Command, args []string) error {
 			return ec2.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
 	return nil
 }

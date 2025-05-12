@@ -6,7 +6,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/harleymckenzie/asc/cmd/ec2/ami"
+	"github.com/harleymckenzie/asc/cmd/ec2/snapshot"
+	"github.com/harleymckenzie/asc/cmd/ec2/volume"
 	"github.com/harleymckenzie/asc/pkg/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
 	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
@@ -61,24 +65,35 @@ var showCmd = &cobra.Command{
 	GroupID: "actions",
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cmdutil.DefaultErrorHandler(ShowEC2Instance(cmd, args))
+		return cmdutil.DefaultErrorHandler(ShowEC2Resource(cmd, args[0]))
 	},
 }
 
 // Flag function
-func newShowFlags(cobraCmd *cobra.Command) {
-	// Add flags - Output
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
-}
+func newShowFlags(cobraCmd *cobra.Command) {}
 
 // Command functions
+// ShowEC2Resource displays detailed information for a specified EC2 resource.
+// It supports instances, volumes, snapshots, and AMIs.
+func ShowEC2Resource(cobraCmd *cobra.Command, arg string) error {
+	switch {
+	case strings.HasPrefix(arg, "i-"):
+		return ShowEC2Instance(cobraCmd, []string{arg})
+	case strings.HasPrefix(arg, "vol-"):
+		return volume.ShowEC2Volume(cobraCmd, arg)
+	case strings.HasPrefix(arg, "snap-"):
+		return snapshot.ShowEC2Snapshot(cobraCmd, arg)
+	case strings.HasPrefix(arg, "ami-"):
+		return ami.ShowEC2AMI(cobraCmd, arg)
+	default:
+		return fmt.Errorf("invalid resource type: %s", arg)
+	}
+}
+
 // ShowEC2Instance is the function for showing EC2 instances
 func ShowEC2Instance(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
-	fields := ec2ShowFields()
-
+	profile, region := cmdutil.GetPersistentFlags(cobraCmd)
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new EC2 service: %w", err)
@@ -91,13 +106,10 @@ func ShowEC2Instance(cobraCmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get instances: %w", err)
 	}
 
+	fields := ec2ShowFields()
 	opts := tableformat.RenderOptions{
 		Title: "EC2 Instance Details",
 		Style: "rounded",
-	}
-
-	if list {
-		opts.Style = "list"
 	}
 
 	err = tableformat.RenderTableDetail(&tableformat.DetailTable{
