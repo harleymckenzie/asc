@@ -35,7 +35,7 @@ func RenderTableList(tl ListTableRenderable, opts RenderOptions) {
 }
 
 // RenderDetail renders a detailed table.
-func RenderTableDetail(td DetailTableRenderable, opts RenderOptions) {
+func RenderTableDetail(td DetailTableRenderable, opts RenderOptions) error {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
@@ -47,4 +47,6 @@ func RenderTableDetail(td DetailTableRenderable, opts RenderOptions) {
 	t.SetStyle(TableStyles[opts.Style])
 
 	t.Render()
+
+	return nil
 }

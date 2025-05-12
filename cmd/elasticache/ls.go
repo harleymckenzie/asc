@@ -4,9 +4,10 @@ package elasticache
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/harleymckenzie/asc/pkg/service/elasticache"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
@@ -46,25 +47,25 @@ var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List Elasticache clusters",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ListElasticacheClusters(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListElasticacheClusters(cobraCmd, args))
 	},
 }
 
 // ListElasticacheClusters is the function for listing Elasticache clusters
-func ListElasticacheClusters(cobraCmd *cobra.Command, args []string) {
+func ListElasticacheClusters(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := elasticache.NewElasticacheService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize Elasticache service: %v", err)
+		return fmt.Errorf("create new Elasticache service: %w", err)
 	}
 
 	instances, err := svc.GetInstances(ctx)
 	if err != nil {
-		log.Fatalf("Failed to list Elasticache instances: %v", err)
+		return fmt.Errorf("list Elasticache instances: %w", err)
 	}
 
 	fields := elasticacheFields()
@@ -86,6 +87,7 @@ func ListElasticacheClusters(cobraCmd *cobra.Command, args []string) {
 			return elasticache.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	return nil
 }
 
 // Flag function

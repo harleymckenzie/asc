@@ -2,9 +2,10 @@ package ec2
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/harleymckenzie/asc/pkg/service/ec2"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/spf13/cobra"
 
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
@@ -21,36 +22,39 @@ var stopCmd = &cobra.Command{
 	Example: "asc ec2 stop i-1234567890abcdef0\n" +
 		"asc ec2 stop i-1234567890abcdef0 --force",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ctx := context.TODO()
-		profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-		region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
-
-		// If an argument hasn't been provided, print the help message
-		if len(args) == 0 {
-			cobraCmd.Help()
-			return
-		}
-
-		svc, err := ec2.NewEC2Service(ctx, profile, region)
-		if err != nil {
-			log.Fatalf("Failed to initialize EC2 service: %v", err)
-		}
-
-		err = svc.StopInstance(ctx, &ascTypes.StopInstanceInput{
-			InstanceID: args[0],
-			Force:      force,
-		})
-		if err != nil {
-			log.Fatalf("Failed to stop EC2 instance: %v", err)
-		}
-
-		ListEC2Instances(cobraCmd, []string{args[0]})
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(StopEC2Instance(cmd, args))
 	},
 }
 
 func addStopFlags(stopCmd *cobra.Command) {
 	stopCmd.Flags().BoolVarP(&force, "force", "f", false, "Force stop the EC2 instance")
+}
+
+func StopEC2Instance(cobraCmd *cobra.Command, args []string) error {
+	ctx := context.TODO()
+	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
+	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+
+	if len(args) == 0 {
+		cobraCmd.Help()
+		return nil
+	}
+
+	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	if err != nil {
+		return fmt.Errorf("create new EC2 service: %w", err)
+	}
+
+	err = svc.StopInstance(ctx, &ascTypes.StopInstanceInput{
+		InstanceID: args[0],
+		Force:      force,
+	})
+	if err != nil {
+		return fmt.Errorf("stop instance: %w", err)
+	}
+
+	return ListEC2Instances(cobraCmd, []string{args[0]})
 }
 
 func init() {

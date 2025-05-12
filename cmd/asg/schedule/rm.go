@@ -3,10 +3,11 @@ package schedule
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/harleymckenzie/asc/pkg/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -16,8 +17,8 @@ var rmCmd = &cobra.Command{
 	Short:   "Remove a scheduled action from an Auto Scaling Group",
 	Example: "asc asg rm schedule my-schedule --asg-name my-asg",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		RemoveSchedule(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(RemoveSchedule(cobraCmd, args))
 	},
 }
 
@@ -36,14 +37,14 @@ func init() {
 //
 
 // RemoveSchedule is the handler for the rm schedule subcommand.
-func RemoveSchedule(cobraCmd *cobra.Command, args []string) {
+func RemoveSchedule(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize Auto Scaling Group service: %v", err)
+		return fmt.Errorf("create new Auto Scaling Group service: %w", err)
 	}
 
 	err = svc.RemoveAutoScalingGroupSchedule(ctx, &ascTypes.RemoveAutoScalingGroupScheduleInput{
@@ -51,6 +52,7 @@ func RemoveSchedule(cobraCmd *cobra.Command, args []string) {
 		ScheduledActionName:  args[0],
 	})
 	if err != nil {
-		log.Fatalf("Failed to remove schedule: %v", err)
+		return fmt.Errorf("remove schedule: %w", err)
 	}
+	return nil
 }

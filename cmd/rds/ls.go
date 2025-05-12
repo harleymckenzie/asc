@@ -4,11 +4,12 @@ package rds
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/harleymckenzie/asc/pkg/service/rds"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -52,8 +53,8 @@ var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all RDS clusters and instances",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ListRDSClusters(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListRDSClusters(cobraCmd, args))
 	},
 }
 
@@ -80,24 +81,24 @@ func addLsFlags(cobraCmd *cobra.Command) {
 }
 
 // ListRDSClusters is the function for listing RDS clusters and instances
-func ListRDSClusters(cobraCmd *cobra.Command, args []string) {
+func ListRDSClusters(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := rds.NewRDSService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize RDS service: %v", err)
+		return fmt.Errorf("create new RDS service: %w", err)
 	}
 
 	instances, err := svc.GetInstances(ctx)
 	if err != nil {
-		log.Fatalf("Failed to list RDS instances: %v", err)
+		return fmt.Errorf("list RDS instances: %w", err)
 	}
 
 	clusters, err := svc.GetClusters(ctx)
 	if err != nil {
-		log.Fatalf("Failed to list RDS clusters: %v", err)
+		return fmt.Errorf("list RDS clusters: %w", err)
 	}
 
 	fields := rdsFields()
@@ -119,4 +120,6 @@ func ListRDSClusters(cobraCmd *cobra.Command, args []string) {
 			return rds.GetAttributeValue(fieldID, instance, clusters)
 		},
 	}, opts)
+
+	return nil
 }

@@ -2,12 +2,13 @@ package target_group
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/harleymckenzie/asc/pkg/service/elb"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -43,8 +44,8 @@ var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List target groups",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ListTargetGroups(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListTargetGroups(cobraCmd, args))
 	},
 }
 
@@ -61,14 +62,14 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 }
 
 // ListELBTargetGroups lists all target groups for a given ELB
-func ListTargetGroups(cobraCmd *cobra.Command, args []string) {
+func ListTargetGroups(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := elb.NewELBService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize ELB service: %v", err)
+		return fmt.Errorf("create new ELB service: %w", err)
 	}
 
 	input := &ascTypes.ListTargetGroupsInput{}
@@ -80,7 +81,7 @@ func ListTargetGroups(cobraCmd *cobra.Command, args []string) {
 		ListTargetGroupsInput: *input,
 	})
 	if err != nil {
-		log.Fatalf("Failed to get target groups: %v", err)
+		return fmt.Errorf("get target groups: %w", err)
 	}
 
 	fields := targetGroupFields()
@@ -102,4 +103,5 @@ func ListTargetGroups(cobraCmd *cobra.Command, args []string) {
 			return elb.GetTargetGroupAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	return nil
 }

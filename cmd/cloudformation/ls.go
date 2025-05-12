@@ -4,9 +4,10 @@ package cloudformation
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/harleymckenzie/asc/pkg/service/cloudformation"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
@@ -49,8 +50,8 @@ var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all CloudFormation stacks",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ListCloudFormationStacks(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListCloudFormationStacks(cobraCmd, args))
 	},
 }
 
@@ -73,19 +74,19 @@ func addLsFlags(lsCmd *cobra.Command) {
 }
 
 // Command functions
-func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) {
+func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := cloudformation.NewCloudFormationService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize CloudFormation service: %v", err)
+		return fmt.Errorf("create new CloudFormation service: %w", err)
 	}
 
 	stacks, err := svc.GetStacks(ctx)
 	if err != nil {
-		log.Fatalf("Failed to list CloudFormation stacks: %v", err)
+		return fmt.Errorf("list CloudFormation stacks: %w", err)
 	}
 
 	fields := cloudformationListFields()
@@ -107,4 +108,5 @@ func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) {
 			return cloudformation.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	return nil
 }

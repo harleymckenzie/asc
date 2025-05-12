@@ -4,7 +4,7 @@ package ec2
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/harleymckenzie/asc/pkg/service/ec2"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 )
 
 // Variables
@@ -63,8 +64,8 @@ var lsCmd = &cobra.Command{
 	Example: "asc ec2 ls -A           # List all EC2 instances with the AMI ID\n" +
 		"asc ec2 ls -Lt          # List all EC2 instances, displaying and sorting by launch time\n" +
 		"asc ec2 ls -l           # List all EC2 instances in list format",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ListEC2Instances(cobraCmd, args)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListEC2Instances(cmd, args))
 	},
 }
 
@@ -92,19 +93,19 @@ func newLsFlags(cobraCmd *cobra.Command) {
 
 // Command functions
 // ListEC2Instances is the function for listing EC2 instances
-func ListEC2Instances(cobraCmd *cobra.Command, args []string) {
+func ListEC2Instances(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize EC2 service: %v", err)
+		return fmt.Errorf("Failed to initialize EC2 service: %w", err)
 	}
 
 	instances, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{})
 	if err != nil {
-		log.Fatalf("Failed to list EC2 instances: %v", err)
+		return fmt.Errorf("Failed to list EC2 instances: %w", err)
 	}
 
 	fields := ec2ListFields()
@@ -125,4 +126,5 @@ func ListEC2Instances(cobraCmd *cobra.Command, args []string) {
 			return ec2.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	return nil
 }

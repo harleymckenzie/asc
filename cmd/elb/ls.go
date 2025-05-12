@@ -4,13 +4,14 @@ package elb
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	tg "github.com/harleymckenzie/asc/cmd/elb/target_group"
 	"github.com/harleymckenzie/asc/pkg/service/elb"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -66,8 +67,8 @@ var lsCmd = &cobra.Command{
 		"  ls [elb-name]                List target groups for the specified ELB\n" +
 		"  ls target-groups             List all target groups",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ListELBs(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListELBs(cobraCmd, args))
 	},
 }
 
@@ -110,19 +111,19 @@ func addLsFlags(cobraCmd *cobra.Command) {
 }
 
 // Command functions
-func ListELBs(cobraCmd *cobra.Command, args []string) {
+func ListELBs(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := elb.NewELBService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize Elastic Load Balancing service: %v", err)
+		return fmt.Errorf("create new Elastic Load Balancing service: %w", err)
 	}
 
 	loadBalancers, err := svc.GetLoadBalancers(ctx, &ascTypes.GetLoadBalancersInput{})
 	if err != nil {
-		log.Fatalf("Failed to list Elastic Load Balancers: %v", err)
+		return fmt.Errorf("list Elastic Load Balancers: %w", err)
 	}
 
 	fields := elbFields()
@@ -144,4 +145,5 @@ func ListELBs(cobraCmd *cobra.Command, args []string) {
 			return elb.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	return nil
 }

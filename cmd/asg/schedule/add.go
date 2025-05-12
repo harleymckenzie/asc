@@ -4,11 +4,11 @@ package schedule
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/harleymckenzie/asc/pkg/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/harleymckenzie/asc/pkg/shared/format"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
@@ -33,20 +33,26 @@ var addCmd = &cobra.Command{
 	Example: "asc asg add schedule my-schedule --asg-name my-asg --min-size 4 --start-time 'Friday 10:00'\n" +
 		"asc asg add schedule my-schedule --asg-name my-asg --desired-capacity 8 --start-time '10:00am 25/04/2025'",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		AddSchedule(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(AddSchedule(cobraCmd, args))
 	},
 }
 
 // NewAddFlags adds flags for the add subcommand.
 func NewAddFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group to add the schedule to.")
+	cobraCmd.Flags().
+		StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group to add the schedule to.")
 	cobraCmd.MarkFlagRequired("asg-name")
-	cobraCmd.Flags().IntVarP(&minSize, "min-size", "m", 0, "The minimum size of the Auto Scaling Group.")
-	cobraCmd.Flags().IntVarP(&maxSize, "max-size", "M", 0, "The maximum size of the Auto Scaling Group.")
-	cobraCmd.Flags().IntVarP(&desiredCapacity, "desired-capacity", "d", 0, "The desired capacity of the Auto Scaling Group.")
-	cobraCmd.Flags().StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
-	cobraCmd.Flags().StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
+	cobraCmd.Flags().
+		IntVarP(&minSize, "min-size", "m", 0, "The minimum size of the Auto Scaling Group.")
+	cobraCmd.Flags().
+		IntVarP(&maxSize, "max-size", "M", 0, "The maximum size of the Auto Scaling Group.")
+	cobraCmd.Flags().
+		IntVarP(&desiredCapacity, "desired-capacity", "d", 0, "The desired capacity of the Auto Scaling Group.")
+	cobraCmd.Flags().
+		StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
+	cobraCmd.Flags().
+		StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
 	cobraCmd.Flags().StringVarP(&endTimeStr, "end-time", "e", "", "The end time of the schedule.")
 }
 
@@ -59,14 +65,14 @@ func init() {
 //
 
 // AddSchedule is the handler for the add schedule subcommand.
-func AddSchedule(cobraCmd *cobra.Command, args []string) {
+func AddSchedule(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize Auto Scaling Group service: %v", err)
+		return fmt.Errorf("create new Auto Scaling Group service: %w", err)
 	}
 
 	var startTime *time.Time
@@ -77,19 +83,17 @@ func AddSchedule(cobraCmd *cobra.Command, args []string) {
 	if startTimeStr != "" {
 		t, err := format.ParseTime(startTimeStr)
 		if err != nil {
-			log.Fatalf("Failed to parse start time: %v", err)
+			return fmt.Errorf("parse start time: %w", err)
 		}
 		startTime = &t
-		fmt.Println("startTime: ", startTime)
 	}
 
 	if endTimeStr != "" {
 		t, err := format.ParseTime(endTimeStr)
 		if err != nil {
-			log.Fatalf("Failed to parse end time: %v", err)
+			return fmt.Errorf("parse end time: %w", err)
 		}
 		endTime = &t
-		fmt.Println("endTime: ", endTime)
 	}
 
 	input := &ascTypes.AddAutoScalingGroupScheduleInput{
@@ -126,16 +130,19 @@ func AddSchedule(cobraCmd *cobra.Command, args []string) {
 
 	err = svc.AddAutoScalingGroupSchedule(ctx, input)
 	if err != nil {
-		log.Fatalf("Failed to add schedule: %v", err)
+		return fmt.Errorf("add schedule: %w", err)
 	}
 
 	// List the schedule and print it
-	schedules, err := svc.GetAutoScalingGroupSchedules(ctx, &ascTypes.GetAutoScalingGroupSchedulesInput{
-		AutoScalingGroupName: asgName,
-		ScheduledActionNames: []string{scheduledActionName},
-	})
+	schedules, err := svc.GetAutoScalingGroupSchedules(
+		ctx,
+		&ascTypes.GetAutoScalingGroupSchedulesInput{
+			AutoScalingGroupName: asgName,
+			ScheduledActionNames: []string{scheduledActionName},
+		},
+	)
 	if err != nil {
-		log.Fatalf("Failed to get schedule: %v", err)
+		return fmt.Errorf("get schedule: %w", err)
 	}
 
 	tableformat.RenderTableList(&tableformat.ListTable{
@@ -145,4 +152,5 @@ func AddSchedule(cobraCmd *cobra.Command, args []string) {
 			return asg.GetAttributeValue(fieldID, instance)
 		},
 	}, tableOpts)
+	return nil
 }

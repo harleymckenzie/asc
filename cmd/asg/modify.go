@@ -4,10 +4,11 @@ package asg
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/harleymckenzie/asc/pkg/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -35,28 +36,31 @@ var modifyCmd = &cobra.Command{
 	Example: "  asc asg modify my-asg --min 3         # Set the minimum capacity to 3\n" +
 		"  asc asg modify my-asg --max -6        # Decrease the maximum capacity by 6\n" +
 		"  asc asg modify my-asg --desired +5    # Increase the desired capacity by 5",
-	Run: func(cmd *cobra.Command, args []string) {
-		ModifyAutoScalingGroup(cmd, args)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ModifyAutoScalingGroup(cmd, args))
 	},
 }
 
 // Flag function
 func addModifyFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().SortFlags = false
-	cobraCmd.Flags().StringVarP(&minSizeStr, "min", "m", "", "The minimum capacity (absolute or relative, e.g. 3, +1, -2)")
-	cobraCmd.Flags().StringVarP(&maxSizeStr, "max", "M", "", "The maximum capacity (absolute or relative, e.g. 3, +3, -3)")
-	cobraCmd.Flags().StringVarP(&desiredCapacityStr, "desired", "d", "", "The desired capacity (absolute or relative, e.g. 3, +1, -2)")
+	cobraCmd.Flags().
+		StringVarP(&minSizeStr, "min", "m", "", "The minimum capacity (absolute or relative, e.g. 3, +1, -2)")
+	cobraCmd.Flags().
+		StringVarP(&maxSizeStr, "max", "M", "", "The maximum capacity (absolute or relative, e.g. 3, +3, -3)")
+	cobraCmd.Flags().
+		StringVarP(&desiredCapacityStr, "desired", "d", "", "The desired capacity (absolute or relative, e.g. 3, +1, -2)")
 }
 
 // Command functions
-func ModifyAutoScalingGroup(cobraCmd *cobra.Command, args []string) {
+func ModifyAutoScalingGroup(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Error creating Auto Scaling Service: %v", err)
+		return fmt.Errorf("create new Auto Scaling Service: %w", err)
 	}
 
 	// Get current information about the Auto Scaling Group
@@ -65,7 +69,7 @@ func ModifyAutoScalingGroup(cobraCmd *cobra.Command, args []string) {
 	}
 	asgOutput, err := svc.GetAutoScalingGroups(ctx, getInput)
 	if err != nil {
-		log.Fatalf("Error getting Auto Scaling Groups: %v", err)
+		return fmt.Errorf("get Auto Scaling Groups: %w", err)
 	}
 
 	// Create a ModifyAutoScalingGroupInput struct to be updated with the new information
@@ -77,21 +81,24 @@ func ModifyAutoScalingGroup(cobraCmd *cobra.Command, args []string) {
 	if minSizeStr != "" {
 		minSizeInt32, err := utils.ApplyRelativeOrAbsolute(minSizeStr, *asgOutput[0].MinSize)
 		if err != nil {
-			log.Fatalf("Error applying relative or absolute value: %v", err)
+			return fmt.Errorf("apply relative or absolute min size: %w", err)
 		}
 		input.MinSize = &minSizeInt32
 	}
 	if maxSizeStr != "" {
 		maxSizeInt32, err := utils.ApplyRelativeOrAbsolute(maxSizeStr, *asgOutput[0].MaxSize)
 		if err != nil {
-			log.Fatalf("Error applying relative or absolute value: %v", err)
+			return fmt.Errorf("apply relative or absolute max size: %w", err)
 		}
 		input.MaxSize = &maxSizeInt32
 	}
 	if desiredCapacityStr != "" {
-		desiredCapacityInt32, err := utils.ApplyRelativeOrAbsolute(desiredCapacityStr, *asgOutput[0].DesiredCapacity)
+		desiredCapacityInt32, err := utils.ApplyRelativeOrAbsolute(
+			desiredCapacityStr,
+			*asgOutput[0].DesiredCapacity,
+		)
 		if err != nil {
-			log.Fatalf("Error applying relative or absolute value: %v", err)
+			return fmt.Errorf("apply relative or absolute desired capacity: %w", err)
 		}
 		input.DesiredCapacity = &desiredCapacityInt32
 	}
@@ -99,6 +106,7 @@ func ModifyAutoScalingGroup(cobraCmd *cobra.Command, args []string) {
 	// Modify the Auto Scaling Group
 	err = svc.ModifyAutoScalingGroup(ctx, input)
 	if err != nil {
-		log.Fatalf("Error modifying Auto Scaling Group: %v", err)
+		return fmt.Errorf("modify Auto Scaling Group: %w", err)
 	}
+	return nil
 }

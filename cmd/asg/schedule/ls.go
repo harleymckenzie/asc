@@ -4,10 +4,10 @@ package schedule
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/harleymckenzie/asc/pkg/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
@@ -48,22 +48,35 @@ var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all scheduled actions for Auto Scaling Groups",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ListSchedules(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListSchedules(cobraCmd, args))
 	},
 }
 
 // NewLsFlags adds flags for the ls subcommand.
 func NewLsFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
+	cobraCmd.Flags().
+		BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending ASG name.")
-	cobraCmd.Flags().BoolVarP(&sortStartTime, "sort-start-time", "t", false, "Sort by descending start time (most recently started first).")
-	cobraCmd.Flags().BoolVarP(&sortEndTime, "sort-end-time", "e", false, "Sort by descending end time (most recently ended first).")
-	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity (most frequent first).")
-	cobraCmd.Flags().BoolVarP(&sortMinSize, "sort-min-size", "m", false, "Sort by descending min size (most frequent first).")
-	cobraCmd.Flags().BoolVarP(&sortMaxSize, "sort-max-size", "M", false, "Sort by descending max size (most frequent first).")
+	cobraCmd.Flags().
+		BoolVarP(&sortStartTime, "sort-start-time", "t", false, "Sort by descending start time (most recently started first).")
+	cobraCmd.Flags().
+		BoolVarP(&sortEndTime, "sort-end-time", "e", false, "Sort by descending end time (most recently ended first).")
+	cobraCmd.Flags().
+		BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity (most frequent first).")
+	cobraCmd.Flags().
+		BoolVarP(&sortMinSize, "sort-min-size", "m", false, "Sort by descending min size (most frequent first).")
+	cobraCmd.Flags().
+		BoolVarP(&sortMaxSize, "sort-max-size", "M", false, "Sort by descending max size (most frequent first).")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
-	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-start-time", "sort-end-time", "sort-min-size", "sort-max-size", "sort-desired-capacity")
+	cobraCmd.MarkFlagsMutuallyExclusive(
+		"sort-name",
+		"sort-start-time",
+		"sort-end-time",
+		"sort-min-size",
+		"sort-max-size",
+		"sort-desired-capacity",
+	)
 }
 
 //
@@ -71,31 +84,34 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 //
 
 // ListSchedules is the handler for the ls subcommand.
-func ListSchedules(cmd *cobra.Command, args []string) {
+func ListSchedules(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize Auto Scaling Group service: %v", err)
+		return fmt.Errorf("create new Auto Scaling Group service: %w", err)
 	}
 
 	if len(args) > 0 {
-		ListSchedulesForGroup(svc, args[0])
+		return ListSchedulesForGroup(svc, args[0])
 	} else {
-		ListSchedulesForAllGroups(svc)
+		return ListSchedulesForAllGroups(svc)
 	}
 }
 
 // ListSchedulesForGroup lists all schedules for a given Auto Scaling Group.
-func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) {
+func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) error {
 	ctx := context.TODO()
-	schedules, err := svc.GetAutoScalingGroupSchedules(ctx, &ascTypes.GetAutoScalingGroupSchedulesInput{
-		AutoScalingGroupName: asgName,
-	})
+	schedules, err := svc.GetAutoScalingGroupSchedules(
+		ctx,
+		&ascTypes.GetAutoScalingGroupSchedulesInput{
+			AutoScalingGroupName: asgName,
+		},
+	)
 	if err != nil {
-		log.Fatalf("Failed to get schedules for Auto Scaling Group %s: %v", asgName, err)
+		return fmt.Errorf("get schedules for Auto Scaling Group %s: %w", asgName, err)
 	}
 
 	fields := asgScheduleFields()
@@ -120,14 +136,18 @@ func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) {
 			return asg.GetScheduleAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	return nil
 }
 
 // ListSchedulesForAllGroups lists all schedules for all Auto Scaling Groups.
-func ListSchedulesForAllGroups(svc *asg.AutoScalingService) {
+func ListSchedulesForAllGroups(svc *asg.AutoScalingService) error {
 	ctx := context.TODO()
-	schedules, err := svc.GetAutoScalingGroupSchedules(ctx, &ascTypes.GetAutoScalingGroupSchedulesInput{})
+	schedules, err := svc.GetAutoScalingGroupSchedules(
+		ctx,
+		&ascTypes.GetAutoScalingGroupSchedulesInput{},
+	)
 	if err != nil {
-		log.Fatalf("Failed to get schedules for all Auto Scaling Groups: %v", err)
+		return fmt.Errorf("get schedules for all Auto Scaling Groups: %w", err)
 	}
 
 	fields := asgScheduleFields()
@@ -149,4 +169,5 @@ func ListSchedulesForAllGroups(svc *asg.AutoScalingService) {
 			return asg.GetScheduleAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	return nil
 }

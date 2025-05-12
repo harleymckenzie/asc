@@ -6,7 +6,6 @@ package asg
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/harleymckenzie/asc/cmd/asg/schedule"
 	"github.com/harleymckenzie/asc/pkg/service/asg"
@@ -76,8 +75,8 @@ var lsCmd = &cobra.Command{
 		"  ls [asg-name]           List instances in the specified ASG\n" +
 		"  ls schedules [asg-name] List schedules (optionally for specific ASG)",
 	GroupID: "actions",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ListAutoScalingGroups(cobraCmd, args)
+	RunE: func(cobraCmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListAutoScalingGroups(cobraCmd, args))
 	},
 }
 
@@ -113,23 +112,23 @@ var scheduleLsCmd = &cobra.Command{
 // Command functions
 //
 
-func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) {
+func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {
-		log.Fatalf("Failed to initialize Auto Scaling Group service: %v", err)
+		return fmt.Errorf("create new Auto Scaling Group service: %w", err)
 	}
 
 	if len(args) > 0 {
 		fmt.Printf("Listing instances for Auto Scaling Group %s\n", args[0])
-		ListAutoScalingGroupInstances(svc, args[0])
+		return ListAutoScalingGroupInstances(svc, args[0])
 	} else {
 		autoScalingGroups, err := svc.GetAutoScalingGroups(ctx, &ascTypes.GetAutoScalingGroupsInput{})
 		if err != nil {
-			log.Fatalf("Failed to get Auto Scaling Groups: %v", err)
+			return fmt.Errorf("get Auto Scaling Groups: %w", err)
 		}
 
 		fields := asgFields()
@@ -151,11 +150,12 @@ func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) {
 				return asg.GetAttributeValue(fieldID, instance)
 			},
 		}, opts)
+		return nil
 	}
 }
 
 // ListAutoScalingGroupInstances is the function for listing instances in an Auto Scaling Group
-func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) {
+func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) error {
 	ctx := context.TODO()
 	instances, err := svc.GetAutoScalingGroupInstances(
 		ctx,
@@ -164,7 +164,7 @@ func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) 
 		},
 	)
 	if err != nil {
-		log.Fatalf("Failed to get instances for Auto Scaling Group %s: %v", asgName, err)
+		return fmt.Errorf("get instances for Auto Scaling Group %s: %w", asgName, err)
 	}
 
 	// Define columns for instances
@@ -187,4 +187,5 @@ func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) 
 			return asg.GetInstanceAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	return nil
 }

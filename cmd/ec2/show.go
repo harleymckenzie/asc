@@ -4,14 +4,12 @@ package ec2
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/aws/smithy-go"
 	"github.com/harleymckenzie/asc/pkg/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
+	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -19,10 +17,7 @@ import (
 )
 
 // Variables
-var (
-	apiErr smithy.APIError
-	oe     *smithy.OperationError
-)
+var ()
 
 // Init function
 func init() {
@@ -64,8 +59,8 @@ var showCmd = &cobra.Command{
 	Aliases: []string{"describe"},
 	GroupID: "actions",
 	Args:    cobra.ExactArgs(1),
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		ShowEC2Instance(cobraCmd, args)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ShowEC2Instance(cmd, args))
 	},
 }
 
@@ -77,7 +72,7 @@ func newShowFlags(cobraCmd *cobra.Command) {
 
 // Command functions
 // ShowEC2Instance is the function for showing EC2 instances
-func ShowEC2Instance(cobraCmd *cobra.Command, args []string) {
+func ShowEC2Instance(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
 	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
@@ -85,26 +80,14 @@ func ShowEC2Instance(cobraCmd *cobra.Command, args []string) {
 
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
-		var oe *smithy.OperationError
-		if errors.As(err, &oe) {
-			log.Fatalf("Failed to get EC2 service: %s", oe.Unwrap())
-		} else {
-			log.Fatalf("Failed to get EC2 service: %s", err.Error())
-		}
-		return
+		return fmt.Errorf("create new EC2 service: %w", err)
 	}
 
 	instance, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{
 		InstanceIDs: args,
 	})
 	if err != nil {
-		var oe *smithy.OperationError
-		if errors.As(err, &oe) {
-			log.Fatalf("Failed to get EC2 instance: %s", oe.Unwrap())
-		} else {
-			log.Fatalf("Failed to get EC2 instance: %s", err.Error())
-		}
-		return
+		return fmt.Errorf("get instances: %w", err)
 	}
 
 	opts := tableformat.RenderOptions{
@@ -116,13 +99,17 @@ func ShowEC2Instance(cobraCmd *cobra.Command, args []string) {
 		opts.Style = "list"
 	}
 
-	tableformat.RenderTableDetail(&tableformat.DetailTable{
+	err = tableformat.RenderTableDetail(&tableformat.DetailTable{
 		Instance: instance[0],
 		Fields:   fields,
 		GetAttribute: func(fieldID string, instance any) string {
 			return ec2.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	if err != nil {
+		return fmt.Errorf("render table: %w", err)
+	}
+	return nil
 }
 
 // printInstanceDetailsStyle1 is a function that was created to preview a concept for the table format
