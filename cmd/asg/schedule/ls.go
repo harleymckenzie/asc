@@ -132,10 +132,13 @@ func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) error {
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(schedules),
 		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) string {
+		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return asg.GetScheduleAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	if err != nil {
+		return fmt.Errorf("render table: %w", err)
+	}
 	return nil
 }
 
@@ -165,9 +168,12 @@ func ListSchedulesForAllGroups(svc *asg.AutoScalingService) error {
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(schedules),
 		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) string {
+		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return asg.GetScheduleAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	if err != nil {
+		return fmt.Errorf("render table: %w", err)
+	}
 	return nil
 }

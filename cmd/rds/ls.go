@@ -116,10 +116,14 @@ func ListRDSClusters(cobraCmd *cobra.Command, args []string) error {
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(instances),
 		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) string {
+		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return rds.GetAttributeValue(fieldID, instance, clusters)
 		},
 	}, opts)
+
+	if err != nil {
+		return fmt.Errorf("render table: %w", err)
+	}
 
 	return nil
 }

@@ -16,6 +16,12 @@ func TestRDSLsSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc rds ls -e output:\n%s", out)
 }
 
@@ -28,6 +34,12 @@ func TestRDSLsBasicSmoke(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
 	t.Logf("asc rds ls output:\n%s", out)
 }
@@ -42,6 +54,12 @@ func TestRDSLsSortByNameSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc rds ls -n (sort by name) output:\n%s", out)
 }
 
@@ -54,6 +72,12 @@ func TestRDSLsSortByClusterSmoke(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
 	t.Logf("asc rds ls -c (sort by cluster) output:\n%s", out)
 }
@@ -68,6 +92,12 @@ func TestRDSLsSortByTypeSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc rds ls -T (sort by type) output:\n%s", out)
 }
 
@@ -80,6 +110,12 @@ func TestRDSLsSortByEngineSmoke(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
 	t.Logf("asc rds ls -E (sort by engine) output:\n%s", out)
 }
@@ -94,6 +130,12 @@ func TestRDSLsSortByStatusSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc rds ls -s (sort by status) output:\n%s", out)
 }
 
@@ -106,6 +148,12 @@ func TestRDSLsSortByRoleSmoke(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
 	t.Logf("asc rds ls -R (sort by role) output:\n%s", out)
 }

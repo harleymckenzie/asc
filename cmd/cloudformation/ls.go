@@ -11,6 +11,8 @@ import (
 	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
 	"github.com/harleymckenzie/asc/pkg/shared/utils"
 	"github.com/spf13/cobra"
+
+	ascTypes "github.com/harleymckenzie/asc/pkg/service/cloudformation/types"
 )
 
 // Variables
@@ -84,7 +86,9 @@ func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new CloudFormation service: %w", err)
 	}
 
-	stacks, err := svc.GetStacks(ctx)
+	stacks, err := svc.GetStacks(ctx, &ascTypes.GetStacksInput{
+		StackName: nil,
+	})
 	if err != nil {
 		return fmt.Errorf("list CloudFormation stacks: %w", err)
 	}
@@ -104,7 +108,7 @@ func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) error {
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(stacks),
 		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) string {
+		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return cloudformation.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)

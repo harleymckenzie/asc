@@ -16,6 +16,12 @@ func TestTargetGroupLsSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc elb ls target-groups output:\n%s", out)
 }
 

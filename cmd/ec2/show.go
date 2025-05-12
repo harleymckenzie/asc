@@ -24,6 +24,7 @@ func init() {
 	newShowFlags(showCmd)
 }
 
+// Column functions
 func ec2ShowFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Instance Details", Header: true},
@@ -102,7 +103,7 @@ func ShowEC2Instance(cobraCmd *cobra.Command, args []string) error {
 	err = tableformat.RenderTableDetail(&tableformat.DetailTable{
 		Instance: instance[0],
 		Fields:   fields,
-		GetAttribute: func(fieldID string, instance any) string {
+		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return ec2.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)

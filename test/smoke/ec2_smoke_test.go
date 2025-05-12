@@ -17,6 +17,12 @@ func TestEC2LsSmoke(t *testing.T) {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
 	t.Logf("asc ec2 ls -L -t output:\n%s", out)
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
 }
 
 // TestEC2ShowSmoke runs 'asc ec2 show <instance-id>' and prints the output for manual inspection.
@@ -34,4 +40,10 @@ func TestEC2ShowSmoke(t *testing.T) {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
 	t.Logf("asc ec2 show %s output:\n%s", instanceID, out)
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
 }

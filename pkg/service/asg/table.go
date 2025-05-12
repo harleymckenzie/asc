@@ -1,6 +1,7 @@
 package asg
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,13 +25,16 @@ type ScheduleAttribute struct {
 }
 
 // GetAttributeValue returns the value of a field for an Auto Scaling Group
-func GetAttributeValue(fieldID string, instance any) string {
+func GetAttributeValue(fieldID string, instance any) (string, error) {
 	asg, ok := instance.(types.AutoScalingGroup)
 	if !ok {
-		return ""
+		return "", fmt.Errorf("instance is not a types.AutoScalingGroup")
 	}
-	attr := availableAttributes()[fieldID]
-	return attr.GetValue(&asg)
+	attr, ok := availableAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&asg), nil
 }
 
 // availableAttributes returns a map of column definitions for Auto Scaling Groups
@@ -70,13 +74,16 @@ func availableAttributes() map[string]Attribute {
 }
 
 // GetInstanceAttributeValue returns the value of a field for an instance
-func GetInstanceAttributeValue(fieldID string, instance any) string {
+func GetInstanceAttributeValue(fieldID string, instance any) (string, error) {
 	inst, ok := instance.(types.Instance)
 	if !ok {
-		return ""
+		return "", fmt.Errorf("instance is not a types.Instance")
 	}
-	attr := availableInstanceAttributes()[fieldID]
-	return attr.GetValue(&inst)
+	attr, ok := availableInstanceAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&inst), nil
 }
 
 // availableInstanceAttributes returns a map of column definitions for instances
@@ -119,13 +126,16 @@ func availableInstanceAttributes() map[string]InstanceAttribute {
 }
 
 // GetScheduleAttributeValue returns the value of a field for a scheduled update group action
-func GetScheduleAttributeValue(fieldID string, instance any) string {
+func GetScheduleAttributeValue(fieldID string, instance any) (string, error) {
 	sched, ok := instance.(types.ScheduledUpdateGroupAction)
 	if !ok {
-		return ""
+		return "", fmt.Errorf("instance is not a types.ScheduledUpdateGroupAction")
 	}
-	attr := availableSchedulesAttributes()[fieldID]
-	return attr.GetValue(&sched)
+	attr, ok := availableSchedulesAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&sched), nil
 }
 
 // availableSchedulesAttributes returns a map of column definitions for scheduled update group actions

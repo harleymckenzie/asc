@@ -16,6 +16,12 @@ func TestELBLsSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc elb ls output:\n%s", out)
 }
 
@@ -28,6 +34,12 @@ func TestELBLsTargetGroupsSmoke(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
 	t.Logf("asc elb ls target-groups output:\n%s", out)
 }
@@ -42,6 +54,12 @@ func TestELBLsSortByDNSNameSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc elb ls -D (sort by DNS name) output:\n%s", out)
 }
 
@@ -54,6 +72,12 @@ func TestELBLsSortByTypeSmoke(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
 	t.Logf("asc elb ls -T (sort by type) output:\n%s", out)
 }
@@ -68,6 +92,12 @@ func TestELBLsSortByCreatedTimeSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc elb ls -t (sort by created time) output:\n%s", out)
 }
 
@@ -81,6 +111,12 @@ func TestELBLsSortBySchemeSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
 	t.Logf("asc elb ls -S (sort by scheme) output:\n%s", out)
 }
 
@@ -93,6 +129,12 @@ func TestELBLsSortByVPCIDSmoke(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsSortWarning(string(out)) {
+		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
 	t.Logf("asc elb ls -V (sort by VPC ID) output:\n%s", out)
 }

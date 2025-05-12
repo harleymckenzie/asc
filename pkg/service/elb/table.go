@@ -1,6 +1,7 @@
 package elb
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -18,13 +19,16 @@ type TargetGroupAttribute struct {
 	GetValue func(*types.TargetGroup) string
 }
 
-func GetAttributeValue(fieldID string, instance any) string {
+func GetAttributeValue(fieldID string, instance any) (string, error) {
 	lb, ok := instance.(types.LoadBalancer)
 	if !ok {
-		return ""
+		return "", fmt.Errorf("instance is not a types.LoadBalancer")
 	}
-	attr := availableAttributes()[fieldID]
-	return attr.GetValue(&lb)
+	attr, ok := availableAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&lb), nil
 }
 
 func availableAttributes() map[string]Attribute {
@@ -86,13 +90,16 @@ func availableAttributes() map[string]Attribute {
 	}
 }
 
-func GetTargetGroupAttributeValue(fieldID string, instance any) string {
+func GetTargetGroupAttributeValue(fieldID string, instance any) (string, error) {
 	tg, ok := instance.(types.TargetGroup)
 	if !ok {
-		return ""
+		return "", fmt.Errorf("instance is not a types.TargetGroup")
 	}
-	attr := availableTargetGroupAttributes()[fieldID]
-	return attr.GetValue(&tg)
+	attr, ok := availableTargetGroupAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&tg), nil
 }
 
 func availableTargetGroupAttributes() map[string]TargetGroupAttribute {

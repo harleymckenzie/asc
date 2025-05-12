@@ -1,6 +1,8 @@
 package rds
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/harleymckenzie/asc/pkg/shared/format"
@@ -12,13 +14,16 @@ type Attribute struct {
 }
 
 // GetAttributeValue returns the value for a given field and DBInstance.
-func GetAttributeValue(fieldID string, instance any, clusters []types.DBCluster) string {
+func GetAttributeValue(fieldID string, instance any, clusters []types.DBCluster) (string, error) {
 	inst, ok := instance.(types.DBInstance)
 	if !ok {
-		return ""
+		return "", fmt.Errorf("instance is not a types.DBInstance")
 	}
-	attr := availableAttributes()[fieldID]
-	return attr.GetValue(&inst, clusters)
+	attr, ok := availableAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&inst, clusters), nil
 }
 
 func availableAttributes() map[string]Attribute {

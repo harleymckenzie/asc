@@ -14,14 +14,16 @@ type Attribute struct {
     GetValue func(*types.CacheCluster) string
 }
 
-func GetAttributeValue(fieldID string, instance any) string {
+func GetAttributeValue(fieldID string, instance any) (string, error) {
 	inst, ok := instance.(types.CacheCluster)
 	if !ok {
-		fmt.Println("Instance is not a types.CacheCluster")
-		return ""
+		return "", fmt.Errorf("instance is not a types.CacheCluster")
 	}
-	attr := availableAttributes()[fieldID]
-	return attr.GetValue(&inst)
+	attr, ok := availableAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+        return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&inst), nil
 }
 
 func availableAttributes() map[string]Attribute {

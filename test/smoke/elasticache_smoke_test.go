@@ -19,6 +19,9 @@ func TestElasticacheLsSmoke(t *testing.T) {
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
 	t.Logf("asc elasticache ls output:\n%s", out)
 }
 
@@ -34,6 +37,9 @@ func TestElasticacheLsSortByNameSmoke(t *testing.T) {
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
 	t.Logf("asc elasticache ls -n (sort by name) output:\n%s", out)
 }
@@ -51,6 +57,9 @@ func TestElasticacheLsSortByTypeSmoke(t *testing.T) {
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
 	t.Logf("asc elasticache ls -T (sort by type) output:\n%s", out)
 }
 
@@ -67,6 +76,9 @@ func TestElasticacheLsSortByStatusSmoke(t *testing.T) {
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
 	t.Logf("asc elasticache ls -s (sort by status) output:\n%s", out)
 }
 
@@ -82,6 +94,9 @@ func TestElasticacheLsSortByEngineSmoke(t *testing.T) {
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
+	}
+	if string(out) != "" && containsAttributeError(string(out)) {
+		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
 	t.Logf("asc elasticache ls -E (sort by engine) output:\n%s", out)
 }

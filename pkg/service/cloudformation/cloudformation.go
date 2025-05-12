@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+
+	ascTypes "github.com/harleymckenzie/asc/pkg/service/cloudformation/types"
 )
 
 // CloudFormationClientAPI is an interface that defines the methods for the CloudFormation client.
@@ -37,10 +39,10 @@ func NewCloudFormationService(ctx context.Context, profile string, region string
 	}, nil
 }
 
-func (svc *CloudFormationService) GetStacks(ctx context.Context) ([]types.Stack, error) {
-	input := &cloudformation.DescribeStacksInput{}
-
-	output, err := svc.Client.DescribeStacks(ctx, input)
+func (svc *CloudFormationService) GetStacks(ctx context.Context, input *ascTypes.GetStacksInput) ([]types.Stack, error) {
+	output, err := svc.Client.DescribeStacks(ctx, &cloudformation.DescribeStacksInput{
+		StackName: input.StackName,
+	})
 	if err != nil {
 		return nil, err
 	}

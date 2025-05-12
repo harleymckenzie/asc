@@ -148,9 +148,12 @@ func AddSchedule(cobraCmd *cobra.Command, args []string) error {
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(schedules),
 		Fields:    asgScheduleFields(),
-		GetAttribute: func(fieldID string, instance any) string {
-			return asg.GetAttributeValue(fieldID, instance)
+		GetAttribute: func(fieldID string, instance any) (string, error) {
+			return asg.GetScheduleAttributeValue(fieldID, instance)
 		},
 	}, tableOpts)
+	if err != nil {
+		return fmt.Errorf("render table: %w", err)
+	}
 	return nil
 }

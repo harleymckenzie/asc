@@ -7,7 +7,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-type AttributeGetter func(fieldID string, instance any) string
+type AttributeGetter func(fieldID string, instance any) (string, error)
 
 type ListTableRenderable interface {
 	WriteHeaders(t table.Writer)
@@ -89,7 +89,11 @@ func (lt *ListTable) WriteRows(t table.Writer) {
 		row := table.Row{}
 		for _, field := range lt.Fields {
 			if field.Visible {
-				row = append(row, lt.GetAttribute(field.ID, instance))
+				val, err := lt.GetAttribute(field.ID, instance)
+				if err != nil {
+					val = fmt.Sprintf("[error: %v]", err)
+				}
+				row = append(row, val)
 			}
 		}
 		rows = append(rows, row)
@@ -126,7 +130,13 @@ func (dt *DetailTable) WriteRows(t table.Writer) {
 			t.AppendRow(row, table.RowConfig{AutoMerge: true})
 			t.AppendSeparator()
 		} else {
-			val := dt.GetAttribute(field.ID, dt.Instance)
+			val, err := dt.GetAttribute(field.ID, dt.Instance)
+			if err != nil {
+				val = fmt.Sprintf("[error: %v]", err)
+			}
+			if val == "" {
+				val = "-"
+			}
 			row := table.Row{field.ID, val}
 			t.AppendRow(row)
 		}

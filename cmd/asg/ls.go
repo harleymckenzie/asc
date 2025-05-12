@@ -146,10 +146,13 @@ func ListAutoScalingGroups(cobraCmd *cobra.Command, args []string) error {
 		tableformat.RenderTableList(&tableformat.ListTable{
 			Instances: utils.SlicesToAny(autoScalingGroups),
 			Fields:    fields,
-			GetAttribute: func(fieldID string, instance any) string {
+			GetAttribute: func(fieldID string, instance any) (string, error) {
 				return asg.GetAttributeValue(fieldID, instance)
 			},
 		}, opts)
+		if err != nil {
+			return fmt.Errorf("render table: %w", err)
+		}
 		return nil
 	}
 }
@@ -183,9 +186,12 @@ func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) 
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(instances),
 		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) string {
+		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return asg.GetInstanceAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	if err != nil {
+		return fmt.Errorf("render table: %w", err)
+	}
 	return nil
 }

@@ -99,9 +99,12 @@ func ListTargetGroups(cobraCmd *cobra.Command, args []string) error {
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(targetGroups),
 		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) string {
+		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return elb.GetTargetGroupAttributeValue(fieldID, instance)
 		},
 	}, opts)
+	if err != nil {
+		return fmt.Errorf("render table: %w", err)
+	}
 	return nil
 }

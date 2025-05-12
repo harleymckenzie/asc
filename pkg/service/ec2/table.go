@@ -16,14 +16,16 @@ type Attribute struct {
 }
 
 // GetAttributeValue is a function that returns the value of a field in a detailed table.
-func GetAttributeValue(fieldID string, instance any) string {
+func GetAttributeValue(fieldID string, instance any) (string, error) {
 	inst, ok := instance.(types.Instance)
 	if !ok {
-		fmt.Println("Instance is not a types.Instance")
-        return ""
+		return "", fmt.Errorf("instance is not a types.Instance")
 	}
-	attr := availableAttributes()[fieldID]
-	return attr.GetValue(&inst)
+	attr, ok := availableAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+        return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&inst), nil
 }
 
 // availableAttributes is a function that returns a map of attributes for a detailed table.
