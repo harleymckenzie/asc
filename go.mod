@@ -32,7 +32,6 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.55.7
 	github.com/aws/aws-sdk-go-v2/config v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.59.2
@@ -40,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.92.0
-	github.com/aws/smithy-go v1.22.2
+	github.com/aws/smithy-go v1.22.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.6.5
 	github.com/olebedev/when v1.1.0
