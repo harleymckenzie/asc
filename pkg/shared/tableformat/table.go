@@ -68,7 +68,7 @@ type Field struct {
 	// Merge determines if adjacent cells with the same value should be merged
 	Merge bool
 
-	// SortDirection specifies the default sort direction ("asc" or "dsc")
+	// SortDirection specifies the default sort direction ("asc" or "desc")
 	SortDirection string
 }
 
@@ -251,7 +251,7 @@ func sortDirection(direction string, reverseSort bool) table.SortMode {
 		switch direction {
 		case "asc":
 			return table.DscNumericAlpha
-		case "dsc":
+		case "desc":
 			return table.AscNumericAlpha
 		}
 	}

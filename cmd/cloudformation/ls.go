@@ -42,7 +42,7 @@ func cloudformationListFields() []tableformat.Field {
 			Visible:       true,
 			Sort:          sortLastUpdate,
 			DefaultSort:   true,
-			SortDirection: "dsc",
+			SortDirection: "desc",
 		},
 	}
 }
