@@ -80,6 +80,16 @@ var lsCmd = &cobra.Command{
 	},
 }
 
+// scheduleLsCmd is the command for listing schedules for an Auto Scaling Group
+var scheduleLsCmd = &cobra.Command{
+	Use:     "schedules",
+	Short:   "List schedules for an Auto Scaling Group",
+	GroupID: "subcommands",
+	Run: func(cobraCmd *cobra.Command, args []string) {
+		schedule.ListSchedules(cobraCmd, args)
+	},
+}
+
 // newLsFlags is the function for adding flags to the ls command
 func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().
@@ -96,16 +106,6 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().
 		BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity. (ASG output only)")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
-}
-
-// scheduleLsCmd is the command for listing schedules for an Auto Scaling Group
-var scheduleLsCmd = &cobra.Command{
-	Use:     "schedules",
-	Short:   "List schedules for an Auto Scaling Group",
-	GroupID: "subcommands",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		schedule.ListSchedules(cobraCmd, args)
-	},
 }
 
 //

@@ -24,6 +24,11 @@ type EC2ClientAPI interface {
 		params *ec2.DescribeVolumesInput,
 		optFns ...func(*ec2.Options),
 	) (*ec2.DescribeVolumesOutput, error)
+	DescribeSecurityGroupRules(
+		ctx context.Context,
+		params *ec2.DescribeSecurityGroupRulesInput,
+		optFns ...func(*ec2.Options),
+	) (*ec2.DescribeSecurityGroupRulesOutput, error)
 	DescribeSnapshots(
 		ctx context.Context,
 		params *ec2.DescribeSnapshotsInput,
@@ -120,6 +125,25 @@ func getSecurityGroups(securityGroups []types.GroupIdentifier) string {
 		securityGroupsList = append(securityGroupsList, aws.ToString(group.GroupId))
 	}
 	return strings.Join(securityGroupsList, "\n")
+}
+
+// GetSecurityGroupRules gets the security group rules for the security group.
+func (svc *EC2Service) GetSecurityGroupRules(
+	ctx context.Context,
+	input *ascTypes.GetSecurityGroupRulesInput,
+) ([]types.SecurityGroupRule, error) {
+	output, err := svc.Client.DescribeSecurityGroupRules(ctx, &ec2.DescribeSecurityGroupRulesInput{
+		Filters: []types.Filter{
+			{
+				Name:   aws.String("group-id"),
+				Values: []string{input.SecurityGroupID},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return output.SecurityGroupRules, nil
 }
 
 // RestartInstance restarts an instance.
@@ -257,4 +281,17 @@ func (svc *EC2Service) GetImagesWithFilters(
 	}
 	images := append([]types.Image{}, output.Images...)
 	return images, nil
+}
+
+// FilterSecurityGroupRules will filter the rules by inbound or outbound
+func FilterSecurityGroupRules(rules []types.SecurityGroupRule, egress bool) []types.SecurityGroupRule {
+	filteredRules := []types.SecurityGroupRule{}
+	for _, rule := range rules {
+		if egress && *rule.IsEgress {
+			filteredRules = append(filteredRules, rule)
+		} else if !egress && !*rule.IsEgress {
+			filteredRules = append(filteredRules, rule)
+		}
+	}
+	return filteredRules
 }

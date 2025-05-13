@@ -18,14 +18,14 @@ func newShowFlags(cobraCmd *cobra.Command) {}
 // ec2SecurityGroupShowFields returns the fields for the security group detail table.
 func ec2SecurityGroupShowFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Group ID", Visible: true},
 		{ID: "Group Name", Visible: true},
+		{ID: "Group ID", Visible: true},
 		{ID: "Description", Visible: true},
 		{ID: "VPC ID", Visible: true},
 		{ID: "Owner ID", Visible: true},
-		{ID: "Ingress Count", Visible: true},
-		{ID: "Egress Count", Visible: true},
-		{ID: "Tag Count", Visible: true},
+		{ID: "Ingress Count", Visible: false},
+		{ID: "Egress Count", Visible: false},
+		{ID: "Tag Count", Visible: false},
 	}
 }
 

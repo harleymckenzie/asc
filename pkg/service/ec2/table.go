@@ -1,3 +1,4 @@
+// Package ec2 provides functions for interacting with EC2 resources.
 package ec2
 
 import (
@@ -32,15 +33,22 @@ type SecurityGroupAttribute struct {
 	GetValue func(*types.SecurityGroup) string
 }
 
+type SecurityGroupRuleAttribute struct {
+	GetValue func(*types.SecurityGroupRule) string
+}
+
 // GetAttributeValue is a function that returns the value of a field in a detailed table.
 func GetAttributeValue(fieldID string, instance any) (string, error) {
 	inst, ok := instance.(types.Instance)
 	if !ok {
 		return "", fmt.Errorf("instance is not a types.Instance")
 	}
-	attr, ok := availableAttributes()[fieldID]
-	if !ok || attr.GetValue == nil {
-		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	attr, exists := availableAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
 	}
 	return attr.GetValue(&inst), nil
 }
@@ -152,9 +160,12 @@ func GetVolumeAttributeValue(fieldID string, volume any) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("volume is not a types.Volume")
 	}
-	attr, ok := volumeAttributes()[fieldID]
-	if !ok || attr.GetValue == nil {
-		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	attr, exists := volumeAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
 	}
 	return attr.GetValue(&vol), nil
 }
@@ -284,9 +295,12 @@ func GetSnapshotAttributeValue(fieldID string, snapshot any) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("snapshot is not a types.Snapshot")
 	}
-	attr, ok := snapshotAttributes()[fieldID]
-	if !ok || attr.GetValue == nil {
-		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	attr, exists := snapshotAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
 	}
 	return attr.GetValue(&snap), nil
 }
@@ -308,9 +322,12 @@ func GetImageAttributeValue(fieldID string, image any) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("image is not a types.Image")
 	}
-	attr, ok := imageAttributes()[fieldID]
-	if !ok || attr.GetValue == nil {
-		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	attr, exists := imageAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
 	}
 	return attr.GetValue(&img), nil
 }
@@ -532,6 +549,278 @@ func imageAttributes() map[string]ImageAttribute {
 	}
 }
 
+// GetSecurityGroupAttributeValue returns the value of a field for a SecurityGroup.
+func GetSecurityGroupAttributeValue(fieldID string, group any) (string, error) {
+	sg, ok := group.(types.SecurityGroup)
+	if !ok {
+		return "", fmt.Errorf("group is not a types.SecurityGroup")
+	}
+	attr, exists := securityGroupAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
+	}
+	return attr.GetValue(&sg), nil
+}
+
+// securityGroupAttributes returns a map of field IDs to SecurityGroupAttribute.
+func securityGroupAttributes() map[string]SecurityGroupAttribute {
+	return map[string]SecurityGroupAttribute{
+		"Group ID": {
+			GetValue: func(sg *types.SecurityGroup) string {
+				return aws.ToString(sg.GroupId)
+			},
+		},
+		"Group Name": {
+			GetValue: func(sg *types.SecurityGroup) string {
+				return aws.ToString(sg.GroupName)
+			},
+		},
+		"Description": {
+			GetValue: func(sg *types.SecurityGroup) string {
+				return aws.ToString(sg.Description)
+			},
+		},
+		"VPC ID": {
+			GetValue: func(sg *types.SecurityGroup) string {
+				return aws.ToString(sg.VpcId)
+			},
+		},
+		"Owner ID": {
+			GetValue: func(sg *types.SecurityGroup) string {
+				return aws.ToString(sg.OwnerId)
+			},
+		},
+		"Ingress Count": {
+			GetValue: func(sg *types.SecurityGroup) string {
+				return fmt.Sprintf("%d entries", len(sg.IpPermissions))
+			},
+		},
+		"Egress Count": {
+			GetValue: func(sg *types.SecurityGroup) string {
+				return fmt.Sprintf("%d entries", len(sg.IpPermissionsEgress))
+			},
+		},
+		"Tag Count": {
+			GetValue: func(sg *types.SecurityGroup) string {
+				return strconv.Itoa(len(sg.Tags))
+			},
+		},
+	}
+}
+
+// GetSecurityGroupIpPermissionAttributeValue returns the value of a field for a SecurityGroupIpPermission.
+func GetSecurityGroupRuleAttributeValue(fieldID string, rule any) (string, error) {
+	r, ok := rule.(types.SecurityGroupRule)
+	if !ok {
+		return "", fmt.Errorf("rule is not a types.SecurityGroupRule")
+	}
+	attr, exists := securityGroupRuleAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
+	}
+	return attr.GetValue(&r), nil
+}
+
+func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
+	return map[string]SecurityGroupRuleAttribute{
+		// Composite/Custom attributes for UI
+		"Rule ID": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.SecurityGroupRuleId == nil {
+					return ""
+				}
+				return *r.SecurityGroupRuleId
+			},
+		},
+		"IP Version": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.CidrIpv4 != nil && *r.CidrIpv4 != "" {
+					return "IPv4"
+				}
+				if r.CidrIpv6 != nil && *r.CidrIpv6 != "" {
+					return "IPv6"
+				}
+				return "-"
+			},
+		},
+		"Type": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				return getSecurityGroupRuleType(*r)
+			},
+		},
+		"Protocol": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.IpProtocol == nil {
+					return ""
+				}
+				if *r.IpProtocol == "-1" {
+					return "All"
+				}
+				return strings.ToUpper(*r.IpProtocol)
+			},
+		},
+		"Port Range": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if *r.FromPort == -1 {
+					return "All"
+				}
+				if r.FromPort != nil && r.ToPort != nil {
+					if *r.FromPort == *r.ToPort {
+						return strconv.Itoa(int(*r.FromPort))
+					}
+					return fmt.Sprintf("%d-%d", *r.FromPort, *r.ToPort)
+				}
+				return ""
+			},
+		},
+		"Source": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.IsEgress != nil && *r.IsEgress {
+					return ""
+				}
+				if r.CidrIpv4 != nil && *r.CidrIpv4 != "" {
+					return *r.CidrIpv4
+				}
+				if r.CidrIpv6 != nil && *r.CidrIpv6 != "" {
+					return *r.CidrIpv6
+				}
+				if r.ReferencedGroupInfo != nil && r.ReferencedGroupInfo.GroupId != nil {
+					return *r.ReferencedGroupInfo.GroupId
+				}
+				return ""
+			},
+		},
+		"Destination": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.IsEgress != nil && *r.IsEgress {
+					if r.CidrIpv4 != nil && *r.CidrIpv4 != "" {
+						return *r.CidrIpv4
+					}
+					if r.CidrIpv6 != nil && *r.CidrIpv6 != "" {
+						return *r.CidrIpv6
+					}
+					if r.ReferencedGroupInfo != nil && r.ReferencedGroupInfo.GroupId != nil {
+						return *r.ReferencedGroupInfo.GroupId
+					}
+				}
+				return ""
+			},
+		},
+		"Description": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.Description == nil {
+					return ""
+				}
+				return *r.Description
+			},
+		},
+
+		// Retain all original attributes for flexibility
+		"CidrIpv4": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.CidrIpv4 == nil {
+					return ""
+				}
+				return *r.CidrIpv4
+			},
+		},
+		"CidrIpv6": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.CidrIpv6 == nil {
+					return ""
+				}
+				return *r.CidrIpv6
+			},
+		},
+		"FromPort": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.FromPort == nil {
+					return ""
+				}
+				return strconv.Itoa(int(*r.FromPort))
+			},
+		},
+		"GroupId": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.GroupId == nil {
+					return ""
+				}
+				return *r.GroupId
+			},
+		},
+		"GroupOwnerId": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.GroupOwnerId == nil {
+					return ""
+				}
+				return *r.GroupOwnerId
+			},
+		},
+		"IsEgress": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.IsEgress == nil {
+					return ""
+				}
+				return strconv.FormatBool(*r.IsEgress)
+			},
+		},
+		"PrefixListId": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.PrefixListId == nil {
+					return ""
+				}
+				return *r.PrefixListId
+			},
+		},
+		"ReferencedGroupInfo": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.ReferencedGroupInfo == nil || r.ReferencedGroupInfo.GroupId == nil {
+					return ""
+				}
+				return *r.ReferencedGroupInfo.GroupId
+			},
+		},
+		"SecurityGroupRuleArn": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.SecurityGroupRuleArn == nil {
+					return ""
+				}
+				return *r.SecurityGroupRuleArn
+			},
+		},
+		"SecurityGroupRuleId": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.SecurityGroupRuleId == nil {
+					return ""
+				}
+				return *r.SecurityGroupRuleId
+			},
+		},
+		"TagCount": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				return strconv.Itoa(len(r.Tags))
+			},
+		},
+		"ToPort": {
+			GetValue: func(r *types.SecurityGroupRule) string {
+				if r.ToPort == nil {
+					return ""
+				}
+				return strconv.Itoa(int(*r.ToPort))
+			},
+		},
+	}
+}
+
+// Helper functions
+// #TODO: Move to a better location
+
 // getAssociatedResource is a function that returns the associated resource for a volume.
 func getAssociatedResource(attachments []types.VolumeAttachment) string {
 	if len(attachments) == 0 {
@@ -596,61 +885,69 @@ func getProductCodes(productCodes []types.ProductCode) string {
 	return fmt.Sprintf("%s (%s)", code, codeType)
 }
 
-// GetSecurityGroupAttributeValue returns the value of a field for a SecurityGroup.
-func GetSecurityGroupAttributeValue(fieldID string, group any) (string, error) {
-	g, ok := group.(types.SecurityGroup)
-	if !ok {
-		return "", fmt.Errorf("group is not a types.SecurityGroup")
+// getSecurityGroupRuleType is a function that returns the type of a security group rule.
+// (eg,. if port range is 443-443, return "HTTPS", if port range is 22-22, return "SSH", if port range is 80-80, return "HTTP")
+func getSecurityGroupRuleType(rule types.SecurityGroupRule) string {
+	if rule.FromPort != nil && rule.ToPort != nil {
+		if *rule.FromPort == *rule.ToPort {
+			switch *rule.FromPort {
+			case -1:
+				return "All traffic"
+			case 22:
+				return "SSH"
+			case 25:
+				return "SMTP"
+			case 53:
+				return "DNS"
+			case 80:
+				return "HTTP"
+			case 110:
+				return "POP3"
+			case 143:
+				return "IMAP"
+			case 389:
+				return "LDAP"
+			case 443:
+				return "HTTPS"
+			case 445:
+				return "SMB"
+			case 465:
+				return "SMTPS"
+			case 993:
+				return "IMAPS"
+			case 995:
+				return "POP3S"
+			case 1433:
+				return "MSSQL"
+			case 2049:
+				return "NFS"
+			case 3306:
+				return "MySQL/Aurora"
+			case 3389:
+				return "RDP"
+			case 5439:
+				return "Redshift"
+			case 5432:
+				return "PostgreSQL"
+			case 1521:
+				return "Oracle RDS"
+			case 5985:
+				return "WinRM-HTTP"
+			case 5986:
+				return "WinRM-HTTPS"
+			case 20049:
+				return "Elastic Graphics"
+			case 9042:
+				return "CQLSH / Cassandra"
+			default:
+				// Handle custom protocol types based on IpProtocol
+				if rule.IpProtocol != nil {
+					return fmt.Sprintf("Custom (%s)", strings.ToUpper(*rule.IpProtocol))
+				} else {
+					return "Custom Protocol"
+				}
+			}
+		}
 	}
-	attr, ok := securityGroupAttributes()[fieldID]
-	if !ok || attr.GetValue == nil {
-		return "", fmt.Errorf("error getting attribute %q", fieldID)
-	}
-	return attr.GetValue(&g), nil
-}
-
-// securityGroupAttributes returns a map of field IDs to SecurityGroupAttribute.
-func securityGroupAttributes() map[string]SecurityGroupAttribute {
-	return map[string]SecurityGroupAttribute{
-		"Group ID": {
-			GetValue: func(g *types.SecurityGroup) string {
-				return aws.ToString(g.GroupId)
-			},
-		},
-		"Group Name": {
-			GetValue: func(g *types.SecurityGroup) string {
-				return aws.ToString(g.GroupName)
-			},
-		},
-		"Description": {
-			GetValue: func(g *types.SecurityGroup) string {
-				return aws.ToString(g.Description)
-			},
-		},
-		"VPC ID": {
-			GetValue: func(g *types.SecurityGroup) string {
-				return aws.ToString(g.VpcId)
-			},
-		},
-		"Owner ID": {
-			GetValue: func(g *types.SecurityGroup) string {
-				return aws.ToString(g.OwnerId)
-			},
-		},
-		"Ingress Count": {
-			GetValue: func(g *types.SecurityGroup) string {
-				return strconv.Itoa(len(g.IpPermissions))
-			},
-		},
-		"Egress Count": {
-			GetValue: func(g *types.SecurityGroup) string {
-				return strconv.Itoa(len(g.IpPermissionsEgress))
-			},
-		},
-		"Tag Count": {
-			GetValue: func(g *types.SecurityGroup) string {
-				return strconv.Itoa(len(g.Tags))
-			},
-		},
-	}
+	return ""
 }

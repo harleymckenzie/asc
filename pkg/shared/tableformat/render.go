@@ -14,6 +14,13 @@ type RenderOptions struct {
 
 // RenderTableList renders a list table.
 func RenderTableList(tl ListTableRenderable, opts RenderOptions) {
+	// Confirm the GetAttribute function is set
+	if listTable, ok := tl.(*ListTable); ok {
+		if listTable.GetAttribute == nil {
+			panic("GetAttribute function is not set")
+		}
+	}
+
 	t := table.NewWriter()
 	style := TableStyles[opts.Style]
 	sortBy := opts.SortBy

@@ -12,16 +12,22 @@ type GetVolumesInput struct {
 	VolumeIDs []string
 }
 
-type GetSnapshotsInput struct {
-
-	// The IDs of the snapshots to get
-	SnapshotIDs []string
-}
-
 type GetImagesInput struct {
 
 	// The IDs of the images to get
 	ImageIDs []string
+}
+
+type GetSecurityGroupRulesInput struct {
+
+	// The ID of the security group to get rules for
+	SecurityGroupID string
+}
+
+type GetSnapshotsInput struct {
+
+	// The IDs of the snapshots to get
+	SnapshotIDs []string
 }
 
 type RestartInstanceInput struct {
