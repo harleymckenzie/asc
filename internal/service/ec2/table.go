@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/format"
+	"github.com/harleymckenzie/asc/internal/shared/format"
 )
 
 // Attribute is a struct that defines a field in a detailed table.
@@ -149,168 +149,6 @@ func availableAttributes() map[string]Attribute {
 		"vCPUs": {
 			GetValue: func(i *types.Instance) string {
 				return strconv.Itoa(int(*i.CpuOptions.CoreCount))
-			},
-		},
-	}
-}
-
-// GetVolumeAttributeValue is a function that returns the value of a field in a detailed table.
-func GetVolumeAttributeValue(fieldID string, volume any) (string, error) {
-	vol, ok := volume.(types.Volume)
-	if !ok {
-		return "", fmt.Errorf("volume is not a types.Volume")
-	}
-	attr, exists := volumeAttributes()[fieldID]
-	if !exists {
-		return "", fmt.Errorf("attribute %q does not exist", fieldID)
-	}
-	if attr.GetValue == nil {
-		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
-	}
-	return attr.GetValue(&vol), nil
-}
-
-// volumeAttributes is a function that returns a map of attributes for a detailed table.
-func volumeAttributes() map[string]VolumeAttribute {
-	return map[string]VolumeAttribute{
-		"Volume ID": {
-			GetValue: func(v *types.Volume) string {
-				if v.VolumeId == nil {
-					return ""
-				}
-				return aws.ToString(v.VolumeId)
-			},
-		},
-		"Volume Type": {
-			GetValue: func(v *types.Volume) string {
-				return string(v.VolumeType)
-			},
-		},
-		"Size": {
-			GetValue: func(v *types.Volume) string {
-				if v.Size == nil {
-					return ""
-				}
-				return strconv.Itoa(int(*v.Size))
-			},
-		},
-		"State": {
-			GetValue: func(v *types.Volume) string {
-				return string(v.State)
-			},
-		},
-		"IOPS": {
-			GetValue: func(v *types.Volume) string {
-				if v.Iops == nil {
-					return ""
-				}
-				return strconv.Itoa(int(*v.Iops))
-			},
-		},
-		"Throughput": {
-			GetValue: func(v *types.Volume) string {
-				if v.Throughput == nil {
-					return ""
-				}
-				return strconv.Itoa(int(*v.Throughput))
-			},
-		},
-		"Fast Restored": {
-			GetValue: func(v *types.Volume) string {
-				if v.FastRestored == nil {
-					return ""
-				}
-				return strconv.FormatBool(*v.FastRestored)
-			},
-		},
-		"Availability Zone": {
-			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.AvailabilityZone)
-			},
-		},
-		"Created": {
-			GetValue: func(v *types.Volume) string {
-				return v.CreateTime.Local().Format("2006-01-02 15:04:05 MST")
-			},
-		},
-		"Multi-Attach Enabled": {
-			GetValue: func(v *types.Volume) string {
-				return strconv.FormatBool(*v.MultiAttachEnabled)
-			},
-		},
-		"Snapshot ID": {
-			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.SnapshotId)
-			},
-		},
-		"Associated Resource": {
-			GetValue: func(v *types.Volume) string {
-				return getAssociatedResource(v.Attachments)
-			},
-		},
-		"Attach Time": {
-			GetValue: func(v *types.Volume) string {
-				return v.Attachments[0].AttachTime.Local().Format("2006-01-02 15:04:05 MST")
-			},
-		},
-		"Delete on Termination": {
-			GetValue: func(v *types.Volume) string {
-				return strconv.FormatBool(*v.Attachments[0].DeleteOnTermination)
-			},
-		},
-		"Device": {
-			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.Attachments[0].Device)
-			},
-		},
-		"Instance ID": {
-			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.Attachments[0].InstanceId)
-			},
-		},
-		"Attachment State": {
-			GetValue: func(v *types.Volume) string {
-				return string(v.Attachments[0].State)
-			},
-		},
-		"Encrypted": {
-			GetValue: func(v *types.Volume) string {
-				if v.Encrypted == nil {
-					return ""
-				}
-				return strconv.FormatBool(*v.Encrypted)
-			},
-		},
-		"KMS Key ID": {
-			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.KmsKeyId)
-			},
-		},
-	}
-}
-
-// GetSnapshotAttributeValue is a function that returns the value of a field in a detailed table.
-func GetSnapshotAttributeValue(fieldID string, snapshot any) (string, error) {
-	snap, ok := snapshot.(types.Snapshot)
-	if !ok {
-		return "", fmt.Errorf("snapshot is not a types.Snapshot")
-	}
-	attr, exists := snapshotAttributes()[fieldID]
-	if !exists {
-		return "", fmt.Errorf("attribute %q does not exist", fieldID)
-	}
-	if attr.GetValue == nil {
-		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
-	}
-	return attr.GetValue(&snap), nil
-}
-
-// snapshotAttributes is a function that returns a map of attributes for a detailed table.
-func snapshotAttributes() map[string]SnapshotAttribute {
-	return map[string]SnapshotAttribute{
-		"Snapshot ID": {
-			GetValue: func(s *types.Snapshot) string {
-				return aws.ToString(s.SnapshotId)
 			},
 		},
 	}
@@ -813,6 +651,285 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 					return ""
 				}
 				return strconv.Itoa(int(*r.ToPort))
+			},
+		},
+	}
+}
+
+// GetVolumeAttributeValue is a function that returns the value of a field in a detailed table.
+func GetVolumeAttributeValue(fieldID string, volume any) (string, error) {
+	vol, ok := volume.(types.Volume)
+	if !ok {
+		return "", fmt.Errorf("volume is not a types.Volume")
+	}
+	attr, exists := volumeAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
+	}
+	return attr.GetValue(&vol), nil
+}
+
+// GetSnapshotAttributeValue is a function that returns the value of a field in a detailed table.
+func GetSnapshotAttributeValue(fieldID string, snapshot any) (string, error) {
+	snap, ok := snapshot.(types.Snapshot)
+	if !ok {
+		return "", fmt.Errorf("snapshot is not a types.Snapshot")
+	}
+	attr, exists := snapshotAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
+	}
+	return attr.GetValue(&snap), nil
+}
+
+// snapshotAttributes is a function that returns a map of attributes for a detailed table.
+func snapshotAttributes() map[string]SnapshotAttribute {
+	return map[string]SnapshotAttribute{
+		"Description": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.Description == nil {
+					return ""
+				}
+				return *s.Description
+			},
+		},
+		"Details": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.SnapshotId == nil {
+					return ""
+				}
+				return aws.ToString(s.SnapshotId)
+			},
+		},
+		"Encryption": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.Encrypted == nil {
+					return ""
+				}
+				return fmt.Sprintf("%t", *s.Encrypted)
+			},
+		},
+		"KMS Key ID": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.KmsKeyId == nil {
+					return ""
+				}
+				return aws.ToString(s.KmsKeyId)
+			},
+		},
+		"Owner Alias": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.OwnerAlias == nil {
+					return ""
+				}
+				return aws.ToString(s.OwnerAlias)
+			},
+		},
+		"Owner ID": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.OwnerId == nil {
+					return ""
+				}
+				return aws.ToString(s.OwnerId)
+			},
+		},
+		"Progress": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.Progress == nil {
+					return ""
+				}
+				return format.Status(aws.ToString(s.Progress))
+			},
+		},
+		"Restore Expiry Time": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.RestoreExpiryTime == nil {
+					return ""
+				}
+				return s.RestoreExpiryTime.Local().Format("2006-01-02 15:04:05 MST")
+			},
+		},
+		"Snapshot ID": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.SnapshotId == nil {
+					return ""
+				}
+				return aws.ToString(s.SnapshotId)
+			},
+		},
+		"Started": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.StartTime == nil {
+					return ""
+				}
+				return s.StartTime.Local().Format("2006-01-02 15:04:05 MST")
+			},
+		},
+		"State": {
+			GetValue: func(s *types.Snapshot) string {
+				return format.Status(string(s.State))
+			},
+		},
+		"State Message": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.StateMessage == nil {
+					return ""
+				}
+				return aws.ToString(s.StateMessage)
+			},
+		},
+		"Storage Tier": {
+			GetValue: func(s *types.Snapshot) string {
+				return string(s.StorageTier)
+			},
+		},
+		"Tier": {
+			GetValue: func(s *types.Snapshot) string {
+				return string(s.StorageTier)
+			},
+		},
+		"Volume ID": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.VolumeId == nil {
+					return ""
+				}
+				return aws.ToString(s.VolumeId)
+			},
+		},
+		"Volume Size": {
+			GetValue: func(s *types.Snapshot) string {
+				if s.VolumeSize == nil {
+					return ""
+				}
+				return fmt.Sprintf("%d GiB", *s.VolumeSize)
+			},
+		},
+	}
+}
+
+// volumeAttributes is a function that returns a map of attributes for a detailed table.
+func volumeAttributes() map[string]VolumeAttribute {
+	return map[string]VolumeAttribute{
+		"Volume ID": {
+			GetValue: func(v *types.Volume) string {
+				if v.VolumeId == nil {
+					return ""
+				}
+				return aws.ToString(v.VolumeId)
+			},
+		},
+		"Type": {
+			GetValue: func(v *types.Volume) string {
+				return string(v.VolumeType)
+			},
+		},
+		"Size": {
+			GetValue: func(v *types.Volume) string {
+				if v.Size == nil {
+					return ""
+				}
+				return fmt.Sprintf("%d GiB", *v.Size)
+			},
+		},
+		"State": {
+			GetValue: func(v *types.Volume) string {
+				return format.Status(string(v.State))
+			},
+		},
+		"IOPS": {
+			GetValue: func(v *types.Volume) string {
+				if v.Iops == nil {
+					return ""
+				}
+				return strconv.Itoa(int(*v.Iops))
+			},
+		},
+		"Throughput": {
+			GetValue: func(v *types.Volume) string {
+				if v.Throughput == nil {
+					return ""
+				}
+				return strconv.Itoa(int(*v.Throughput))
+			},
+		},
+		"Fast Snapshot Restored": {
+			GetValue: func(v *types.Volume) string {
+				if v.FastRestored == nil {
+					return ""
+				}
+				return strconv.FormatBool(*v.FastRestored)
+			},
+		},
+		"Availability Zone": {
+			GetValue: func(v *types.Volume) string {
+				return aws.ToString(v.AvailabilityZone)
+			},
+		},
+		"Created": {
+			GetValue: func(v *types.Volume) string {
+				return v.CreateTime.Local().Format("2006-01-02 15:04:05 MST")
+			},
+		},
+		"Multi-Attach Enabled": {
+			GetValue: func(v *types.Volume) string {
+				return strconv.FormatBool(*v.MultiAttachEnabled)
+			},
+		},
+		"Snapshot ID": {
+			GetValue: func(v *types.Volume) string {
+				return aws.ToString(v.SnapshotId)
+			},
+		},
+		"Associated Resource": {
+			GetValue: func(v *types.Volume) string {
+				return getAssociatedResource(v.Attachments)
+			},
+		},
+		"Attach Time": {
+			GetValue: func(v *types.Volume) string {
+				return v.Attachments[0].AttachTime.Local().Format("2006-01-02 15:04:05 MST")
+			},
+		},
+		"Delete on Termination": {
+			GetValue: func(v *types.Volume) string {
+				return strconv.FormatBool(*v.Attachments[0].DeleteOnTermination)
+			},
+		},
+		"Device": {
+			GetValue: func(v *types.Volume) string {
+				return aws.ToString(v.Attachments[0].Device)
+			},
+		},
+		"Instance ID": {
+			GetValue: func(v *types.Volume) string {
+				return aws.ToString(v.Attachments[0].InstanceId)
+			},
+		},
+		"Attachment State": {
+			GetValue: func(v *types.Volume) string {
+				return string(v.Attachments[0].State)
+			},
+		},
+		"Encryption": {
+			GetValue: func(v *types.Volume) string {
+				if v.Encrypted == nil {
+					return ""
+				}
+				if *v.Encrypted {
+					return "Encrypted"
+				}
+				return "Not Encrypted"
+			},
+		},
+		"KMS Key ID": {
+			GetValue: func(v *types.Volume) string {
+				return aws.ToString(v.KmsKeyId)
 			},
 		},
 	}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/harleymckenzie/asc/pkg/shared/format"
+	"github.com/harleymckenzie/asc/internal/shared/format"
 )
 
 // Attribute is a struct that defines a field in a detailed table.

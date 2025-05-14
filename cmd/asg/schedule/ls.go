@@ -5,11 +5,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/asg"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/internal/service/asg"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -86,8 +86,7 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 // ListSchedules is the handler for the ls subcommand.
 func ListSchedules(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 
-	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 )
 
 

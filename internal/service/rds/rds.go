@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 
-	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 )
 
 // RDSClientAPI is the interface for the RDS client.

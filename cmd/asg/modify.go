@@ -6,10 +6,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/asg"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/internal/service/asg"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -53,10 +53,9 @@ func addModifyFlags(cobraCmd *cobra.Command) {
 }
 
 // Command functions
-func ModifyAutoScalingGroup(cobraCmd *cobra.Command, args []string) error {
+func ModifyAutoScalingGroup(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {

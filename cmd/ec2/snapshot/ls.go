@@ -5,11 +5,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -19,25 +19,28 @@ var (
 	sortSize    bool
 	showDesc    bool
 	reverseSort bool
+	owner       string
 )
 
-// NewLsFlags adds flags for the ls subcommand.
-func NewLsFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs snapshots in list format.")
-	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending snapshot ID.")
-	cobraCmd.Flags().
-		BoolVarP(&sortSize, "sort-size", "s", false, "Sort by descending snapshot size.")
-	cobraCmd.Flags().
-		BoolVarP(&showDesc, "show-description", "d", false, "Show the snapshot description column.")
-	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
+// Init function
+func init() {
+	newLsFlags(lsCmd)
 }
 
 // ec2SnapshotListFields returns the fields for the snapshot list table.
 func ec2SnapshotListFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Snapshot ID", Visible: true, Sort: sortID},
-		{ID: "Size", Visible: true, Sort: sortSize},
+		{ID: "Volume Size", Visible: true},
 		{ID: "Description", Visible: showDesc},
+		{ID: "Tier", Visible: true},
+		{ID: "State", Visible: true},
+		{ID: "Started", Visible: true, DefaultSort: true, SortDirection: "desc"},
+		{ID: "Progress", Visible: true},
+		{ID: "Encryption", Visible: true},
+		{ID: "Data Transfer Progress", Visible: false},
+		{ID: "KMS Key ID", Visible: false},
+		{ID: "Owner ID", Visible: true},
 	}
 }
 
@@ -51,6 +54,19 @@ var lsCmd = &cobra.Command{
 	},
 }
 
+// NewLsFlags adds flags for the ls subcommand.
+func newLsFlags(cobraCmd *cobra.Command) {
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs snapshots in list format.")
+	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending snapshot ID.")
+	cobraCmd.Flags().
+		BoolVarP(&sortSize, "sort-size", "s", false, "Sort by descending snapshot size.")
+	cobraCmd.Flags().
+		BoolVarP(&showDesc, "show-description", "d", false, "Show the snapshot description column.")
+	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
+	cobraCmd.Flags().
+		StringVar(&owner, "owner", "", "Accepts a single AWS account ID or 'all' to show all snapshots. If not provided, only your own snapshots are shown.")
+}
+
 // ListSnapshots is the handler for the ls subcommand.
 func ListSnapshots(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
@@ -60,7 +76,21 @@ func ListSnapshots(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new EC2 service: %w", err)
 	}
 
-	snapshots, err := svc.GetSnapshots(ctx, &ascTypes.GetSnapshotsInput{})
+	// If 'all' is provided, dont use a filter
+	// If a specific owner is provided, use the owner-id filter
+	// Otherwise, use the self filter
+	ownerIds := []string{}
+	if owner == "all" {
+		// Do nothing
+	} else if owner != "" {
+		ownerIds = append(ownerIds, owner)
+	} else {
+		ownerIds = append(ownerIds, "self")
+	}
+
+	snapshots, err := svc.GetSnapshots(ctx, &ascTypes.GetSnapshotsInput{
+		OwnerIds: ownerIds,
+	})
 	if err != nil {
 		return fmt.Errorf("get snapshots: %w", err)
 	}
@@ -68,7 +98,7 @@ func ListSnapshots(cmd *cobra.Command, args []string) error {
 	fields := ec2SnapshotListFields()
 	opts := tableformat.RenderOptions{
 		Title:  "Snapshots",
-		Style:  "list",
+		Style:  "rounded",
 		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}
 

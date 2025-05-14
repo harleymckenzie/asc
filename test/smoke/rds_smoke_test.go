@@ -16,8 +16,11 @@ func TestRDSLsSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
-	if string(out) != "" && containsAttributeError(string(out)) {
+	if containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -35,8 +38,11 @@ func TestRDSLsBasicSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
-	if string(out) != "" && containsAttributeError(string(out)) {
+	if containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -54,8 +60,11 @@ func TestRDSLsSortByNameSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
-	if string(out) != "" && containsAttributeError(string(out)) {
+	if containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -73,8 +82,11 @@ func TestRDSLsSortByClusterSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
-	if string(out) != "" && containsAttributeError(string(out)) {
+	if containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -92,8 +104,11 @@ func TestRDSLsSortByTypeSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
-	if string(out) != "" && containsAttributeError(string(out)) {
+	if containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -111,8 +126,11 @@ func TestRDSLsSortByEngineSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
-	if string(out) != "" && containsAttributeError(string(out)) {
+	if containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -130,8 +148,11 @@ func TestRDSLsSortByStatusSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
-	if string(out) != "" && containsAttributeError(string(out)) {
+	if containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -149,8 +170,11 @@ func TestRDSLsSortByRoleSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
 	}
-	if string(out) != "" && containsAttributeError(string(out)) {
+	if containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)

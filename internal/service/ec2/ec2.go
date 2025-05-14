@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 )
 
 // EC2ClientAPI is the interface for the EC2 client.
@@ -223,6 +223,8 @@ func (svc *EC2Service) GetSnapshots(
 ) ([]types.Snapshot, error) {
 	output, err := svc.Client.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{
 		SnapshotIds: input.SnapshotIDs,
+		Filters:     input.Filters,
+		OwnerIds:    input.OwnerIds,
 	})
 	if err != nil {
 		return nil, err

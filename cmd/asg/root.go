@@ -2,7 +2,7 @@ package asg
 
 import (
 	schedule "github.com/harleymckenzie/asc/cmd/asg/schedule"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 

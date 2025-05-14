@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/asg"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/service/asg"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -39,8 +39,7 @@ func init() {
 // RemoveSchedule is the handler for the rm schedule subcommand.
 func RemoveSchedule(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cobraCmd)
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {

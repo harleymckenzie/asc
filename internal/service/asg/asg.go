@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
-	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 )
 
 type AutoScalingClientAPI interface {

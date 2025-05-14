@@ -19,6 +19,9 @@ func TestELBLsSmoke(t *testing.T) {
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
+	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
@@ -37,6 +40,9 @@ func TestELBLsTargetGroupsSmoke(t *testing.T) {
 	}
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -57,6 +63,9 @@ func TestELBLsSortByDNSNameSmoke(t *testing.T) {
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
+	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
@@ -75,6 +84,9 @@ func TestELBLsSortByTypeSmoke(t *testing.T) {
 	}
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -95,6 +107,9 @@ func TestELBLsSortByCreatedTimeSmoke(t *testing.T) {
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
+	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
@@ -114,6 +129,9 @@ func TestELBLsSortBySchemeSmoke(t *testing.T) {
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
+	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
@@ -132,6 +150,9 @@ func TestELBLsSortByVPCIDSmoke(t *testing.T) {
 	}
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)

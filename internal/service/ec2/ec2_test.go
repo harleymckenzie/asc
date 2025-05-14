@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 )
 
 // MockEC2Client is a mock implementation of EC2ClientAPI for unit tests.
@@ -63,12 +63,59 @@ func (m *MockEC2Client) TerminateInstances(
 	return &ec2.TerminateInstancesOutput{}, args.Error(1)
 }
 
+func (m *MockEC2Client) DescribeImages(
+	ctx context.Context,
+	params *ec2.DescribeImagesInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.DescribeImagesOutput, error) {
+	args := m.Called(ctx, params)
+	return args.Get(0).(*ec2.DescribeImagesOutput), args.Error(1)
+}
+
+func (m *MockEC2Client) DescribeSecurityGroupRules(
+	ctx context.Context,
+	params *ec2.DescribeSecurityGroupRulesInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.DescribeSecurityGroupRulesOutput, error) {
+	args := m.Called(ctx, params)
+	return args.Get(0).(*ec2.DescribeSecurityGroupRulesOutput), args.Error(1)
+}
+
+func (m *MockEC2Client) DescribeSecurityGroups(
+	ctx context.Context,
+	params *ec2.DescribeSecurityGroupsInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.DescribeSecurityGroupsOutput, error) {
+	args := m.Called(ctx, params)
+	return args.Get(0).(*ec2.DescribeSecurityGroupsOutput), args.Error(1)
+}
+
+func (m *MockEC2Client) DescribeSnapshots(
+	ctx context.Context,
+	params *ec2.DescribeSnapshotsInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.DescribeSnapshotsOutput, error) {
+	args := m.Called(ctx, params)
+	return args.Get(0).(*ec2.DescribeSnapshotsOutput), args.Error(1)
+}
+
+func (m *MockEC2Client) DescribeVolumes(
+	ctx context.Context,
+	params *ec2.DescribeVolumesInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.DescribeVolumesOutput, error) {
+	args := m.Called(ctx, params)
+	return args.Get(0).(*ec2.DescribeVolumesOutput), args.Error(1)
+}
+
 // Unit test for GetInstances
 func TestGetInstances(t *testing.T) {
 	mockClient := new(MockEC2Client)
 	input := &ascTypes.GetInstancesInput{InstanceIDs: []string{"i-123"}}
 	mockOutput := &ec2.DescribeInstancesOutput{
-		Reservations: []types.Reservation{{Instances: []types.Instance{{InstanceId: &input.InstanceIDs[0]}}}},
+		Reservations: []types.Reservation{
+			{Instances: []types.Instance{{InstanceId: &input.InstanceIDs[0]}}},
+		},
 	}
 	mockClient.On("DescribeInstances", mock.Anything, mock.Anything).Return(mockOutput, nil)
 
@@ -83,7 +130,8 @@ func TestGetInstances(t *testing.T) {
 func TestStartInstance(t *testing.T) {
 	mockClient := new(MockEC2Client)
 	input := &ascTypes.StartInstanceInput{InstanceID: "i-123"}
-	mockClient.On("StartInstances", mock.Anything, mock.Anything).Return(&ec2.StartInstancesOutput{}, nil)
+	mockClient.On("StartInstances", mock.Anything, mock.Anything).
+		Return(&ec2.StartInstancesOutput{}, nil)
 
 	svc := &EC2Service{Client: mockClient}
 	err := svc.StartInstance(context.Background(), input)
@@ -94,7 +142,8 @@ func TestStartInstance(t *testing.T) {
 func TestStopInstance(t *testing.T) {
 	mockClient := new(MockEC2Client)
 	input := &ascTypes.StopInstanceInput{InstanceID: "i-123", Force: true}
-	mockClient.On("StopInstances", mock.Anything, mock.Anything).Return(&ec2.StopInstancesOutput{}, nil)
+	mockClient.On("StopInstances", mock.Anything, mock.Anything).
+		Return(&ec2.StopInstancesOutput{}, nil)
 
 	svc := &EC2Service{Client: mockClient}
 	err := svc.StopInstance(context.Background(), input)
@@ -105,7 +154,8 @@ func TestStopInstance(t *testing.T) {
 func TestRestartInstance(t *testing.T) {
 	mockClient := new(MockEC2Client)
 	input := &ascTypes.RestartInstanceInput{InstanceID: "i-123"}
-	mockClient.On("RebootInstances", mock.Anything, mock.Anything).Return(&ec2.RebootInstancesOutput{}, nil)
+	mockClient.On("RebootInstances", mock.Anything, mock.Anything).
+		Return(&ec2.RebootInstancesOutput{}, nil)
 
 	svc := &EC2Service{Client: mockClient}
 	err := svc.RestartInstance(context.Background(), input)
@@ -116,7 +166,8 @@ func TestRestartInstance(t *testing.T) {
 func TestTerminateInstance(t *testing.T) {
 	mockClient := new(MockEC2Client)
 	input := &ascTypes.TerminateInstanceInput{InstanceID: "i-123"}
-	mockClient.On("TerminateInstances", mock.Anything, mock.Anything).Return(&ec2.TerminateInstancesOutput{}, nil)
+	mockClient.On("TerminateInstances", mock.Anything, mock.Anything).
+		Return(&ec2.TerminateInstancesOutput{}, nil)
 
 	svc := &EC2Service{Client: mockClient}
 	err := svc.TerminateInstance(context.Background(), input)

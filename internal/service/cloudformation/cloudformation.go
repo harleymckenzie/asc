@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/cloudformation/types"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/cloudformation/types"
 )
 
 // CloudFormationClientAPI is an interface that defines the methods for the CloudFormation client.

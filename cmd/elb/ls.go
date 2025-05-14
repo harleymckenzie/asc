@@ -7,11 +7,11 @@ import (
 	"fmt"
 
 	tg "github.com/harleymckenzie/asc/cmd/elb/target_group"
-	"github.com/harleymckenzie/asc/pkg/service/elb"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/service/elb"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/elb/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -113,8 +113,7 @@ func addLsFlags(cobraCmd *cobra.Command) {
 // Command functions
 func ListELBs(cobraCmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cobraCmd)
 
 	svc, err := elb.NewELBService(ctx, profile, region)
 	if err != nil {

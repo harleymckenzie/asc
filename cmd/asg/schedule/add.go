@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harleymckenzie/asc/pkg/service/asg"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/asg/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/format"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/internal/service/asg"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/format"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -65,10 +65,9 @@ func init() {
 //
 
 // AddSchedule is the handler for the add schedule subcommand.
-func AddSchedule(cobraCmd *cobra.Command, args []string) error {
+func AddSchedule(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
 	if err != nil {

@@ -5,11 +5,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +23,8 @@ var (
 	sortAttachTime bool
 	sortCreatedAt  bool
 	showKMS        bool
+	showCreatedAt  bool
+	showAttachTime bool
 	reverseSort    bool
 )
 
@@ -35,11 +37,18 @@ func init() {
 func ec2VolumeListFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Volume ID", Visible: true, Sort: sortID},
-		{ID: "Volume Type", Visible: true, Sort: sortType},
+		{ID: "Type", Visible: true, Sort: sortType},
 		{ID: "Size", Visible: true, Sort: sortSize},
-		{ID: "State", Visible: true, Sort: sortState},
-		{ID: "Attach Time", Visible: true, Sort: sortAttachTime},
-		{ID: "Created At", Visible: true, Sort: sortCreatedAt},
+		{ID: "IOPS", Visible: true},
+		{ID: "Throughput", Visible: true},
+		{ID: "Snapshot ID", Visible: true},
+		{ID: "State", Visible: true},
+		{ID: "Created", Visible: showCreatedAt, Sort: sortCreatedAt},
+		{ID: "Attach Time", Visible: showAttachTime, Sort: sortAttachTime, DefaultSort: true},
+		{ID: "Availability Zone", Visible: false},
+		{ID: "Encryption", Visible: true},
+		{ID: "Fast Snapshot Restored", Visible: true},
+		{ID: "Multi-Attach Enabled", Visible: false},
 		{ID: "KMS Key ID", Visible: showKMS},
 	}
 }
@@ -59,7 +68,7 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().
 		BoolVarP(&list, "list", "l", false, "Outputs volumes in list format.")
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending volume ID.")
-	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "t", false, "Sort by descending volume type.")
+	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending volume type.")
 	cobraCmd.Flags().BoolVarP(&sortSize, "sort-size", "s", false, "Sort by descending volume size.")
 	cobraCmd.Flags().BoolVarP(&showKMS, "show-kms", "k", false, "Show the KMS Key ID column.")
 	cobraCmd.Flags().
@@ -67,15 +76,18 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().
 		BoolVarP(&sortAttachTime, "sort-attach-time", "a", false, "Sort by descending attach time.")
 	cobraCmd.Flags().
-		BoolVarP(&sortCreatedAt, "sort-created-at", "c", false, "Sort by descending creation time.")
+		BoolVarP(&sortCreatedAt, "sort-created-at", "t", false, "Sort by descending creation time.")
+	cobraCmd.Flags().
+		BoolVarP(&showCreatedAt, "show-created-at", "c", false, "Show the creation time column.")
+	cobraCmd.Flags().
+		BoolVarP(&showAttachTime, "show-attach-time", "A", false, "Show the attach time column.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
 }
 
 // ListVolumes is the handler for the ls subcommand.
 func ListVolumes(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
@@ -88,10 +100,9 @@ func ListVolumes(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := ec2VolumeListFields()
-
 	opts := tableformat.RenderOptions{
 		Title:  "Volumes",
-		Style:  "list",
+		Style:  "rounded",
 		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}
 
@@ -103,7 +114,7 @@ func ListVolumes(cmd *cobra.Command, args []string) error {
 		Instances: utils.SlicesToAny(volumes),
 		Fields:    fields,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetAttributeValue(fieldID, instance)
+			return ec2.GetVolumeAttributeValue(fieldID, instance)
 		},
 	}, opts)
 	return nil

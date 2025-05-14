@@ -1,9 +1,9 @@
 package elb
 
 import (
-	"github.com/spf13/cobra"
 	tg "github.com/harleymckenzie/asc/cmd/elb/target_group"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/spf13/cobra"
 )
 
 func NewELBRootCmd() *cobra.Command {

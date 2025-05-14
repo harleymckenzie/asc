@@ -5,10 +5,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/spf13/cobra"
 )
 
@@ -18,8 +18,30 @@ func newShowFlags(cobraCmd *cobra.Command) {}
 // ec2SnapshotShowFields returns the fields for the snapshot detail table.
 func ec2SnapshotShowFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Snapshot ID", Visible: true},
-		// Add more fields as needed
+		{ID: "Details", Header: true},
+		{ID: "Snapshot ID", Visible: true, Sort: sortID},
+		{ID: "Owner ID", Visible: true},
+		{ID: "Owner Alias", Visible: true},
+		{ID: "Description", Visible: showDesc},
+		{ID: "Tier", Visible: true},
+		{ID: "State", Visible: true},
+		{ID: "State Message", Visible: true},
+		{ID: "Encryption", Visible: true},
+		{ID: "Started", Visible: true, DefaultSort: true, SortDirection: "desc"},
+		{ID: "Progress", Visible: true},
+		{ID: "Owner ID", Visible: true},
+		
+		{ID: "Source Volume", Header: true},
+		{ID: "Volume ID", Visible: true},
+		{ID: "Volume Size", Visible: true},
+		
+		{ID: "Encryption", Header: true},
+		{ID: "Encryption", Visible: true},
+		{ID: "KMS Key ID", Visible: true},
+
+		{ID: "Storage Tier", Header: true},
+		{ID: "Storage Tier", Visible: true},
+		{ID: "Restore Expiry Time", Visible: true},
 	}
 }
 
@@ -54,7 +76,7 @@ func ShowEC2Snapshot(cmd *cobra.Command, arg string) error {
 
 	fields := ec2SnapshotShowFields()
 	opts := tableformat.RenderOptions{
-		Title: "Snapshot Details",
+		Title: fmt.Sprintf("Snapshot Details\n(%s)", arg),
 		Style: "rounded",
 	}
 

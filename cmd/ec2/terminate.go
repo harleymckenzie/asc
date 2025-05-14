@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
 	"github.com/spf13/cobra"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 )
 
 var terminateCmd = &cobra.Command{
@@ -28,13 +28,12 @@ func init() {
 	addTerminateFlags(terminateCmd)
 }
 
-func TerminateEC2Instance(cobraCmd *cobra.Command, args []string) error {
+func TerminateEC2Instance(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	if len(args) == 0 {
-		cobraCmd.Help()
+		cmd.Help()
 		return nil
 	}
 
@@ -50,5 +49,5 @@ func TerminateEC2Instance(cobraCmd *cobra.Command, args []string) error {
 		return fmt.Errorf("terminate instance: %w", err)
 	}
 
-	return ListEC2Instances(cobraCmd, []string{args[0]})
+	return ListEC2Instances(cmd, []string{args[0]})
 }

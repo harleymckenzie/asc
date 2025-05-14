@@ -1,7 +1,7 @@
 package cloudformation
 
 import (
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 

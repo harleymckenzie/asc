@@ -7,8 +7,8 @@ import (
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/elb/types"
-	"github.com/harleymckenzie/asc/pkg/shared/awsutil"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/elb/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 )
 
 type ELBClientAPI interface {

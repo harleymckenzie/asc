@@ -6,12 +6,12 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -85,23 +85,23 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new EC2 service: %w", err)
 	}
 
-	filters := []ec2types.Filter{}
+	filters := []types.Filter{}
 	owners := []string{}
 
 	switch scope {
 	case "self":
 		owners = append(owners, "self")
-		filters = append(filters, ec2types.Filter{
+		filters = append(filters, types.Filter{
 			Name:   aws.String("is-public"),
 			Values: []string{"false"},
 		})
 	case "private":
-		filters = append(filters, ec2types.Filter{
+		filters = append(filters, types.Filter{
 			Name:   aws.String("is-public"),
 			Values: []string{"false"},
 		})
 	case "public":
-		filters = append(filters, ec2types.Filter{
+		filters = append(filters, types.Filter{
 			Name:   aws.String("is-public"),
 			Values: []string{"true"},
 		})
@@ -119,7 +119,7 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 	}
 
 	if nameFilter != "" {
-		filters = append(filters, ec2types.Filter{
+		filters = append(filters, types.Filter{
 			Name:   aws.String("name"),
 			Values: []string{"*" + nameFilter + "*"},
 		})
@@ -140,6 +140,10 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 		Title:  "AMIs",
 		Style:  "rounded",
 		SortBy: tableformat.GetSortByField(fields, reverseSort),
+	}
+
+	if list {
+		opts.Style = "list"
 	}
 
 	tableformat.RenderTableList(&tableformat.ListTable{

@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/harleymckenzie/asc/cmd/asg"
 	"github.com/harleymckenzie/asc/cmd/cloudformation"
 	"github.com/harleymckenzie/asc/cmd/ec2"
@@ -49,9 +47,6 @@ func NewRootCmd() *cobra.Command {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := NewRootCmd().Execute()
-	if err != nil {
-		os.Exit(1)
-	}
+func Execute() error {
+	return NewRootCmd().Execute()
 }

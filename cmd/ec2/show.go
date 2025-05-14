@@ -11,10 +11,10 @@ import (
 	"github.com/harleymckenzie/asc/cmd/ec2/ami"
 	"github.com/harleymckenzie/asc/cmd/ec2/snapshot"
 	"github.com/harleymckenzie/asc/cmd/ec2/volume"
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
@@ -70,30 +70,30 @@ var showCmd = &cobra.Command{
 }
 
 // Flag function
-func newShowFlags(cobraCmd *cobra.Command) {}
+func newShowFlags(cmd *cobra.Command) {}
 
 // Command functions
 // ShowEC2Resource displays detailed information for a specified EC2 resource.
 // It supports instances, volumes, snapshots, and AMIs.
-func ShowEC2Resource(cobraCmd *cobra.Command, arg string) error {
+func ShowEC2Resource(cmd *cobra.Command, arg string) error {
 	switch {
 	case strings.HasPrefix(arg, "i-"):
-		return ShowEC2Instance(cobraCmd, []string{arg})
+		return ShowEC2Instance(cmd, []string{arg})
 	case strings.HasPrefix(arg, "vol-"):
-		return volume.ShowEC2Volume(cobraCmd, arg)
+		return volume.ShowEC2Volume(cmd, arg)
 	case strings.HasPrefix(arg, "snap-"):
-		return snapshot.ShowEC2Snapshot(cobraCmd, arg)
+		return snapshot.ShowEC2Snapshot(cmd, arg)
 	case strings.HasPrefix(arg, "ami-"):
-		return ami.ShowEC2AMI(cobraCmd, arg)
+		return ami.ShowEC2AMI(cmd, arg)
 	default:
 		return fmt.Errorf("invalid resource type: %s", arg)
 	}
 }
 
 // ShowEC2Instance is the function for showing EC2 instances
-func ShowEC2Instance(cobraCmd *cobra.Command, args []string) error {
+func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cobraCmd)
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new EC2 service: %w", err)

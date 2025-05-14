@@ -6,13 +6,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/cloudformation"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
+	"github.com/harleymckenzie/asc/internal/service/cloudformation"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/cloudformation/types"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/cloudformation/types"
 )
 
 // Variables
@@ -76,10 +76,9 @@ func addLsFlags(lsCmd *cobra.Command) {
 }
 
 // Command functions
-func ListCloudFormationStacks(cobraCmd *cobra.Command, args []string) error {
+func ListCloudFormationStacks(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	svc, err := cloudformation.NewCloudFormationService(ctx, profile, region)
 	if err != nil {

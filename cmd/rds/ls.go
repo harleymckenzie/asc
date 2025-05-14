@@ -6,10 +6,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/rds"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
-	"github.com/harleymckenzie/asc/pkg/shared/utils"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/service/rds"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -53,8 +53,8 @@ var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List all RDS clusters and instances",
 	GroupID: "actions",
-	RunE: func(cobraCmd *cobra.Command, args []string) error {
-		return cmdutil.DefaultErrorHandler(ListRDSClusters(cobraCmd, args))
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ListRDSClusters(cmd, args))
 	},
 }
 
@@ -81,10 +81,9 @@ func addLsFlags(cobraCmd *cobra.Command) {
 }
 
 // ListRDSClusters is the function for listing RDS clusters and instances
-func ListRDSClusters(cobraCmd *cobra.Command, args []string) error {
+func ListRDSClusters(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	svc, err := rds.NewRDSService(ctx, profile, region)
 	if err != nil {

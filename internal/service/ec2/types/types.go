@@ -1,5 +1,7 @@
 package types
 
+import "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+
 type GetInstancesInput struct {
 
 	// The IDs of the instances to get
@@ -16,6 +18,9 @@ type GetImagesInput struct {
 
 	// The IDs of the images to get
 	ImageIDs []string
+
+	// Filters to apply to the images
+	Filters []string
 }
 
 type GetSecurityGroupRulesInput struct {
@@ -28,6 +33,12 @@ type GetSnapshotsInput struct {
 
 	// The IDs of the snapshots to get
 	SnapshotIDs []string
+
+	// Filters to apply to the snapshots
+	Filters []types.Filter
+
+	// The IDs of the owners to get snapshots for
+	OwnerIds []string
 }
 
 type RestartInstanceInput struct {

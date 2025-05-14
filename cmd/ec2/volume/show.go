@@ -6,10 +6,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/spf13/cobra"
 )
 
@@ -25,12 +25,12 @@ func init() {
 func ec2VolumeShowFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Volume ID", Visible: true},
-		{ID: "Volume Type", Visible: true},
+		{ID: "Type", Visible: true},
 		{ID: "Size", Visible: true},
 		{ID: "State", Visible: true},
 		{ID: "IOPS", Visible: true},
 		{ID: "Throughput", Visible: true},
-		{ID: "Fast Restored", Visible: true},
+		{ID: "Fast Snapshot Restored", Visible: true},
 		{ID: "Availability Zone", Visible: true},
 		{ID: "Created", Visible: true},
 		{ID: "Multi-Attach Enabled", Visible: true},
@@ -45,7 +45,7 @@ func ec2VolumeShowFields() []tableformat.Field {
 		{ID: "Attachment State", Visible: true},
 
 		{ID: "Encryption", Header: true},
-		{ID: "Encrypted", Visible: true},
+		{ID: "Encryption", Visible: true},
 		{ID: "KMS Key ID", Visible: true},
 	}
 }

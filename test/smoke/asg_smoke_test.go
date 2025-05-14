@@ -19,6 +19,9 @@ func TestASGLsSmoke(t *testing.T) {
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
+	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
@@ -37,6 +40,9 @@ func TestASGLsSchedulesSmoke(t *testing.T) {
 	}
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -61,6 +67,9 @@ func TestASGLsNameSmoke(t *testing.T) {
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
+	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
@@ -81,6 +90,9 @@ func TestASGLsSortByNameSmoke(t *testing.T) {
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
+	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
@@ -99,6 +111,9 @@ func TestASGLsSortByDesiredCapacitySmoke(t *testing.T) {
 	t.Logf("asc asg ls -d (sort by desired capacity) output:\n%s", out)
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
@@ -119,6 +134,9 @@ func TestASGLsSortByMinCapacitySmoke(t *testing.T) {
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
 	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
+	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)
 	}
@@ -137,6 +155,9 @@ func TestASGLsSortByMaxCapacitySmoke(t *testing.T) {
 	t.Logf("asc asg ls -M (sort by max capacity) output:\n%s", out)
 	if string(out) != "" && containsAttributeError(string(out)) {
 		t.Fatalf("Test failed due to attribute error: %s", out)
+	}
+	if string(out) != "" && containsMissingAttributeError(string(out)) {
+		t.Fatalf("Test failed due to missing attribute error: %s", out)
 	}
 	if string(out) != "" && containsSortWarning(string(out)) {
 		t.Fatalf("Test failed due to multiple sort fields: %s", out)

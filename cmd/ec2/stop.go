@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/spf13/cobra"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 )
 
 var (
@@ -31,13 +31,12 @@ func addStopFlags(stopCmd *cobra.Command) {
 	stopCmd.Flags().BoolVarP(&force, "force", "f", false, "Force stop the EC2 instance")
 }
 
-func StopEC2Instance(cobraCmd *cobra.Command, args []string) error {
+func StopEC2Instance(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	if len(args) == 0 {
-		cobraCmd.Help()
+		cmd.Help()
 		return nil
 	}
 
@@ -54,7 +53,7 @@ func StopEC2Instance(cobraCmd *cobra.Command, args []string) error {
 		return fmt.Errorf("stop instance: %w", err)
 	}
 
-	return ListEC2Instances(cobraCmd, []string{args[0]})
+	return ListEC2Instances(cmd, []string{args[0]})
 }
 
 func init() {

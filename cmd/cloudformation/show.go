@@ -6,10 +6,10 @@ import (
 	"context"
 	"fmt"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/cloudformation/types"
-	"github.com/harleymckenzie/asc/pkg/service/cloudformation"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
-	"github.com/harleymckenzie/asc/pkg/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/service/cloudformation"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/cloudformation/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/spf13/cobra"
 )
 
@@ -56,10 +56,9 @@ var showCmd = &cobra.Command{
 func addShowFlags(showCmd *cobra.Command) {}
 
 // Show function
-func ShowCloudFormationStack(cobraCmd *cobra.Command, args []string) error {
+func ShowCloudFormationStack(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 	fields := cloudformationShowFields()
 
 	svc, err := cloudformation.NewCloudFormationService(ctx, profile, region)

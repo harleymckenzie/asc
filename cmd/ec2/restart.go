@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/pkg/service/ec2"
+	"github.com/harleymckenzie/asc/internal/service/ec2"
 	"github.com/spf13/cobra"
 
-	ascTypes "github.com/harleymckenzie/asc/pkg/service/ec2/types"
-	"github.com/harleymckenzie/asc/pkg/shared/cmdutil"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 )
 
 var restartCmd = &cobra.Command{
@@ -22,13 +22,12 @@ var restartCmd = &cobra.Command{
 	},
 }
 
-func RestartEC2Instance(cobraCmd *cobra.Command, args []string) error {
+func RestartEC2Instance(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
-	profile, _ := cobraCmd.Root().PersistentFlags().GetString("profile")
-	region, _ := cobraCmd.Root().PersistentFlags().GetString("region")
+	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	if len(args) == 0 {
-		cobraCmd.Help()
+		cmd.Help()
 		return nil
 	}
 
@@ -48,7 +47,7 @@ func RestartEC2Instance(cobraCmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newRestartFlags(cobraCmd *cobra.Command) {}
+func newRestartFlags(cmd *cobra.Command) {}
 
 func init() {
 	newRestartFlags(restartCmd)

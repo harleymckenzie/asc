@@ -17,14 +17,17 @@ func Status(state string) string {
 
 // StateColours is a map of state to colour.
 var StateColours = map[string]text.Color{
+	"100%":                        text.FgGreen,
 	"active":                      text.FgGreen,
 	"available":                   text.FgGreen,
+	"completed":                   text.FgGreen,
 	"create_complete":             text.FgGreen,
 	"create_in_progress":          text.FgYellow,
 	"creating":                    text.FgYellow,
 	"delete_failed":               text.FgRed,
 	"deleted":                     text.FgRed,
 	"deleting":                    text.FgRed,
+	"error":                       text.FgRed,
 	"failed":                      text.FgRed,
 	"healthy":                     text.FgGreen,
 	"import_complete":             text.FgGreen,
@@ -32,6 +35,7 @@ var StateColours = map[string]text.Color{
 	"import_rollback_complete":    text.FgGreen,
 	"import_rollback_failed":      text.FgRed,
 	"import_rollback_in_progress": text.FgYellow,
+	"in-use":                      text.FgGreen,
 	"modifying":                   text.FgYellow,
 	"pending":                     text.FgYellow,
 	"rebooting":                   text.FgYellow,
