@@ -12,9 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// newShowFlags adds flags for the show subcommand.
-func newShowFlags(cobraCmd *cobra.Command) {}
-
 // ec2SnapshotShowFields returns the fields for the snapshot detail table.
 func ec2SnapshotShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -44,6 +41,9 @@ func ec2SnapshotShowFields() []tableformat.Field {
 		{ID: "Restore Expiry Time", Visible: true},
 	}
 }
+
+// NewShowFlags adds flags for the show subcommand.
+func NewShowFlags(cobraCmd *cobra.Command) {}
 
 // showCmd is the cobra command for showing snapshot details.
 var showCmd = &cobra.Command{

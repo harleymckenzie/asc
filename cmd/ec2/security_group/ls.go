@@ -24,6 +24,10 @@ var (
 	reverseSort bool
 )
 
+func init() {
+	NewLsFlags(lsCmd)
+}
+
 // ec2SecurityGroupListFields returns the fields for the security group list table.
 func ec2SecurityGroupListFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -73,7 +77,7 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().
 		BoolVarP(&sortOwnerID, "sort-owner-id", "o", false, "Sort by descending owner ID.")
 	cobraCmd.Flags().
-		BoolVarP(&showOwnerID, "show-owner-id", "o", false, "Show the security group owner ID column.")
+		BoolVarP(&showOwnerID, "show-owner-id", "O", false, "Show the security group owner ID column.")
 }
 
 // ListSecurityGroups is the handler for the ls subcommand.

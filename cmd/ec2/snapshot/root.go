@@ -5,12 +5,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var CmdAliases = []string{"snapshots", "snapshot", "snaps", "snap"}
+
 // Root command
 func NewSnapshotRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "snapshot",
 		Short:   "Perform snapshot operations",
-		Aliases: []string{"snapshots"},
+		Aliases: CmdAliases,
 		GroupID: "subcommands",
 	}
 

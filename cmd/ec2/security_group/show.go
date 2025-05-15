@@ -12,9 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// newShowFlags adds flags for the show subcommand.
-func newShowFlags(cobraCmd *cobra.Command) {}
-
 // ec2SecurityGroupShowFields returns the fields for the security group detail table.
 func ec2SecurityGroupShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -40,6 +37,9 @@ var showCmd = &cobra.Command{
 		return cmdutil.DefaultErrorHandler(ShowSecurityGroup(cmd, args[0]))
 	},
 }
+
+// newShowFlags adds flags for the show subcommand.
+func NewShowFlags(cobraCmd *cobra.Command) {}
 
 // ShowSecurityGroup displays detailed information for a specified security group.
 func ShowSecurityGroup(cmd *cobra.Command, arg string) error {

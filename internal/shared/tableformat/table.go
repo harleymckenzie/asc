@@ -251,7 +251,7 @@ func sortDirection(direction string, reverseSort bool) table.SortMode {
 		switch direction {
 		case "asc":
 			return table.DscNumericAlpha
-		case "desc":
+		case "desc", "":
 			return table.AscNumericAlpha
 		}
 	}

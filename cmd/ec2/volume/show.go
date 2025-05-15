@@ -18,7 +18,7 @@ var ()
 
 // Init function
 func init() {
-	newShowFlags(showCmd)
+	NewShowFlags(showCmd)
 }
 
 // Column functions
@@ -63,7 +63,7 @@ var showCmd = &cobra.Command{
 }
 
 // Flag function
-func newShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {}
 
 // ShowEC2Volume is the function for showing EC2 volumes
 func ShowEC2Volume(cobraCmd *cobra.Command, args string) error {

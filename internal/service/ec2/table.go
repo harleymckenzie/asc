@@ -63,12 +63,12 @@ func availableAttributes() map[string]Attribute {
 		},
 		"Instance ID": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.InstanceId)
+				return format.StringOrEmpty(i.InstanceId)
 			},
 		},
 		"State": {
 			GetValue: func(i *types.Instance) string {
-				return format.Status(string(i.State.Name))
+				return format.StatusOrDefault(string(i.State.Name), "")
 			},
 		},
 		"Instance Type": {
@@ -78,32 +78,32 @@ func availableAttributes() map[string]Attribute {
 		},
 		"AMI ID": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.ImageId)
+				return format.StringOrEmpty(i.ImageId)
 			},
 		},
 		"AMI Name": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.ImageId)
+				return format.StringOrEmpty(i.ImageId)
 			},
 		},
 		"Public IP": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.PublicIpAddress)
+				return format.StringOrEmpty(i.PublicIpAddress)
 			},
 		},
 		"Private IP": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.PrivateIpAddress)
+				return format.StringOrEmpty(i.PrivateIpAddress)
 			},
 		},
 		"Launch Time": {
 			GetValue: func(i *types.Instance) string {
-				return i.LaunchTime.Local().Format("2006-01-02 15:04:05 MST")
+				return format.TimeToStringOrEmpty(i.LaunchTime)
 			},
 		},
 		"Subnet ID": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.SubnetId)
+				return format.StringOrEmpty(i.SubnetId)
 			},
 		},
 		"Security Group(s)": {
@@ -113,42 +113,42 @@ func availableAttributes() map[string]Attribute {
 		},
 		"Key Name": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.KeyName)
+				return format.StringOrEmpty(i.KeyName)
 			},
 		},
 		"VPC ID": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.VpcId)
+				return format.StringOrEmpty(i.VpcId)
 			},
 		},
 		"Placement Group": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.Placement.GroupName)
+				return format.StringOrEmpty(i.Placement.GroupName)
 			},
 		},
 		"Availability Zone": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.Placement.AvailabilityZone)
+				return format.StringOrEmpty(i.Placement.AvailabilityZone)
 			},
 		},
 		"Root Device Type": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString((*string)(&i.RootDeviceType))
+				return format.StringOrEmpty((*string)(&i.RootDeviceType))
 			},
 		},
 		"Root Device Name": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString(i.RootDeviceName)
+				return format.StringOrEmpty(i.RootDeviceName)
 			},
 		},
 		"Virtualization Type": {
 			GetValue: func(i *types.Instance) string {
-				return aws.ToString((*string)(&i.VirtualizationType))
+				return format.StringOrEmpty((*string)(&i.VirtualizationType))
 			},
 		},
 		"vCPUs": {
 			GetValue: func(i *types.Instance) string {
-				return strconv.Itoa(int(*i.CpuOptions.CoreCount))
+				return format.Int32ToStringOrEmpty(i.CpuOptions.CoreCount)
 			},
 		},
 	}
@@ -175,33 +175,21 @@ func imageAttributes() map[string]ImageAttribute {
 	return map[string]ImageAttribute{
 		"Allowed Image": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.ImageAllowed == nil {
-					return ""
-				}
-				return strconv.FormatBool(*i.ImageAllowed)
+				return format.BoolToLabel(i.ImageAllowed, "Yes", "No")
 			},
 		},
 		"AMI ID": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.ImageId == nil {
-					return ""
-				}
-				return aws.ToString(i.ImageId)
+				return format.StringOrEmpty(i.ImageId)
 			},
 		},
 		"AMI Name": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.Name == nil {
-					return ""
-				}
-				return aws.ToString(i.Name)
+				return format.StringOrEmpty(i.Name)
 			},
 		},
 		"Architecture": {
 			GetValue: func(i *types.Image) string {
-				if i == nil {
-					return ""
-				}
 				return string(i.Architecture)
 			},
 		},
@@ -215,18 +203,12 @@ func imageAttributes() map[string]ImageAttribute {
 		},
 		"Boot Mode": {
 			GetValue: func(i *types.Image) string {
-				if i == nil {
-					return ""
-				}
 				return string(i.BootMode)
 			},
 		},
 		"Creation Date": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.CreationDate == nil {
-					return ""
-				}
-				return aws.ToString(i.CreationDate)
+				return format.StringOrEmpty(i.CreationDate)
 			},
 		},
 		"Deprecation Time": {
@@ -234,142 +216,91 @@ func imageAttributes() map[string]ImageAttribute {
 				if i == nil || i.DeprecationTime == nil {
 					return ""
 				}
-				return aws.ToString(i.DeprecationTime)
+				return format.StringOrEmpty(i.DeprecationTime)
 			},
 		},
 		"Deregistration Protection": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.DeregistrationProtection == nil {
-					return ""
-				}
-				return aws.ToString(i.DeregistrationProtection)
+				return format.StringOrEmpty(i.DeregistrationProtection)
 			},
 		},
 		"Description": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.Description == nil {
-					return ""
-				}
-				return aws.ToString(i.Description)
+				return format.StringOrEmpty(i.Description)
 			},
 		},
 		"Image Type": {
 			GetValue: func(i *types.Image) string {
-				if i == nil {
-					return ""
-				}
 				return string(i.ImageType)
 			},
 		},
 		"Kernel ID": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.KernelId == nil {
-					return ""
-				}
-				return aws.ToString(i.KernelId)
+				return format.StringOrEmpty(i.KernelId)
 			},
 		},
 		"Owner": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.OwnerId == nil {
-					return ""
-				}
-				return aws.ToString(i.OwnerId)
+				return format.StringOrEmpty(i.OwnerId)
 			},
 		},
 		"Platform": {
 			GetValue: func(i *types.Image) string {
-				if i == nil {
-					return ""
-				}
-				return string(*i.PlatformDetails)
+				return format.StringOrEmpty(i.PlatformDetails)
 			},
 		},
 		"Product Codes": {
 			GetValue: func(i *types.Image) string {
-				if i == nil {
-					return ""
-				}
 				return getProductCodes(i.ProductCodes)
 			},
 		},
 		"RAM Disk ID": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.RamdiskId == nil {
-					return ""
-				}
-				return aws.ToString(i.RamdiskId)
+				return format.StringOrEmpty(i.RamdiskId)
 			},
 		},
 		"Root Device Name": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.RootDeviceName == nil {
-					return ""
-				}
-				return aws.ToString(i.RootDeviceName)
+				return format.StringOrEmpty(i.RootDeviceName)
 			},
 		},
 		"Root Device Type": {
 			GetValue: func(i *types.Image) string {
-				if i == nil {
-					return ""
-				}
 				return string(i.RootDeviceType)
 			},
 		},
 		"Source": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.ImageLocation == nil {
-					return ""
-				}
-				return aws.ToString(i.ImageLocation)
+				return format.StringOrEmpty(i.ImageLocation)
 			},
 		},
 		"Source AMI ID": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.SourceImageId == nil {
-					return ""
-				}
-				return aws.ToString(i.SourceImageId)
+				return format.StringOrEmpty(i.SourceImageId)
 			},
 		},
 		"Source AMI Region": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.SourceImageRegion == nil {
-					return ""
-				}
-				return aws.ToString(i.SourceImageRegion)
+				return format.StringOrEmpty(i.SourceImageRegion)
 			},
 		},
 		"State Reason": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.StateReason == nil || i.StateReason.Message == nil {
-					return ""
-				}
-				return aws.ToString(i.StateReason.Message)
+				return format.StringOrEmpty(i.StateReason.Message)
 			},
 		},
 		"Status": {
 			GetValue: func(i *types.Image) string {
-				if i == nil {
-					return ""
-				}
-				return format.Status(string(i.State))
+				return format.StatusOrDefault(string(i.State), "")
 			},
 		},
 		"Usage Operation": {
 			GetValue: func(i *types.Image) string {
-				if i == nil || i.UsageOperation == nil {
-					return ""
-				}
-				return aws.ToString(i.UsageOperation)
+				return format.StringOrEmpty(i.UsageOperation)
 			},
 		},
 		"Virtualization": {
 			GetValue: func(i *types.Image) string {
-				if i == nil {
-					return ""
-				}
 				return string(i.VirtualizationType)
 			},
 		},
@@ -378,10 +309,7 @@ func imageAttributes() map[string]ImageAttribute {
 				if i == nil || i.Public == nil {
 					return ""
 				}
-				if *i.Public {
-					return "Public"
-				}
-				return "Private"
+				return format.BoolToLabel(i.Public, "Public", "Private")
 			},
 		},
 	}
@@ -408,27 +336,27 @@ func securityGroupAttributes() map[string]SecurityGroupAttribute {
 	return map[string]SecurityGroupAttribute{
 		"Group ID": {
 			GetValue: func(sg *types.SecurityGroup) string {
-				return aws.ToString(sg.GroupId)
+				return format.StringOrEmpty(sg.GroupId)
 			},
 		},
 		"Group Name": {
 			GetValue: func(sg *types.SecurityGroup) string {
-				return aws.ToString(sg.GroupName)
+				return format.StringOrEmpty(sg.GroupName)
 			},
 		},
 		"Description": {
 			GetValue: func(sg *types.SecurityGroup) string {
-				return aws.ToString(sg.Description)
+				return format.StringOrEmpty(sg.Description)
 			},
 		},
 		"VPC ID": {
 			GetValue: func(sg *types.SecurityGroup) string {
-				return aws.ToString(sg.VpcId)
+				return format.StringOrEmpty(sg.VpcId)
 			},
 		},
 		"Owner ID": {
 			GetValue: func(sg *types.SecurityGroup) string {
-				return aws.ToString(sg.OwnerId)
+				return format.StringOrEmpty(sg.OwnerId)
 			},
 		},
 		"Ingress Count": {
@@ -470,10 +398,7 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 		// Composite/Custom attributes for UI
 		"Rule ID": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.SecurityGroupRuleId == nil {
-					return ""
-				}
-				return *r.SecurityGroupRuleId
+				return format.StringOrEmpty(r.SecurityGroupRuleId)
 			},
 		},
 		"IP Version": {
@@ -510,7 +435,7 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 				}
 				if r.FromPort != nil && r.ToPort != nil {
 					if *r.FromPort == *r.ToPort {
-						return strconv.Itoa(int(*r.FromPort))
+						return format.Int32ToStringOrEmpty(r.FromPort)
 					}
 					return fmt.Sprintf("%d-%d", *r.FromPort, *r.ToPort)
 				}
@@ -520,16 +445,16 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 		"Source": {
 			GetValue: func(r *types.SecurityGroupRule) string {
 				if r.IsEgress != nil && *r.IsEgress {
-					return ""
+					return format.StringOrEmpty(r.CidrIpv4)
 				}
 				if r.CidrIpv4 != nil && *r.CidrIpv4 != "" {
-					return *r.CidrIpv4
+					return format.StringOrEmpty(r.CidrIpv4)
 				}
 				if r.CidrIpv6 != nil && *r.CidrIpv6 != "" {
-					return *r.CidrIpv6
+					return format.StringOrEmpty(r.CidrIpv6)
 				}
 				if r.ReferencedGroupInfo != nil && r.ReferencedGroupInfo.GroupId != nil {
-					return *r.ReferencedGroupInfo.GroupId
+					return format.StringOrEmpty(r.ReferencedGroupInfo.GroupId)
 				}
 				return ""
 			},
@@ -537,83 +462,57 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 		"Destination": {
 			GetValue: func(r *types.SecurityGroupRule) string {
 				if r.IsEgress != nil && *r.IsEgress {
-					if r.CidrIpv4 != nil && *r.CidrIpv4 != "" {
-						return *r.CidrIpv4
-					}
-					if r.CidrIpv6 != nil && *r.CidrIpv6 != "" {
-						return *r.CidrIpv6
-					}
-					if r.ReferencedGroupInfo != nil && r.ReferencedGroupInfo.GroupId != nil {
-						return *r.ReferencedGroupInfo.GroupId
-					}
+					return format.StringOrEmpty(r.CidrIpv4)
+				}
+				if r.CidrIpv6 != nil && *r.CidrIpv6 != "" {
+					return format.StringOrEmpty(r.CidrIpv6)
+				}
+				if r.ReferencedGroupInfo != nil && r.ReferencedGroupInfo.GroupId != nil {
+					return format.StringOrEmpty(r.ReferencedGroupInfo.GroupId)
 				}
 				return ""
 			},
 		},
 		"Description": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.Description == nil {
-					return ""
-				}
-				return *r.Description
+				return format.StringOrEmpty(r.Description)
 			},
 		},
 
 		// Retain all original attributes for flexibility
 		"CidrIpv4": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.CidrIpv4 == nil {
-					return ""
-				}
-				return *r.CidrIpv4
+				return format.StringOrEmpty(r.CidrIpv4)
 			},
 		},
 		"CidrIpv6": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.CidrIpv6 == nil {
-					return ""
-				}
-				return *r.CidrIpv6
+				return format.StringOrEmpty(r.CidrIpv6)
 			},
 		},
 		"FromPort": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.FromPort == nil {
-					return ""
-				}
-				return strconv.Itoa(int(*r.FromPort))
+				return format.Int32ToStringOrEmpty(r.FromPort)
 			},
 		},
 		"GroupId": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.GroupId == nil {
-					return ""
-				}
-				return *r.GroupId
+				return format.StringOrEmpty(r.GroupId)
 			},
 		},
 		"GroupOwnerId": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.GroupOwnerId == nil {
-					return ""
-				}
-				return *r.GroupOwnerId
+				return format.StringOrEmpty(r.GroupOwnerId)
 			},
 		},
 		"IsEgress": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.IsEgress == nil {
-					return ""
-				}
-				return strconv.FormatBool(*r.IsEgress)
+				return format.BoolToLabel(r.IsEgress, "Yes", "No")
 			},
 		},
 		"PrefixListId": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.PrefixListId == nil {
-					return ""
-				}
-				return *r.PrefixListId
+				return format.StringOrEmpty(r.PrefixListId)
 			},
 		},
 		"ReferencedGroupInfo": {
@@ -621,23 +520,17 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 				if r.ReferencedGroupInfo == nil || r.ReferencedGroupInfo.GroupId == nil {
 					return ""
 				}
-				return *r.ReferencedGroupInfo.GroupId
+				return format.StringOrEmpty(r.ReferencedGroupInfo.GroupId)
 			},
 		},
 		"SecurityGroupRuleArn": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.SecurityGroupRuleArn == nil {
-					return ""
-				}
-				return *r.SecurityGroupRuleArn
+				return format.StringOrEmpty(r.SecurityGroupRuleArn)
 			},
 		},
 		"SecurityGroupRuleId": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.SecurityGroupRuleId == nil {
-					return ""
-				}
-				return *r.SecurityGroupRuleId
+				return format.StringOrEmpty(r.SecurityGroupRuleId)
 			},
 		},
 		"TagCount": {
@@ -647,10 +540,7 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 		},
 		"ToPort": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				if r.ToPort == nil {
-					return ""
-				}
-				return strconv.Itoa(int(*r.ToPort))
+				return format.Int32ToStringOrEmpty(r.ToPort)
 			},
 		},
 	}
@@ -693,82 +583,52 @@ func snapshotAttributes() map[string]SnapshotAttribute {
 	return map[string]SnapshotAttribute{
 		"Description": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.Description == nil {
-					return ""
-				}
-				return *s.Description
+				return format.StringOrEmpty(s.Description)
 			},
 		},
 		"Details": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.SnapshotId == nil {
-					return ""
-				}
-				return aws.ToString(s.SnapshotId)
+				return format.StringOrEmpty(s.SnapshotId)
 			},
 		},
 		"Encryption": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.Encrypted == nil {
-					return ""
-				}
-				return fmt.Sprintf("%t", *s.Encrypted)
+				return format.BoolToLabel(s.Encrypted, "Encrypted", "Not encrypted")
 			},
 		},
 		"KMS Key ID": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.KmsKeyId == nil {
-					return ""
-				}
-				return aws.ToString(s.KmsKeyId)
+				return format.StringOrEmpty(s.KmsKeyId)
 			},
 		},
 		"Owner Alias": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.OwnerAlias == nil {
-					return ""
-				}
-				return aws.ToString(s.OwnerAlias)
+				return format.StringOrEmpty(s.OwnerAlias)
 			},
 		},
 		"Owner ID": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.OwnerId == nil {
-					return ""
-				}
-				return aws.ToString(s.OwnerId)
+				return format.StringOrEmpty(s.OwnerId)
 			},
 		},
 		"Progress": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.Progress == nil {
-					return ""
-				}
-				return format.Status(aws.ToString(s.Progress))
+				return format.Status(format.StringOrEmpty(s.Progress))
 			},
 		},
 		"Restore Expiry Time": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.RestoreExpiryTime == nil {
-					return ""
-				}
-				return s.RestoreExpiryTime.Local().Format("2006-01-02 15:04:05 MST")
+				return format.TimeToStringOrEmpty(s.RestoreExpiryTime)
 			},
 		},
 		"Snapshot ID": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.SnapshotId == nil {
-					return ""
-				}
-				return aws.ToString(s.SnapshotId)
+				return format.StringOrEmpty(s.SnapshotId)
 			},
 		},
 		"Started": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.StartTime == nil {
-					return ""
-				}
-				return s.StartTime.Local().Format("2006-01-02 15:04:05 MST")
+				return format.TimeToStringOrEmpty(s.StartTime)
 			},
 		},
 		"State": {
@@ -778,10 +638,7 @@ func snapshotAttributes() map[string]SnapshotAttribute {
 		},
 		"State Message": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.StateMessage == nil {
-					return ""
-				}
-				return aws.ToString(s.StateMessage)
+				return format.StringOrEmpty(s.StateMessage)
 			},
 		},
 		"Storage Tier": {
@@ -796,18 +653,16 @@ func snapshotAttributes() map[string]SnapshotAttribute {
 		},
 		"Volume ID": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.VolumeId == nil {
-					return ""
-				}
-				return aws.ToString(s.VolumeId)
+				return format.StringOrEmpty(s.VolumeId)
 			},
 		},
 		"Volume Size": {
 			GetValue: func(s *types.Snapshot) string {
-				if s.VolumeSize == nil {
+				size := format.Int32ToStringOrEmpty(s.VolumeSize)
+				if size == "" {
 					return ""
 				}
-				return fmt.Sprintf("%d GiB", *s.VolumeSize)
+				return fmt.Sprintf("%s GiB", size)
 			},
 		},
 	}
@@ -818,10 +673,7 @@ func volumeAttributes() map[string]VolumeAttribute {
 	return map[string]VolumeAttribute{
 		"Volume ID": {
 			GetValue: func(v *types.Volume) string {
-				if v.VolumeId == nil {
-					return ""
-				}
-				return aws.ToString(v.VolumeId)
+				return format.StringOrEmpty(v.VolumeId)
 			},
 		},
 		"Type": {
@@ -831,10 +683,16 @@ func volumeAttributes() map[string]VolumeAttribute {
 		},
 		"Size": {
 			GetValue: func(v *types.Volume) string {
-				if v.Size == nil {
+				size := format.Int32ToStringOrEmpty(v.Size)
+				if size == "" {
 					return ""
 				}
-				return fmt.Sprintf("%d GiB", *v.Size)
+				return fmt.Sprintf("%s GiB", size)
+			},
+		},
+		"Size Raw": {
+			GetValue: func(v *types.Volume) string {
+				return format.Int32ToStringOrEmpty(v.Size)
 			},
 		},
 		"State": {
@@ -844,18 +702,15 @@ func volumeAttributes() map[string]VolumeAttribute {
 		},
 		"IOPS": {
 			GetValue: func(v *types.Volume) string {
-				if v.Iops == nil {
-					return ""
-				}
-				return strconv.Itoa(int(*v.Iops))
+				return format.Int32ToStringOrEmpty(v.Iops)
 			},
 		},
 		"Throughput": {
 			GetValue: func(v *types.Volume) string {
 				if v.Throughput == nil {
-					return ""
+					return "-"
 				}
-				return strconv.Itoa(int(*v.Throughput))
+				return fmt.Sprintf("%s MiB/s", format.Int32ToStringOrEmpty(v.Throughput))
 			},
 		},
 		"Fast Snapshot Restored": {
@@ -863,27 +718,27 @@ func volumeAttributes() map[string]VolumeAttribute {
 				if v.FastRestored == nil {
 					return ""
 				}
-				return strconv.FormatBool(*v.FastRestored)
+				return format.BoolToLabel(v.FastRestored, "Yes", "No")
 			},
 		},
 		"Availability Zone": {
 			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.AvailabilityZone)
+				return format.StringOrEmpty(v.AvailabilityZone)
 			},
 		},
 		"Created": {
 			GetValue: func(v *types.Volume) string {
-				return v.CreateTime.Local().Format("2006-01-02 15:04:05 MST")
+				return format.TimeToStringOrEmpty(v.CreateTime)
 			},
 		},
 		"Multi-Attach Enabled": {
 			GetValue: func(v *types.Volume) string {
-				return strconv.FormatBool(*v.MultiAttachEnabled)
+				return format.BoolToLabel(v.MultiAttachEnabled, "Yes", "No")
 			},
 		},
 		"Snapshot ID": {
 			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.SnapshotId)
+				return format.StringOrEmpty(v.SnapshotId)
 			},
 		},
 		"Associated Resource": {
@@ -893,43 +748,37 @@ func volumeAttributes() map[string]VolumeAttribute {
 		},
 		"Attach Time": {
 			GetValue: func(v *types.Volume) string {
-				return v.Attachments[0].AttachTime.Local().Format("2006-01-02 15:04:05 MST")
+				return format.TimeToStringOrEmpty(v.Attachments[0].AttachTime)
 			},
 		},
 		"Delete on Termination": {
 			GetValue: func(v *types.Volume) string {
-				return strconv.FormatBool(*v.Attachments[0].DeleteOnTermination)
+				return format.BoolToLabel(v.Attachments[0].DeleteOnTermination, "Yes", "No")
 			},
 		},
 		"Device": {
 			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.Attachments[0].Device)
+				return format.StringOrEmpty(v.Attachments[0].Device)
 			},
 		},
 		"Instance ID": {
 			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.Attachments[0].InstanceId)
+				return format.StringOrEmpty(v.Attachments[0].InstanceId)
 			},
 		},
 		"Attachment State": {
 			GetValue: func(v *types.Volume) string {
-				return string(v.Attachments[0].State)
+				return format.Status(string(v.Attachments[0].State))
 			},
 		},
 		"Encryption": {
 			GetValue: func(v *types.Volume) string {
-				if v.Encrypted == nil {
-					return ""
-				}
-				if *v.Encrypted {
-					return "Encrypted"
-				}
-				return "Not Encrypted"
+				return format.BoolToLabel(v.Encrypted, "Encrypted", "Not encrypted")
 			},
 		},
 		"KMS Key ID": {
 			GetValue: func(v *types.Volume) string {
-				return aws.ToString(v.KmsKeyId)
+				return format.StringOrEmpty(v.KmsKeyId)
 			},
 		},
 	}

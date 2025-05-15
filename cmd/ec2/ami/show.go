@@ -13,9 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// newShowFlags adds flags for the show subcommand.
-func newShowFlags(cobraCmd *cobra.Command) {}
-
 // ec2AMIShowFields returns the fields for the AMI detail table.
 func ec2AMIShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -58,6 +55,9 @@ var showCmd = &cobra.Command{
 		return cmdutil.DefaultErrorHandler(ShowEC2AMI(cmd, args[0]))
 	},
 }
+
+// NewShowFlags adds flags for the show subcommand.
+func NewShowFlags(cobraCmd *cobra.Command) {}
 
 // ShowEC2AMI displays detailed information for a specified AMI.
 func ShowEC2AMI(cmd *cobra.Command, arg string) error {

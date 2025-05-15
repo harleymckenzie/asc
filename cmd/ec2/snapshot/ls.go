@@ -24,7 +24,7 @@ var (
 
 // Init function
 func init() {
-	newLsFlags(lsCmd)
+	NewLsFlags(lsCmd)
 }
 
 // ec2SnapshotListFields returns the fields for the snapshot list table.
@@ -55,7 +55,7 @@ var lsCmd = &cobra.Command{
 }
 
 // NewLsFlags adds flags for the ls subcommand.
-func newLsFlags(cobraCmd *cobra.Command) {
+func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs snapshots in list format.")
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending snapshot ID.")
 	cobraCmd.Flags().
@@ -96,9 +96,13 @@ func ListSnapshots(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := ec2SnapshotListFields()
+	style := "rounded"
+	if list {
+		style = "list"
+	}
 	opts := tableformat.RenderOptions{
 		Title:  "Snapshots",
-		Style:  "rounded",
+		Style:  style,
 		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}
 

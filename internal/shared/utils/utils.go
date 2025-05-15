@@ -17,10 +17,10 @@ func ApplyRelativeOrAbsolute(input string, currentValue int32) (int32, error) {
 		}
 		return currentValue + int32(delta), nil
 	}
-    newValue, err := strconv.Atoi(input)
-    if err != nil {
-        return 0, err
-    }
+	newValue, err := strconv.Atoi(input)
+	if err != nil {
+		return 0, err
+	}
 	return int32(newValue), nil
 }
 

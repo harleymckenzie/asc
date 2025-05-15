@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/harleymckenzie/asc/cmd/ec2/ami"
+	"github.com/harleymckenzie/asc/cmd/ec2/security_group"
 	"github.com/harleymckenzie/asc/cmd/ec2/snapshot"
 	"github.com/harleymckenzie/asc/cmd/ec2/volume"
 	"github.com/harleymckenzie/asc/internal/service/ec2"
@@ -26,6 +27,21 @@ var ()
 // Init function
 func init() {
 	newShowFlags(showCmd)
+
+	// Add subcommands
+	showCmd.AddCommand(amiShowCmd)
+	showCmd.AddCommand(volumeShowCmd)
+	showCmd.AddCommand(securityGroupShowCmd)
+	showCmd.AddCommand(snapshotShowCmd)
+
+	// Add flags to subcommands
+	ami.NewShowFlags(amiShowCmd)
+	volume.NewShowFlags(volumeShowCmd)
+	security_group.NewShowFlags(securityGroupShowCmd)
+	snapshot.NewShowFlags(snapshotShowCmd)
+
+	// Add groups
+	showCmd.AddGroup(cmdutil.SubcommandGroups()...)
 }
 
 // Column functions
@@ -66,6 +82,47 @@ var showCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.DefaultErrorHandler(ShowEC2Resource(cmd, args[0]))
+	},
+}
+
+// Subcommands
+var amiShowCmd = &cobra.Command{
+	Use:     "amis",
+	Short:   "Show detailed information about an AMI",
+	Aliases: ami.CmdAliases,
+	GroupID: "subcommands",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ami.ShowEC2AMI(cmd, args[0]))
+	},
+}
+
+var securityGroupShowCmd = &cobra.Command{
+	Use:     "security-groups",
+	Short:   "Show detailed information about a security group",
+	Aliases: security_group.CmdAliases,
+	GroupID: "subcommands",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(security_group.ShowSecurityGroup(cmd, args[0]))
+	},
+}
+
+var snapshotShowCmd = &cobra.Command{
+	Use:     "snapshots",
+	Short:   "Show detailed information about a snapshot",
+	Aliases: snapshot.CmdAliases,
+	GroupID: "subcommands",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(snapshot.ShowEC2Snapshot(cmd, args[0]))
+	},
+}
+
+var volumeShowCmd = &cobra.Command{
+	Use:     "volumes",
+	Short:   "Show detailed information about an EBS volume",
+	Aliases: volume.CmdAliases,
+	GroupID: "subcommands",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(volume.ShowEC2Volume(cmd, args[0]))
 	},
 }
 

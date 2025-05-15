@@ -5,12 +5,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var CmdAliases = []string{"volumes", "volume", "disk", "disks", "ebs"}
+
 // Root command
 func NewVolumeRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "volume",
 		Short:   "Perform volume operations",
-		Aliases: []string{"volumes", "vol", "volum"},
+		Aliases: CmdAliases,
 		GroupID: "subcommands",
 	}
 

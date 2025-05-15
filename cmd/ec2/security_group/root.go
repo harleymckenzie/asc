@@ -5,12 +5,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var CmdAliases = []string{"security-groups", "sg", "security-group", "sgs"}
+
 // Root command
 func NewSecurityGroupRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "security-group",
 		Short:   "Perform security group operations",
-		Aliases: []string{"security-groups", "sg", "secgroup"},
+		Aliases: CmdAliases,
 		GroupID: "subcommands",
 	}
 

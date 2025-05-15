@@ -26,8 +26,8 @@ func NewEC2RootCmd() *cobra.Command {
 
 	// Subcommands
 	cmd.AddCommand(ami.NewAMIRootCmd())
-	cmd.AddCommand(snapshot.NewSnapshotRootCmd())
 	cmd.AddCommand(security_group.NewSecurityGroupRootCmd())
+	cmd.AddCommand(snapshot.NewSnapshotRootCmd())
 	cmd.AddCommand(volume.NewVolumeRootCmd())
 
 	// Add groups

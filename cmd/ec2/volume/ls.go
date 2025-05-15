@@ -16,9 +16,7 @@ import (
 // Variables
 var (
 	list           bool
-	sortID         bool
 	sortType       bool
-	sortSize       bool
 	sortState      bool
 	sortAttachTime bool
 	sortCreatedAt  bool
@@ -36,15 +34,15 @@ func init() {
 // Define columns for volumes
 func ec2VolumeListFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Volume ID", Visible: true, Sort: sortID},
+		{ID: "Volume ID", Visible: true, DefaultSort: true},
 		{ID: "Type", Visible: true, Sort: sortType},
-		{ID: "Size", Visible: true, Sort: sortSize},
+		{ID: "Size", Visible: true},
 		{ID: "IOPS", Visible: true},
 		{ID: "Throughput", Visible: true},
 		{ID: "Snapshot ID", Visible: true},
 		{ID: "State", Visible: true},
-		{ID: "Created", Visible: showCreatedAt, Sort: sortCreatedAt},
-		{ID: "Attach Time", Visible: showAttachTime, Sort: sortAttachTime, DefaultSort: true},
+		{ID: "Created", Visible: showCreatedAt, Sort: sortCreatedAt, SortDirection: "desc"},
+		{ID: "Attach Time", Visible: showAttachTime, Sort: sortAttachTime},
 		{ID: "Availability Zone", Visible: false},
 		{ID: "Encryption", Visible: true},
 		{ID: "Fast Snapshot Restored", Visible: true},
@@ -67,10 +65,8 @@ var lsCmd = &cobra.Command{
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().
 		BoolVarP(&list, "list", "l", false, "Outputs volumes in list format.")
-	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending volume ID.")
 	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending volume type.")
-	cobraCmd.Flags().BoolVarP(&sortSize, "sort-size", "s", false, "Sort by descending volume size.")
-	cobraCmd.Flags().BoolVarP(&showKMS, "show-kms", "k", false, "Show the KMS Key ID column.")
+	cobraCmd.Flags().BoolVarP(&showKMS, "show-kms", "K", false, "Show the KMS Key ID column.")
 	cobraCmd.Flags().
 		BoolVarP(&sortState, "sort-state", "S", false, "Sort by descending volume state.")
 	cobraCmd.Flags().
@@ -78,9 +74,9 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().
 		BoolVarP(&sortCreatedAt, "sort-created-at", "t", false, "Sort by descending creation time.")
 	cobraCmd.Flags().
-		BoolVarP(&showCreatedAt, "show-created-at", "c", false, "Show the creation time column.")
-	cobraCmd.Flags().
 		BoolVarP(&showAttachTime, "show-attach-time", "A", false, "Show the attach time column.")
+	cobraCmd.Flags().
+		BoolVarP(&showCreatedAt, "show-created-at", "C", false, "Show the creation time column.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
 }
 

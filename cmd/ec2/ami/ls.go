@@ -30,7 +30,7 @@ var (
 
 // Init function
 func init() {
-	newLsFlags(lsCmd)
+	NewLsFlags(lsCmd)
 }
 
 // ec2AMIListFields returns the fields for the AMI list table.
@@ -53,15 +53,15 @@ func ec2AMIListFields() []tableformat.Field {
 // lsCmd is the cobra command for listing AMIs.
 var lsCmd = &cobra.Command{
 	Use:     "ls",
-	Short:   "List all AMIs",
+	Short:   "List AMIs",
 	GroupID: "actions",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.DefaultErrorHandler(ListAMIs(cmd, args))
 	},
 }
 
-// newLsFlags adds flags for the ls subcommand.
-func newLsFlags(cobraCmd *cobra.Command) {
+// NewLsFlags adds flags for the ls subcommand.
+func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs AMIs in list format.")
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending image ID.")
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending image name.")
@@ -137,7 +137,7 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 
 	fields := ec2AMIListFields()
 	opts := tableformat.RenderOptions{
-		Title:  "AMIs",
+		Title:  "Amazon Machine Images (AMIs)",
 		Style:  "rounded",
 		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}

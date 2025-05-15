@@ -6,6 +6,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harleymckenzie/asc/cmd/ec2/ami"
+	"github.com/harleymckenzie/asc/cmd/ec2/snapshot"
+	"github.com/harleymckenzie/asc/cmd/ec2/volume"
+	"github.com/harleymckenzie/asc/cmd/ec2/security_group"
+
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
@@ -39,6 +44,22 @@ type ListInstancesInput struct {
 // Init function
 func init() {
 	newLsFlags(lsCmd)
+
+	// Add subcommands
+	lsCmd.AddCommand(amiLsCmd)
+	lsCmd.AddCommand(volumeLsCmd)
+	lsCmd.AddCommand(securityGroupLsCmd)
+	lsCmd.AddCommand(snapshotLsCmd)
+
+	// Add flags to subcommands
+	ami.NewLsFlags(amiLsCmd)
+	snapshot.NewLsFlags(snapshotLsCmd)
+	volume.NewLsFlags(volumeLsCmd)
+	security_group.NewLsFlags(securityGroupLsCmd)
+
+	// Add groups
+	lsCmd.AddGroup(cmdutil.SubcommandGroups()...)
+
 }
 
 // Column functions
@@ -58,7 +79,7 @@ func ec2ListFields() []tableformat.Field {
 // Command variable
 var lsCmd = &cobra.Command{
 	Use:     "ls",
-	Short:   "List all EC2 instances",
+	Short:   "List EC2 instances, AMIs, snapshots, and volumes",
 	Aliases: []string{"list"},
 	GroupID: "actions",
 	Example: "asc ec2 ls -A           # List all EC2 instances with the AMI ID\n" +
@@ -66,6 +87,48 @@ var lsCmd = &cobra.Command{
 		"asc ec2 ls -l           # List all EC2 instances in list format",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.DefaultErrorHandler(ListEC2Instances(cmd, args))
+	},
+}
+
+// Subcommands
+
+var amiLsCmd = &cobra.Command{
+	Use:     "amis",
+	Short:   "List AMIs",
+	Aliases: ami.CmdAliases,
+	GroupID: "subcommands",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(ami.ListAMIs(cmd, args))
+	},
+}
+
+var securityGroupLsCmd = &cobra.Command{
+	Use:     "security-groups",
+	Short:   "List all security groups",
+	Aliases: security_group.CmdAliases,
+	GroupID: "subcommands",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(security_group.ListSecurityGroups(cmd, args))
+	},
+}
+
+var snapshotLsCmd = &cobra.Command{
+	Use:     "snapshots",
+	Short:   "List all snapshots",
+	Aliases: snapshot.CmdAliases,
+	GroupID: "subcommands",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(snapshot.ListSnapshots(cmd, args))
+	},
+}
+
+var volumeLsCmd = &cobra.Command{
+	Use:     "volumes",
+	Short:   "List all volumes",
+	Aliases: volume.CmdAliases,
+	GroupID: "subcommands",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.DefaultErrorHandler(volume.ListVolumes(cmd, args))
 	},
 }
 
