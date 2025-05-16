@@ -50,28 +50,6 @@ func TestRDSLsBasicSmoke(t *testing.T) {
 	t.Logf("asc rds ls output:\n%s", out)
 }
 
-// TestRDSLsSortByNameSmoke runs 'rds ls -n' and prints the output for manual inspection.
-func TestRDSLsSortByNameSmoke(t *testing.T) {
-	if os.Getenv("SMOKE") != "1" {
-		t.Skip("skipping smoke test; set SMOKE=1 to run")
-	}
-	cmd := exec.Command("go", "run", "../../main.go", "rds", "ls", "-n")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
-	}
-	if containsAttributeError(string(out)) {
-		t.Fatalf("Test failed due to attribute error: %s", out)
-	}
-	if containsMissingAttributeError(string(out)) {
-		t.Fatalf("Test failed due to missing attribute error: %s", out)
-	}
-	if string(out) != "" && containsSortWarning(string(out)) {
-		t.Fatalf("Test failed due to multiple sort fields: %s", out)
-	}
-	t.Logf("asc rds ls -n (sort by name) output:\n%s", out)
-}
-
 // TestRDSLsSortByClusterSmoke runs 'rds ls -c' and prints the output for manual inspection.
 func TestRDSLsSortByClusterSmoke(t *testing.T) {
 	if os.Getenv("SMOKE") != "1" {

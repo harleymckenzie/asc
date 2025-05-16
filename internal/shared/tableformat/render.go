@@ -1,3 +1,6 @@
+// Package tableformat: rendering logic for tables.
+// This file contains only rendering functions and options.
+
 package tableformat
 
 import (
@@ -30,14 +33,14 @@ func RenderTableList(tl ListTableRenderable, opts RenderOptions) {
 	t.SetStyle(style)
 	tl.WriteHeaders(t)
 	tl.WriteRows(t)
-	t.SetColumnConfigs(tl.ColumnConfigs())
-	t.SortBy(sortBy)
-
 	// Only suppress empty columns if there is at least one row of data
 	// This requires a type assertion to access Instances
 	if listTable, ok := tl.(*ListTable); ok && len(listTable.Instances) > 0 {
 		t.SuppressEmptyColumns()
 	}
+	t.SetColumnConfigs(tl.ColumnConfigs())
+	t.SortBy(sortBy)
+
 	t.Render()
 }
 

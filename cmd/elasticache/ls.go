@@ -18,7 +18,6 @@ var (
 	list         bool
 	showEndpoint bool
 
-	sortName   bool
 	sortType   bool
 	sortStatus bool
 	sortEngine bool
@@ -34,11 +33,11 @@ func init() {
 // Column functions
 func elasticacheFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Cache Name", Visible: true, Sort: sortName, DefaultSort: true},
-		{ID: "Status", Visible: true, Sort: sortStatus},
-		{ID: "Engine Version", Visible: true, Sort: sortEngine},
-		{ID: "Configuration", Visible: true, Sort: sortType},
-		{ID: "Endpoint", Visible: showEndpoint},
+		{ID: "Cache Name", Display: true, DefaultSort: true},
+		{ID: "Status", Display: true, Sort: sortStatus},
+		{ID: "Engine Version", Display: true, Sort: sortEngine, SortDirection: "desc"},
+		{ID: "Configuration", Display: true, Sort: sortType},
+		{ID: "Endpoint", Display: showEndpoint},
 	}
 }
 
@@ -102,14 +101,12 @@ func newLsFlags(cobraCmd *cobra.Command) {
 
 	// Add flags - Sorting
 	cobraCmd.Flags().
-		BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending Elasticache cluster name.")
-	cobraCmd.Flags().
 		BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elasticache cluster type.")
 	cobraCmd.Flags().
 		BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending Elasticache cluster status.")
 	cobraCmd.Flags().
 		BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending Elasticache cluster engine version.")
-	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-type", "sort-status", "sort-engine")
+	cobraCmd.MarkFlagsMutuallyExclusive("sort-type", "sort-status", "sort-engine")
 
 	// Add flags - Reverse Sort
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")

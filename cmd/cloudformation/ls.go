@@ -34,12 +34,12 @@ func init() {
 // Column functions
 func cloudformationListFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Stack Name", Visible: true, Sort: sortName},
-		{ID: "Status", Visible: true, Sort: sortStatus},
-		{ID: "Description", Visible: showDescription},
+		{ID: "Stack Name", Display: true, Sort: sortName},
+		{ID: "Status", Display: true, Sort: sortStatus},
+		{ID: "Description", Display: showDescription},
 		{
 			ID:            "Last Updated",
-			Visible:       true,
+			Display:       true,
 			Sort:          sortLastUpdate,
 			DefaultSort:   true,
 			SortDirection: "desc",

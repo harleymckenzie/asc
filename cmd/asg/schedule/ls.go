@@ -32,14 +32,14 @@ func init() {
 // Define columns for schedules
 func asgScheduleFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Auto Scaling Group", Visible: true, Sort: false, Merge: true},
-		{ID: "Name", Visible: true, Sort: sortName},
-		{ID: "Recurrence", Visible: true, Sort: false},
-		{ID: "Start Time", Visible: true, Sort: sortStartTime, DefaultSort: true},
-		{ID: "End Time", Visible: true, Sort: sortEndTime},
-		{ID: "Desired Capacity", Visible: true, Sort: sortDesiredCapacity},
-		{ID: "Min", Visible: true, Sort: sortMinSize},
-		{ID: "Max", Visible: true, Sort: sortMaxSize},
+		{ID: "Auto Scaling Group", Display: true, Sort: false, Merge: true},
+		{ID: "Name", Display: true, Sort: sortName},
+		{ID: "Recurrence", Display: true, Sort: false},
+		{ID: "Start Time", Display: true, Sort: sortStartTime, DefaultSort: true},
+		{ID: "End Time", Display: true, Sort: sortEndTime},
+		{ID: "Desired Capacity", Display: true, Sort: sortDesiredCapacity},
+		{ID: "Min", Display: true, Sort: sortMinSize, SortDirection: "desc"},
+		{ID: "Max", Display: true, Sort: sortMaxSize, SortDirection: "desc"},
 	}
 }
 
@@ -116,7 +116,7 @@ func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) error {
 	fields := asgScheduleFields()
 
 	// Set "Auto Scaling Group" field Visible to false when listing for a single group
-	fields[0].Visible = false
+	fields[0].Display = false
 
 	opts := tableformat.RenderOptions{
 		Title:  fmt.Sprintf("Scheduled Actions\n(%s)", asgName),

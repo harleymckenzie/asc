@@ -24,29 +24,29 @@ func init() {
 // Column functions
 func ec2VolumeShowFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Volume ID", Visible: true},
-		{ID: "Type", Visible: true},
-		{ID: "Size", Visible: true},
-		{ID: "State", Visible: true},
-		{ID: "IOPS", Visible: true},
-		{ID: "Throughput", Visible: true},
-		{ID: "Fast Snapshot Restored", Visible: true},
-		{ID: "Availability Zone", Visible: true},
-		{ID: "Created", Visible: true},
-		{ID: "Multi-Attach Enabled", Visible: true},
+		{ID: "Volume ID", Display: true},
+		{ID: "Type", Display: true},
+		{ID: "Size", Display: true},
+		{ID: "State", Display: true},
+		{ID: "IOPS", Display: true},
+		{ID: "Throughput", Display: true},
+		{ID: "Fast Snapshot Restored", Display: true},
+		{ID: "Availability Zone", Display: true},
+		{ID: "Created", Display: true},
+		{ID: "Multi-Attach Enabled", Display: true},
 
 		{ID: "Associations", Header: true},
-		{ID: "Snapshot ID", Visible: true},
-		{ID: "Associated Resource", Visible: true},
-		{ID: "Attach Time", Visible: true},
-		{ID: "Delete on Termination", Visible: true},
-		{ID: "Device", Visible: true},
-		{ID: "Instance ID", Visible: true},
-		{ID: "Attachment State", Visible: true},
+		{ID: "Snapshot ID", Display: true},
+		{ID: "Associated Resource", Display: true},
+		{ID: "Attach Time", Display: true},
+		{ID: "Delete on Termination", Display: true},
+		{ID: "Device", Display: true},
+		{ID: "Instance ID", Display: true},
+		{ID: "Attachment State", Display: true},
 
 		{ID: "Encryption", Header: true},
-		{ID: "Encryption", Visible: true},
-		{ID: "KMS Key ID", Visible: true},
+		{ID: "Encryption", Display: true},
+		{ID: "KMS Key ID", Display: true},
 	}
 }
 

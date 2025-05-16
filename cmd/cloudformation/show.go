@@ -24,21 +24,21 @@ func init() {
 // Column functions
 func cloudformationShowFields() []tableformat.Field {
 	return []tableformat.Field{
-        {ID: "Overview", Visible: true, Header: true},
-        {ID: "Stack ID", Visible: true},
-		{ID: "Description", Visible: true},
-		{ID: "Status", Visible: true},
-		{ID: "Detailed Status", Visible: true},
-		{ID: "Status Reason", Visible: true},
-		{ID: "Creation Time", Visible: true},
-        {ID: "Last Updated", Visible: true},
-        {ID: "Deletion Time", Visible: true},
-        {ID: "Deletion Mode", Visible: true},
-        {ID: "Drift Status", Visible: true},
-        {ID: "Root Stack", Visible: true},
-        {ID: "Parent Stack", Visible: true},
-        {ID: "Termination Protection", Visible: true},
-        {ID: "IAM Role", Visible: true},
+        {ID: "Overview", Display: true, Header: true},
+        {ID: "Stack ID", Display: true},
+		{ID: "Description", Display: true},
+		{ID: "Status", Display: true},
+		{ID: "Detailed Status", Display: true},
+		{ID: "Status Reason", Display: true},
+		{ID: "Creation Time", Display: true},
+        {ID: "Last Updated", Display: true},
+        {ID: "Deletion Time", Display: true},
+        {ID: "Deletion Mode", Display: true},
+        {ID: "Drift Status", Display: true},
+        {ID: "Root Stack", Display: true},
+        {ID: "Parent Stack", Display: true},
+        {ID: "Termination Protection", Display: true},
+        {ID: "IAM Role", Display: true},
 	}
 }
 

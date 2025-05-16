@@ -27,16 +27,16 @@ func init() {
 
 func targetGroupFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Name", Visible: true, Sort: false, DefaultSort: true},
-		{ID: "ARN", Visible: showARNs, Sort: false},
-		{ID: "Port", Visible: true, Sort: false},
-		{ID: "Protocol", Visible: true, Sort: false},
-		{ID: "Target Type", Visible: true, Sort: false},
-		{ID: "Load Balancer", Visible: true, Sort: false},
-		{ID: "VPC ID", Visible: true, Sort: false},
-		{ID: "Health Check Enabled", Visible: false, Sort: showHealthCheckEnabled},
-		{ID: "Health Check Path", Visible: false, Sort: showHealthCheckPath},
-		{ID: "Health Check Port", Visible: false, Sort: showHealthCheckPort},
+		{ID: "Name", Display: true, DefaultSort: true},
+		{ID: "ARN", Display: showARNs},
+		{ID: "Port", Display: true},
+		{ID: "Protocol", Display: true},
+		{ID: "Target Type", Display: true},
+		{ID: "Load Balancer", Display: true},
+		{ID: "VPC ID", Display: true},
+		{ID: "Health Check Enabled", Display: showHealthCheckEnabled},
+		{ID: "Health Check Path", Display: showHealthCheckPath},
+		{ID: "Health Check Port", Display: showHealthCheckPort},
 	}
 }
 

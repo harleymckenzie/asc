@@ -30,17 +30,18 @@ func init() {
 // ec2SnapshotListFields returns the fields for the snapshot list table.
 func ec2SnapshotListFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Snapshot ID", Visible: true, Sort: sortID},
-		{ID: "Volume Size", Visible: true},
-		{ID: "Description", Visible: showDesc},
-		{ID: "Tier", Visible: true},
-		{ID: "State", Visible: true},
-		{ID: "Started", Visible: true, DefaultSort: true, SortDirection: "desc"},
-		{ID: "Progress", Visible: true},
-		{ID: "Encryption", Visible: true},
-		{ID: "Data Transfer Progress", Visible: false},
-		{ID: "KMS Key ID", Visible: false},
-		{ID: "Owner ID", Visible: true},
+		{ID: "Snapshot ID", Display: true, Sort: sortID},
+		{ID: "Volume Size", Display: true},
+		{ID: "Volume Size Raw", Hidden: true, Sort: sortSize, SortDirection: "desc"}, // This is used for sorting, as Size is a combination of numbers and letters
+		{ID: "Description", Display: showDesc},
+		{ID: "Tier", Display: true},
+		{ID: "State", Display: true},
+		{ID: "Started", Display: true, DefaultSort: true, SortDirection: "desc"},
+		{ID: "Progress", Display: true, SortDirection: "desc"},
+		{ID: "Encryption", Display: true},
+		{ID: "Data Transfer Progress", Display: false, SortDirection: "desc"},
+		{ID: "KMS Key ID", Display: false},
+		{ID: "Owner ID", Display: true},
 	}
 }
 

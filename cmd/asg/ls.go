@@ -47,23 +47,23 @@ func init() {
 
 func asgFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Name", Visible: true, Sort: sortName},
-		{ID: "Instances", Visible: true, Sort: sortInstances},
-		{ID: "Desired", Visible: true, Sort: sortDesiredCapacity},
-		{ID: "Min", Visible: true, Sort: sortMinCapacity},
-		{ID: "Max", Visible: true, Sort: sortMaxCapacity},
-		{ID: "ARN", Visible: showARNs, Sort: false},
+		{ID: "Name", Display: true, DefaultSort: true},
+		{ID: "Instances", Display: true, Sort: sortInstances},
+		{ID: "Desired", Display: true, Sort: sortDesiredCapacity},
+		{ID: "Min", Display: true, Sort: sortMinCapacity, SortDirection: "desc"},
+		{ID: "Max", Display: true, Sort: sortMaxCapacity, SortDirection: "desc"},
+		{ID: "ARN", Display: showARNs},
 	}
 }
 
 func asgInstanceFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Name", Visible: true, Sort: sortName, DefaultSort: true},
-		{ID: "State", Visible: true, Sort: false},
-		{ID: "Instance Type", Visible: true, Sort: false},
-		{ID: "Launch Template/Configuration", Visible: true, Sort: false},
-		{ID: "Availability Zone", Visible: true, Sort: false},
-		{ID: "Health", Visible: true, Sort: false},
+		{ID: "Name", Display: true, Sort: sortName, DefaultSort: true},
+		{ID: "State", Display: true},
+		{ID: "Instance Type", Display: true},
+		{ID: "Launch Template/Configuration", Display: true},
+		{ID: "Availability Zone", Display: true},
+		{ID: "Health", Display: true},
 	}
 }
 

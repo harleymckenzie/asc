@@ -37,14 +37,14 @@ func init() {
 // Column functions
 func rdsFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Cluster Identifier", Visible: true, Sort: sortCluster, Merge: true},
-		{ID: "Identifier", Visible: true, Sort: sortName},
-		{ID: "Status", Visible: true, Sort: sortStatus},
-		{ID: "Role", Visible: true, Sort: sortRole},
-		{ID: "Engine", Visible: true, Sort: sortEngine},
-		{ID: "Engine Version", Visible: showEngineVersion, Sort: false},
-		{ID: "Size", Visible: true, Sort: false},
-		{ID: "Endpoint", Visible: showEndpoint, Sort: false},
+		{ID: "Cluster Identifier", Display: true, Sort: sortCluster, Merge: true},
+		{ID: "Identifier", Display: true, Sort: sortName},
+		{ID: "Status", Display: true, Sort: sortStatus},
+		{ID: "Role", Display: true, Sort: sortRole},
+		{ID: "Engine", Display: true, Sort: sortEngine},
+		{ID: "Engine Version", Display: showEngineVersion, Sort: false, SortDirection: "desc"},
+		{ID: "Size", Display: true, Sort: false},
+		{ID: "Endpoint", Display: showEndpoint, Sort: false},
 	}
 }
 

@@ -31,27 +31,27 @@ func init() {
 // ec2SecurityGroupListFields returns the fields for the security group list table.
 func ec2SecurityGroupListFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Group Name", Visible: true, Sort: sortName, DefaultSort: true},
-		{ID: "Group ID", Visible: true, Sort: sortID},
-		{ID: "Description", Visible: showDesc},
-		{ID: "VPC ID", Visible: true, Sort: sortVPCID},
-		{ID: "Owner ID", Visible: showOwnerID, Sort: sortOwnerID},
-		{ID: "Ingress Count", Visible: true},
-		{ID: "Egress Count", Visible: true},
-		{ID: "Tag Count", Visible: false},
+		{ID: "Group Name", Display: true, Sort: sortName, DefaultSort: true},
+		{ID: "Group ID", Display: true, Sort: sortID},
+		{ID: "Description", Display: showDesc},
+		{ID: "VPC ID", Display: true, Sort: sortVPCID},
+		{ID: "Owner ID", Display: showOwnerID, Sort: sortOwnerID},
+		{ID: "Ingress Count", Display: true, SortDirection: "desc"},
+		{ID: "Egress Count", Display: true, SortDirection: "desc"},
+		{ID: "Tag Count", Display: false},
 	}
 }
 
 func ec2SecurityGroupRulesFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Rule ID", Visible: true},
-		{ID: "IP Version", Visible: true},
-		{ID: "Type", Visible: true},
-		{ID: "Protocol", Visible: true},
-		{ID: "Port Range", Visible: true},
-		{ID: "Source", Visible: true},      // Inbound rules only
-		{ID: "Destination", Visible: true}, // Outbound rules only
-		{ID: "Description", Visible: true},
+		{ID: "Rule ID", Display: true},
+		{ID: "IP Version", Display: true},
+		{ID: "Type", Display: true},
+		{ID: "Protocol", Display: true},
+		{ID: "Port Range", Display: true},
+		{ID: "Source", Display: true},      // Inbound rules only
+		{ID: "Destination", Display: true}, // Outbound rules only
+		{ID: "Description", Display: true},
 	}
 }
 

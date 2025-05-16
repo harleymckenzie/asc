@@ -1,3 +1,6 @@
+// Package tableformat: table definitions and methods.
+// This file contains the definitions and methods for the table types.
+
 package tableformat
 
 import (
@@ -49,24 +52,27 @@ type DetailTable struct {
 
 // Field is a struct that defines a field in a table.
 type Field struct {
-
-	// ID is the unique identifier for the field/column
-	ID string
-
-	// Visible determines if the field should be shown in the table
-	Visible bool
-
-	// Sort determines if the field can be used for sorting
-	Sort bool
-
 	// DefaultSort marks this field as the default sort column
 	DefaultSort bool
+
+	// Display determines if the field should be shown in the rendered table
+	Display bool
 
 	// Header marks this field as a header row (for grouping or sectioning)
 	Header bool
 
+	// ID is the unique identifier for the field/column
+	ID string
+
+	// Hidden determines if attributes should be retrieved but not displayed in the rendered table
+	// This is used for fields that should support sorting without being displayed
+	Hidden bool
+
 	// Merge determines if adjacent cells with the same value should be merged
 	Merge bool
+
+	// Sort determines if the field can be used for sorting
+	Sort bool
 
 	// SortDirection specifies the default sort direction ("asc" or "desc")
 	SortDirection string
@@ -76,7 +82,7 @@ type Field struct {
 func (lt *ListTable) WriteHeaders(t table.Writer) {
 	headers := table.Row{}
 	for _, field := range lt.Fields {
-		if field.Visible {
+		if field.Display || field.Hidden {
 			headers = append(headers, field.ID)
 		}
 	}
@@ -88,7 +94,7 @@ func (lt *ListTable) WriteRows(t table.Writer) {
 	for _, instance := range lt.Instances {
 		row := table.Row{}
 		for _, field := range lt.Fields {
-			if field.Visible {
+			if field.Display || field.Hidden {
 				val, err := lt.GetAttribute(field.ID, instance)
 				if err != nil {
 					val = fmt.Sprintf("[error: %v]", err)
@@ -106,6 +112,10 @@ func (lt *ListTable) ColumnConfigs() []table.ColumnConfig {
 	for _, field := range lt.Fields {
 		if field.Merge {
 			columnConfig := table.ColumnConfig{Name: field.ID, AutoMerge: true}
+			columnConfigs = append(columnConfigs, columnConfig)
+		}
+		if field.Hidden {
+			columnConfig := table.ColumnConfig{Name: field.ID, Hidden: true}
 			columnConfigs = append(columnConfigs, columnConfig)
 		}
 	}
@@ -225,7 +235,7 @@ func processDetailTableFields(fields []Field) ([]string, string, []string) {
 	sortBy := ""
 	headerFields := []string{}
 	for _, field := range fields {
-		if field.Visible {
+		if field.Display {
 			fieldIDs = append(fieldIDs, field.ID)
 		}
 		if field.Sort {
@@ -256,8 +266,8 @@ func sortDirection(direction string, reverseSort bool) table.SortMode {
 		}
 	}
 
-	if direction == "asc" {
-		return table.AscNumericAlpha
+	if direction == "desc" {
+		return table.DscNumericAlpha
 	}
-	return table.DscNumericAlpha
+	return table.AscNumericAlpha
 }

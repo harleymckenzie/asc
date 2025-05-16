@@ -45,16 +45,16 @@ func init() {
 // Column functions
 func elbFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Name", Visible: true},
-		{ID: "DNS Name", Visible: showDNSName, Sort: sortDNSName},
-		{ID: "Scheme", Visible: showScheme, Sort: sortScheme},
-		{ID: "State", Visible: true},
-		{ID: "Type", Visible: true, Sort: sortType},
-		{ID: "IP Type", Visible: showIPAddressType},
-		{ID: "VPC ID", Visible: true, Sort: sortVPCID},
-		{ID: "Created Time", Visible: true, Sort: sortCreatedTime},
-		{ID: "ARN", Visible: showARNs, Sort: false},
-		{ID: "Availability Zones", Visible: showAZs},
+		{ID: "Name", Display: true},
+		{ID: "DNS Name", Display: showDNSName, Sort: sortDNSName},
+		{ID: "Scheme", Display: showScheme, Sort: sortScheme},
+		{ID: "State", Display: true},
+		{ID: "Type", Display: true, Sort: sortType},
+		{ID: "IP Type", Display: showIPAddressType},
+		{ID: "VPC ID", Display: true, Sort: sortVPCID},
+		{ID: "Created Time", Display: true, Sort: sortCreatedTime, SortDirection: "desc"},
+		{ID: "ARN", Display: showARNs, Sort: false},
+		{ID: "Availability Zones", Display: showAZs},
 	}
 }
 

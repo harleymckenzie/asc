@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	"github.com/harleymckenzie/asc/cmd/ec2/ami"
+	"github.com/harleymckenzie/asc/cmd/ec2/security_group"
 	"github.com/harleymckenzie/asc/cmd/ec2/snapshot"
 	"github.com/harleymckenzie/asc/cmd/ec2/volume"
-	"github.com/harleymckenzie/asc/cmd/ec2/security_group"
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
@@ -27,7 +27,6 @@ var (
 	showLaunchTime bool
 	showPrivateIP  bool
 
-	sortName       bool
 	sortID         bool
 	sortType       bool
 	sortLaunchTime bool
@@ -65,14 +64,14 @@ func init() {
 // Column functions
 func ec2ListFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Name", Visible: true, Sort: sortName, Merge: false, DefaultSort: true},
-		{ID: "Instance ID", Visible: true, Sort: sortID},
-		{ID: "State", Visible: true, Sort: false},
-		{ID: "Instance Type", Visible: true, Sort: sortType},
-		{ID: "Public IP", Visible: true, Sort: false},
-		{ID: "AMI ID", Visible: showAMI, Sort: false},
-		{ID: "Launch Time", Visible: showLaunchTime, Sort: sortLaunchTime},
-		{ID: "Private IP", Visible: showPrivateIP, Sort: false},
+		{ID: "Name", Display: true, Merge: false, DefaultSort: true},
+		{ID: "Instance ID", Display: true, Sort: sortID},
+		{ID: "State", Display: true, Sort: false},
+		{ID: "Instance Type", Display: true, Sort: sortType},
+		{ID: "Public IP", Display: true, Sort: false},
+		{ID: "AMI ID", Display: showAMI, Sort: false},
+		{ID: "Launch Time", Display: showLaunchTime, Sort: sortLaunchTime, SortDirection: "desc"},
+		{ID: "Private IP", Display: showPrivateIP, Sort: false},
 	}
 }
 
@@ -82,9 +81,11 @@ var lsCmd = &cobra.Command{
 	Short:   "List EC2 instances, AMIs, snapshots, and volumes",
 	Aliases: []string{"list"},
 	GroupID: "actions",
-	Example: "asc ec2 ls -A           # List all EC2 instances with the AMI ID\n" +
-		"asc ec2 ls -Lt          # List all EC2 instances, displaying and sorting by launch time\n" +
-		"asc ec2 ls -l           # List all EC2 instances in list format",
+	Example: "  asc ec2 ls                   # List all EC2 instances\n" +
+		"  asc ec2 ls amis              # List all AMIs\n" +
+		"  asc ec2 ls security-groups   # List all security groups\n" +
+		"  asc ec2 ls snapshots         # List all snapshots\n" +
+		"  asc ec2 ls volumes           # List all volumes",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.DefaultErrorHandler(ListEC2Instances(cmd, args))
 	},
@@ -143,15 +144,13 @@ func newLsFlags(cobraCmd *cobra.Command) {
 		BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
 
 	// Add flags - Sorting
-	cobraCmd.Flags().
-		BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending EC2 instance name.")
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
 	cobraCmd.Flags().
 		BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
 	cobraCmd.Flags().
 		BoolVarP(&sortLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
-	cobraCmd.MarkFlagsMutuallyExclusive("sort-name", "sort-id", "sort-type", "sort-launch-time")
+	cobraCmd.MarkFlagsMutuallyExclusive("sort-id", "sort-type", "sort-launch-time")
 }
 
 // Command functions

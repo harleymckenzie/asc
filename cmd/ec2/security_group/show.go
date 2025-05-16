@@ -15,14 +15,14 @@ import (
 // ec2SecurityGroupShowFields returns the fields for the security group detail table.
 func ec2SecurityGroupShowFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Group Name", Visible: true},
-		{ID: "Group ID", Visible: true},
-		{ID: "Description", Visible: true},
-		{ID: "VPC ID", Visible: true},
-		{ID: "Owner ID", Visible: true},
-		{ID: "Ingress Count", Visible: false},
-		{ID: "Egress Count", Visible: false},
-		{ID: "Tag Count", Visible: false},
+		{ID: "Group Name", Display: true},
+		{ID: "Group ID", Display: true},
+		{ID: "Description", Display: true},
+		{ID: "VPC ID", Display: true},
+		{ID: "Owner ID", Display: true},
+		{ID: "Ingress Count", Display: false},
+		{ID: "Egress Count", Display: false},
+		{ID: "Tag Count", Display: false},
 	}
 }
 

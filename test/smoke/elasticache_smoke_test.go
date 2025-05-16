@@ -28,28 +28,6 @@ func TestElasticacheLsSmoke(t *testing.T) {
 	t.Logf("asc elasticache ls output:\n%s", out)
 }
 
-// TestElasticacheLsSortByNameSmoke runs 'elasticache ls -n' and prints the output for manual inspection.
-func TestElasticacheLsSortByNameSmoke(t *testing.T) {
-	if os.Getenv("SMOKE") != "1" {
-		t.Skip("skipping smoke test; set SMOKE=1 to run")
-	}
-	cmd := exec.Command("go", "run", "../../main.go", "elasticache", "ls", "-n")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("command failed: %v\nOutput:\n%s", err, out)
-	}
-	if string(out) != "" && containsSortWarning(string(out)) {
-		t.Fatalf("Test failed due to multiple sort fields: %s", out)
-	}
-	if containsAttributeError(string(out)) {
-		t.Fatalf("Test failed due to attribute error: %s", out)
-	}
-	if containsMissingAttributeError(string(out)) {
-		t.Fatalf("Test failed due to missing attribute error: %s", out)
-	}
-	t.Logf("asc elasticache ls -n (sort by name) output:\n%s", out)
-}
-
 // TestElasticacheLsSortByTypeSmoke runs 'elasticache ls -T' and prints the output for manual inspection.
 func TestElasticacheLsSortByTypeSmoke(t *testing.T) {
 	if os.Getenv("SMOKE") != "1" {

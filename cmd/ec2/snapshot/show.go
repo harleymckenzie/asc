@@ -16,29 +16,29 @@ import (
 func ec2SnapshotShowFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Details", Header: true},
-		{ID: "Snapshot ID", Visible: true, Sort: sortID},
-		{ID: "Owner ID", Visible: true},
-		{ID: "Owner Alias", Visible: true},
-		{ID: "Description", Visible: showDesc},
-		{ID: "Tier", Visible: true},
-		{ID: "State", Visible: true},
-		{ID: "State Message", Visible: true},
-		{ID: "Encryption", Visible: true},
-		{ID: "Started", Visible: true, DefaultSort: true, SortDirection: "desc"},
-		{ID: "Progress", Visible: true},
-		{ID: "Owner ID", Visible: true},
+		{ID: "Snapshot ID", Display: true, Sort: sortID},
+		{ID: "Owner ID", Display: true},
+		{ID: "Owner Alias", Display: true},
+		{ID: "Description", Display: showDesc},
+		{ID: "Tier", Display: true},
+		{ID: "State", Display: true},
+		{ID: "State Message", Display: true},
+		{ID: "Encryption", Display: true},
+		{ID: "Started", Display: true, DefaultSort: true, SortDirection: "desc"},
+		{ID: "Progress", Display: true},
+		{ID: "Owner ID", Display: true},
 		
 		{ID: "Source Volume", Header: true},
-		{ID: "Volume ID", Visible: true},
-		{ID: "Volume Size", Visible: true},
+		{ID: "Volume ID", Display: true},
+		{ID: "Volume Size", Display: true},
 		
 		{ID: "Encryption", Header: true},
-		{ID: "Encryption", Visible: true},
-		{ID: "KMS Key ID", Visible: true},
+		{ID: "Encryption", Display: true},
+		{ID: "KMS Key ID", Display: true},
 
 		{ID: "Storage Tier", Header: true},
-		{ID: "Storage Tier", Visible: true},
-		{ID: "Restore Expiry Time", Visible: true},
+		{ID: "Storage Tier", Display: true},
+		{ID: "Restore Expiry Time", Display: true},
 	}
 }
 

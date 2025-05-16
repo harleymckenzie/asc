@@ -18,6 +18,7 @@ var (
 	list           bool
 	sortType       bool
 	sortState      bool
+	sortSize       bool
 	sortAttachTime bool
 	sortCreatedAt  bool
 	showKMS        bool
@@ -34,20 +35,21 @@ func init() {
 // Define columns for volumes
 func ec2VolumeListFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "Volume ID", Visible: true, DefaultSort: true},
-		{ID: "Type", Visible: true, Sort: sortType},
-		{ID: "Size", Visible: true},
-		{ID: "IOPS", Visible: true},
-		{ID: "Throughput", Visible: true},
-		{ID: "Snapshot ID", Visible: true},
-		{ID: "State", Visible: true},
-		{ID: "Created", Visible: showCreatedAt, Sort: sortCreatedAt, SortDirection: "desc"},
-		{ID: "Attach Time", Visible: showAttachTime, Sort: sortAttachTime},
-		{ID: "Availability Zone", Visible: false},
-		{ID: "Encryption", Visible: true},
-		{ID: "Fast Snapshot Restored", Visible: true},
-		{ID: "Multi-Attach Enabled", Visible: false},
-		{ID: "KMS Key ID", Visible: showKMS},
+		{ID: "Volume ID", Display: true, DefaultSort: true},
+		{ID: "Type", Display: true, Sort: sortType},
+		{ID: "Size", Display: true},
+		{ID: "Size Raw", Hidden: true, Sort: sortSize, SortDirection: "desc"}, // This is used for sorting, as Size is a combination of numbers and letters
+		{ID: "IOPS", Display: true},
+		{ID: "Throughput", Display: true},
+		{ID: "Snapshot ID", Display: true},
+		{ID: "State", Display: true},
+		{ID: "Created", Display: showCreatedAt, Sort: sortCreatedAt, SortDirection: "desc"},
+		{ID: "Attach Time", Display: showAttachTime, Sort: sortAttachTime, SortDirection: "desc"},
+		{ID: "Availability Zone", Display: false},
+		{ID: "Encryption", Display: true},
+		{ID: "Fast Snapshot Restored", Display: true},
+		{ID: "Multi-Attach Enabled", Display: false},
+		{ID: "KMS Key ID", Display: showKMS},
 	}
 }
 
@@ -71,6 +73,8 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 		BoolVarP(&sortState, "sort-state", "S", false, "Sort by descending volume state.")
 	cobraCmd.Flags().
 		BoolVarP(&sortAttachTime, "sort-attach-time", "a", false, "Sort by descending attach time.")
+	cobraCmd.Flags().
+		BoolVarP(&sortSize, "sort-size", "s", false, "Sort by descending size.")
 	cobraCmd.Flags().
 		BoolVarP(&sortCreatedAt, "sort-created-at", "t", false, "Sort by descending creation time.")
 	cobraCmd.Flags().

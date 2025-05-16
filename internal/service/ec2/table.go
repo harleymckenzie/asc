@@ -665,6 +665,11 @@ func snapshotAttributes() map[string]SnapshotAttribute {
 				return fmt.Sprintf("%s GiB", size)
 			},
 		},
+		"Volume Size Raw": {
+			GetValue: func(s *types.Snapshot) string {
+				return format.Int32ToStringOrEmpty(s.VolumeSize)
+			},
+		},
 	}
 }
 

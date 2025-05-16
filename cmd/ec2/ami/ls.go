@@ -36,17 +36,17 @@ func init() {
 // ec2AMIListFields returns the fields for the AMI list table.
 func ec2AMIListFields() []tableformat.Field {
 	return []tableformat.Field{
-		{ID: "AMI Name", Visible: true, Sort: sortName},
-		{ID: "AMI ID", Visible: true, Sort: sortID, SortDirection: "desc"},
-		{ID: "Source", Visible: false},
-		{ID: "Owner", Visible: true},
-		{ID: "Visibility", Visible: false},
-		{ID: "Status", Visible: true, Sort: sortState},
-		{ID: "Creation Date", Visible: true, DefaultSort: true, SortDirection: "desc"},
-		{ID: "Platform", Visible: false},
-		{ID: "Root Device Type", Visible: false},
-		{ID: "Block Devices", Visible: false},
-		{ID: "Virtualization", Visible: false},
+		{ID: "AMI Name", Display: true, Sort: sortName},
+		{ID: "AMI ID", Display: true, Sort: sortID},
+		{ID: "Source", Display: false},
+		{ID: "Owner", Display: true},
+		{ID: "Visibility", Display: false},
+		{ID: "Status", Display: true, Sort: sortState},
+		{ID: "Creation Date", Display: true, DefaultSort: true, SortDirection: "desc"},
+		{ID: "Platform", Display: false},
+		{ID: "Root Device Type", Display: false},
+		{ID: "Block Devices", Display: false},
+		{ID: "Virtualization", Display: false},
 	}
 }
 
