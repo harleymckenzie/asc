@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/cmd/asg/schedule"
 	"github.com/harleymckenzie/asc/internal/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
@@ -32,13 +31,6 @@ var (
 
 func init() {
 	newLsFlags(lsCmd)
-
-	// Add the lsSchedulesCmd to the lsCmd
-	lsCmd.AddCommand(scheduleLsCmd)
-	lsCmd.AddGroup(cmdutil.SubcommandGroups()...)
-
-	// Add the lsSchedulesCmd to the lsCmd
-	schedule.NewLsFlags(scheduleLsCmd)
 }
 
 //
@@ -77,16 +69,6 @@ var lsCmd = &cobra.Command{
 	GroupID: "actions",
 	RunE: func(cobraCmd *cobra.Command, args []string) error {
 		return cmdutil.DefaultErrorHandler(ListAutoScalingGroups(cobraCmd, args))
-	},
-}
-
-// scheduleLsCmd is the command for listing schedules for an Auto Scaling Group
-var scheduleLsCmd = &cobra.Command{
-	Use:     "schedules",
-	Short:   "List schedules for an Auto Scaling Group",
-	GroupID: "subcommands",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		schedule.ListSchedules(cobraCmd, args)
 	},
 }
 

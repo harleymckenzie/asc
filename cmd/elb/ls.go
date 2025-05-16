@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	tg "github.com/harleymckenzie/asc/cmd/elb/target_group"
 	"github.com/harleymckenzie/asc/internal/service/elb"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/elb/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
@@ -37,9 +36,6 @@ var (
 // Init function
 func init() {
 	addLsFlags(lsCmd)
-
-	lsCmd.AddCommand(lsTargetGroupCmd)
-	tg.NewLsFlags(lsTargetGroupCmd)
 }
 
 // Column functions
@@ -69,15 +65,6 @@ var lsCmd = &cobra.Command{
 	GroupID: "actions",
 	RunE: func(cobraCmd *cobra.Command, args []string) error {
 		return cmdutil.DefaultErrorHandler(ListELBs(cobraCmd, args))
-	},
-}
-
-// Subcommand variable
-var lsTargetGroupCmd = &cobra.Command{
-	Use:   "target-groups",
-	Short: "List target groups",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		tg.ListTargetGroups(cobraCmd, args)
 	},
 }
 
@@ -144,8 +131,6 @@ func ListELBs(cobraCmd *cobra.Command, args []string) error {
 			return elb.GetAttributeValue(fieldID, instance)
 		},
 	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
+
 	return nil
 }

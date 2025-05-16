@@ -4,8 +4,6 @@
 package asg
 
 import (
-	schedule "github.com/harleymckenzie/asc/cmd/asg/schedule"
-	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -14,11 +12,7 @@ import (
 // (No variables for this command)
 //
 // Init function
-func init() {
-	rmCmd.AddCommand(scheduleRmCmd)
-	rmCmd.AddGroup(cmdutil.SubcommandGroups()...)
-	schedule.NewRmFlags(scheduleRmCmd)
-}
+func init() {}
 
 // Command variable
 var rmCmd = &cobra.Command{
@@ -28,12 +22,3 @@ var rmCmd = &cobra.Command{
 	Run:     func(cobraCmd *cobra.Command, args []string) {},
 }
 
-// Subcommand variable
-var scheduleRmCmd = &cobra.Command{
-	Use:     "schedule",
-	Short:   "Remove scheduled actions from an Auto Scaling Group",
-	GroupID: "subcommands",
-	Run: func(cobraCmd *cobra.Command, args []string) {
-		schedule.RemoveSchedule(cobraCmd, args)
-	},
-}
