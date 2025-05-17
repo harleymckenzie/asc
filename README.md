@@ -95,6 +95,10 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | RDS            | modify                    | ✗      | Modify RDS instances                                                        |
 | RDS            | rm                        | ✗      | Terminate RDS instances                                                     |
 | RDS            | show / describe           | ✗      | Show RDS instance details                                                   |
+| Route53        | ls                        | ✗      | List Route53 hosted zones and records                                       |
+| Route53        | modify                    | ✗      | Modify Route53 hosted zones and records                                     |
+| Route53        | rm                        | ✗      | Terminate Route53 hosted zones and records                                  |
+| Route53        | show / describe           | ✗      | Show Route53 hosted zone and record details                                 |
 | S3             | cp                        | ✗      | Copy S3 objects                                                             |
 | S3             | ls                        | ✗      | List S3 buckets and objects                                                 |
 | S3             | mv                        | ✗      | Move S3 objects                                                             |
@@ -117,6 +121,20 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | SSM            | session stop              | ✗      | Stop SSM sessions                                                           |
 | SSM            | session rm                | ✗      | Delete SSM sessions                                                         |
 | SSM            | session show              | ✗      | Show SSM session details                                                    |
+| VPC            | ls                        | ✗      | List VPCs                                                                   |
+| VPC            | modify                    | ✗      | Modify VPCs                                                                 |
+| VPC            | rm                        | ✗      | Terminate VPCs                                                              |
+| VPC            | show / describe           | ✗      | Show VPC details                                                            |
+| VPC            | subnet ls                 | ✗      | List VPC subnets                                                            |
+| VPC            | subnet add                | ✗      | Add VPC subnet                                                              |
+| VPC            | subnet rm                 | ✗      | Remove VPC subnet                                                           |
+| VPC            | subnet show               | ✗      | Show VPC subnet details                                                     |
+| VPC            | route-table ls            | ✗      | List VPC route tables                                                       |
+| VPC            | route-table add           | ✗      | Add VPC route table                                                         |
+| VPC            | route-table rm            | ✗      | Remove VPC route table                                                      |
+| VPC            | route-table show          | ✗      | Show VPC route table details                                                |
+| VPC            | route-table rule add      | ✗      | Add VPC route table rule                                                    |
+| VPC            | route-table rule rm       | ✗      | Remove VPC route table rule                                                 |
 
 ### Service Implementation: Other Features
 | Description                                                 | Status | Notes / Features                                 |
