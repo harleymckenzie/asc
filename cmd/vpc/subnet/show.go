@@ -61,7 +61,7 @@ func ShowSubnet(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	subnets, err := svc.GetSubnets(ctx, &ascTypes.GetSubnetsInput{SubnetIDs: []string{id}})
+	subnets, err := svc.GetSubnets(ctx, &ascTypes.GetSubnetsInput{SubnetIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get subnets: %w", err)
 	}

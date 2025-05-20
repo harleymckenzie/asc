@@ -37,13 +37,7 @@ func cloudformationListFields() []tableformat.Field {
 		{ID: "Stack Name", Display: true, Sort: sortName},
 		{ID: "Status", Display: true, Sort: sortStatus},
 		{ID: "Description", Display: showDescription},
-		{
-			ID:            "Last Updated",
-			Display:       true,
-			Sort:          sortLastUpdate,
-			DefaultSort:   true,
-			SortDirection: "desc",
-		},
+		{ID: "Last Updated", Display: true, Sort: sortLastUpdate, DefaultSort: true, SortDirection: "desc"},
 	}
 }
 
@@ -59,20 +53,13 @@ var lsCmd = &cobra.Command{
 
 // Flag function
 func addLsFlags(lsCmd *cobra.Command) {
-	lsCmd.Flags().
-		BoolVarP(&list, "list", "l", false, "Outputs CloudFormation stacks in list format.")
-	lsCmd.Flags().
-		BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
-	lsCmd.Flags().
-		BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending CloudFormation stack name.")
-	lsCmd.Flags().
-		BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending CloudFormation stack status.")
-	lsCmd.Flags().
-		BoolVarP(&sortLastUpdate, "sort-last-update", "u", false, "Sort by descending CloudFormation stack last updated date.")
-	lsCmd.Flags().
-		BoolVarP(&showDescription, "show-description", "d", false, "Show the description of the CloudFormation stack.")
-	lsCmd.Flags().
-		BoolVarP(&showLastUpdated, "show-last-updated", "U", false, "Show the last updated date of the CloudFormation stack.")
+	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs CloudFormation stacks in list format.")
+	lsCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
+	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending CloudFormation stack name.")
+	lsCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending CloudFormation stack status.")
+	lsCmd.Flags().BoolVarP(&sortLastUpdate, "sort-last-update", "u", false, "Sort by descending CloudFormation stack last updated date.")
+	lsCmd.Flags().BoolVarP(&showDescription, "show-description", "d", false, "Show the description of the CloudFormation stack.")
+	lsCmd.Flags().BoolVarP(&showLastUpdated, "show-last-updated", "U", false, "Show the last updated date of the CloudFormation stack.")
 }
 
 // Command functions

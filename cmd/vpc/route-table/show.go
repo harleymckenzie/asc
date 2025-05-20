@@ -7,7 +7,6 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/format"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/spf13/cobra"
 )
@@ -51,12 +50,12 @@ func ShowRouteTable(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{RouteTableIDs: []string{id}})
+	rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{RouteTableIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get route tables: %w", err)
 	}
 	if len(rts) == 0 {
-		return fmt.Errorf("Route Table not found: %s", id)
+		return fmt.Errorf("route table not found: %s", id)
 	}
 	rt := rts[0]
 
@@ -70,24 +69,6 @@ func ShowRouteTable(cmd *cobra.Command, id string) error {
 		Instance: rt,
 		Fields:   fields,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
-			// Placeholder logic for extra fields
-			switch fieldID {
-			case "Main":
-				for _, assoc := range rt.Associations {
-					if assoc.Main != nil && *assoc.Main {
-						return "Yes", nil
-					}
-				}
-				return "No", nil
-			case "Owner ID":
-				return format.StringOrEmpty(rt.OwnerId), nil
-			case "Explicit subnet associations":
-				return "-", nil // TODO: List explicit subnet associations
-			case "Edge associations":
-				return "-", nil // TODO: List edge associations
-			case "Routes":
-				return "-", nil // TODO: Format route list
-			}
 			return vpc.GetRouteTableAttributeValue(fieldID, instance)
 		},
 	}, opts)

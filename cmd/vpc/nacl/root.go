@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CmdAliases = []string{"nacls", "network-acl", "network-acls"}
+var CmdAliases = []string{"nacls", "nacl", "network-acl", "network-acls"}
 
 // NewNACLRootCmd returns the root command for NACL operations.
 func NewNACLRootCmd() *cobra.Command {

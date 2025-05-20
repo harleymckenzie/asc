@@ -25,10 +25,9 @@ func init() {
 func vpcIGWShowFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Internet Gateway ID", Display: true},
+		{ID: "State", Display: true},
 		{ID: "VPC ID", Display: true},
 		{ID: "Owner", Display: true},
-		{ID: "State", Display: true},
-		{ID: "VPC Attachments", Display: true},
 	}
 }
 
@@ -56,12 +55,12 @@ func ShowVPCIGW(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	igws, err := svc.GetIGWs(ctx, &ascTypes.GetIGWsInput{IGWIDs: []string{id}})
+	igws, err := svc.GetIGWs(ctx, &ascTypes.GetIGWsInput{IGWIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get internet gateways: %w", err)
 	}
 	if len(igws) == 0 {
-		return fmt.Errorf("Internet Gateway not found: %s", id)
+		return fmt.Errorf("internet gateway not found: %s", id)
 	}
 	igw := igws[0]
 
@@ -75,18 +74,6 @@ func ShowVPCIGW(cmd *cobra.Command, id string) error {
 		Instance: igw,
 		Fields:   fields,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
-			// Placeholder logic for extra fields
-			switch fieldID {
-			case "VPC ID":
-				return "-", nil // TODO: Show attached VPC ID
-			case "Owner":
-				return "-", nil // TODO: Lookup Owner
-			case "State":
-				if len(igw.Attachments) > 0 {
-					return string(igw.Attachments[0].State), nil
-				}
-				return "-", nil
-			}
 			return vpc.GetIGWAttributeValue(fieldID, instance)
 		},
 	}, opts)

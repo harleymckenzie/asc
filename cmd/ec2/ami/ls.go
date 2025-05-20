@@ -65,13 +65,10 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs AMIs in list format.")
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending image ID.")
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending image name.")
-	cobraCmd.Flags().
-		BoolVarP(&sortState, "sort-state", "s", false, "Sort by descending image state.")
-	cobraCmd.Flags().
-		BoolVarP(&showDesc, "show-description", "d", false, "Show the AMI description column.")
+	cobraCmd.Flags().BoolVarP(&sortState, "sort-state", "s", false, "Sort by descending image state.")
+	cobraCmd.Flags().BoolVarP(&showDesc, "show-description", "d", false, "Show the AMI description column.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
-	cobraCmd.Flags().
-		StringVar(&scope, "scope", "self", "Scope of AMIs to list: self (your private AMIs), private (all private AMIs you can access), public, amazon, all, or AWS account ID.")
+	cobraCmd.Flags().StringVar(&scope, "scope", "self", "Scope of AMIs to list: self (your private AMIs), private (all private AMIs you can access), public, amazon, all, or AWS account ID.")
 	cobraCmd.Flags().StringVar(&nameFilter, "name", "", "Substring to match in AMI name.")
 	cobraCmd.Flags().IntVar(&limit, "limit", 0, "Limit the number of AMIs displayed.")
 }

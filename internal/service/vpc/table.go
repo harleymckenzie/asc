@@ -12,6 +12,34 @@ type VPCAttribute struct {
 	GetValue func(*types.Vpc) string
 }
 
+type NetworkAclAttribute struct {
+	GetValue func(*types.NetworkAcl) string
+}
+
+type NACLRuleAttribute struct {
+	GetValue func(*types.NetworkAclEntry) string
+}
+
+type RouteTableAttribute struct {
+	GetValue func(*types.RouteTable) string
+}
+
+type SubnetAttribute struct {
+	GetValue func(*types.Subnet) string
+}
+
+type NatGatewayAttribute struct {
+	GetValue func(*types.NatGateway) string
+}
+
+type PrefixListAttribute struct {
+	GetValue func(*types.ManagedPrefixList) string
+}
+
+type IGWAttribute struct {
+	GetValue func(*types.InternetGateway) string
+}
+
 func GetVPCAttributeValue(fieldID string, instance any) (string, error) {
 	vpc, ok := instance.(types.Vpc)
 	if !ok {
@@ -36,7 +64,7 @@ func vpcAttributes() map[string]VPCAttribute {
 		},
 		"State": {
 			GetValue: func(vpc *types.Vpc) string {
-				return string(vpc.State)
+				return format.Status(string(vpc.State))
 			},
 		},
 		"IPv4 CIDR": {
@@ -103,26 +131,99 @@ func GetNetworkAclAttributeValue(fieldID string, instance any) (string, error) {
 	return attr.GetValue(&nacl), nil
 }
 
-type NetworkAclAttribute struct {
-	GetValue func(*types.NetworkAcl) string
-}
-
 func networkAclAttributes() map[string]NetworkAclAttribute {
 	return map[string]NetworkAclAttribute{
 		"Network ACL ID": {
 			GetValue: func(n *types.NetworkAcl) string { return format.StringOrEmpty(n.NetworkAclId) },
 		},
+		"Associated with": {
+			GetValue: func(n *types.NetworkAcl) string { return fmt.Sprintf("%d Subnets", len(n.Associations)) },
+		},
+		"Default": {
+			GetValue: func(n *types.NetworkAcl) string { return format.BoolToLabel(n.IsDefault, "Yes", "No") },
+		},
 		"VPC ID": {
 			GetValue: func(n *types.NetworkAcl) string { return format.StringOrEmpty(n.VpcId) },
 		},
-		"Is Default": {
-			GetValue: func(n *types.NetworkAcl) string { return format.BoolToLabel(n.IsDefault, "Yes", "No") },
+		"Inbound Rules": {
+			GetValue: func(n *types.NetworkAcl) string { return fmt.Sprintf("%d Inbound rules", countNACLRules(n, true)) },
 		},
-		"Entry Count": {
-			GetValue: func(n *types.NetworkAcl) string { return fmt.Sprintf("%d", len(n.Entries)) },
+		"Outbound Rules": {
+			GetValue: func(n *types.NetworkAcl) string { return fmt.Sprintf("%d Outbound rules", countNACLRules(n, false)) },
 		},
-		"Association Count": {
-			GetValue: func(n *types.NetworkAcl) string { return fmt.Sprintf("%d", len(n.Associations)) },
+		"Owner": {
+			GetValue: func(n *types.NetworkAcl) string { return format.StringOrEmpty(n.OwnerId) },
+		},
+	}
+}
+
+// GetNACLRuleAttributeValue returns the value for a field from a NetworkAclRule.
+func GetNACLRuleAttributeValue(fieldID string, instance any) (string, error) {
+	rule, ok := instance.(types.NetworkAclEntry)
+	if !ok {
+		return "", fmt.Errorf("instance is not a types.NetworkAclEntry")
+	}
+	attr, exists := naclRuleAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
+	}
+	return attr.GetValue(&rule), nil
+}
+
+func naclRuleAttributes() map[string]NACLRuleAttribute {
+	return map[string]NACLRuleAttribute{
+		"Rule number": {
+			GetValue: func(r *types.NetworkAclEntry) string {
+				ruleNumber := format.Int32ToStringOrDefault(r.RuleNumber, "-")
+				if ruleNumber == "32767" {
+					return "*"
+				}
+				return ruleNumber
+			},
+		},
+		"Type": {
+			GetValue: func(r *types.NetworkAclEntry) string {
+				if r.Protocol == nil {
+					return ""
+				}
+				if *r.Protocol == "-1" {
+					return "All traffic"
+				}
+				return strings.ToUpper(*r.Protocol)
+			},
+		},
+		"Protocol": {
+			GetValue: func(r *types.NetworkAclEntry) string {
+				if r.Protocol == nil {
+					return ""
+				}
+				if *r.Protocol == "-1" {
+					return "All"
+				}
+				return strings.ToUpper(*r.Protocol)
+			},
+		},
+		"Port range": {
+			GetValue: func(r *types.NetworkAclEntry) string {
+				if r.PortRange == nil {
+					return "All"
+				}
+				return fmt.Sprintf("%d-%d", r.PortRange.From, r.PortRange.To)
+			},
+		},
+		"Source": {
+			GetValue: func(r *types.NetworkAclEntry) string { return format.StringOrEmpty(r.CidrBlock) },
+		},
+		"Destination": {
+			GetValue: func(r *types.NetworkAclEntry) string { return format.StringOrEmpty(r.CidrBlock) },
+		},
+		"Allow/Deny": {
+			GetValue: func(r *types.NetworkAclEntry) string {
+				return format.Status(getNACLRuleAction(r))
+			},
 		},
 	}
 }
@@ -143,14 +244,18 @@ func GetNatGatewayAttributeValue(fieldID string, instance any) (string, error) {
 	return attr.GetValue(&nat), nil
 }
 
-type NatGatewayAttribute struct {
-	GetValue func(*types.NatGateway) string
-}
-
 func natGatewayAttributes() map[string]NatGatewayAttribute {
 	return map[string]NatGatewayAttribute{
 		"NAT Gateway ID": {
 			GetValue: func(n *types.NatGateway) string { return format.StringOrEmpty(n.NatGatewayId) },
+		},
+		"Connectivity": {
+			GetValue: func(n *types.NatGateway) string {
+				if n.ConnectivityType == "public" {
+					return "Public"
+				}
+				return "Private"
+			},
 		},
 		"VPC ID": {
 			GetValue: func(n *types.NatGateway) string { return format.StringOrEmpty(n.VpcId) },
@@ -159,21 +264,17 @@ func natGatewayAttributes() map[string]NatGatewayAttribute {
 			GetValue: func(n *types.NatGateway) string { return format.StringOrEmpty(n.SubnetId) },
 		},
 		"State": {
-			GetValue: func(n *types.NatGateway) string { return string(n.State) },
+			GetValue: func(n *types.NatGateway) string { return format.Status(string(n.State)) },
 		},
-		"Type": {
-			GetValue: func(n *types.NatGateway) string { return string(n.ConnectivityType) },
+		"Primary Public IP": {
+			GetValue: func(n *types.NatGateway) string { return getNatGatewayPrimaryPublicIP(n) },
 		},
-		"IP Addresses": {
+		"Primary Private IP": {
+			GetValue: func(n *types.NatGateway) string { return getNatGatewayPrimaryPrivateIP(n) },
+		},
+		"Created": {
 			GetValue: func(n *types.NatGateway) string {
-				ips := make([]string, 0, len(n.NatGatewayAddresses))
-				for _, addr := range n.NatGatewayAddresses {
-					ips = append(ips, format.StringOrEmpty(addr.PublicIp))
-				}
-				if len(ips) == 0 {
-					return ""
-				}
-				return strings.Join(ips, ", ")
+				return format.TimeToStringOrEmpty(n.CreateTime)
 			},
 		},
 	}
@@ -181,9 +282,9 @@ func natGatewayAttributes() map[string]NatGatewayAttribute {
 
 // GetPrefixListAttributeValue returns the value for a field from a PrefixList.
 func GetPrefixListAttributeValue(fieldID string, instance any) (string, error) {
-	pl, ok := instance.(types.PrefixList)
+	pl, ok := instance.(types.ManagedPrefixList)
 	if !ok {
-		return "", fmt.Errorf("instance is not a types.PrefixList")
+		return "", fmt.Errorf("instance is not a types.ManagedPrefixList")
 	}
 	attr, exists := prefixListAttributes()[fieldID]
 	if !exists {
@@ -195,24 +296,42 @@ func GetPrefixListAttributeValue(fieldID string, instance any) (string, error) {
 	return attr.GetValue(&pl), nil
 }
 
-type PrefixListAttribute struct {
-	GetValue func(*types.PrefixList) string
-}
-
 func prefixListAttributes() map[string]PrefixListAttribute {
 	return map[string]PrefixListAttribute{
 		"Prefix List ID": {
-			GetValue: func(p *types.PrefixList) string { return format.StringOrEmpty(p.PrefixListId) },
+			GetValue: func(p *types.ManagedPrefixList) string { return format.StringOrEmpty(p.PrefixListId) },
 		},
-		"Name": {
-			GetValue: func(p *types.PrefixList) string { return format.StringOrEmpty(p.PrefixListName) },
+		"Prefix List Name": {
+			GetValue: func(p *types.ManagedPrefixList) string { return format.StringOrEmpty(p.PrefixListName) },
 		},
-		"CIDRs": {
-			GetValue: func(p *types.PrefixList) string {
-				if len(p.Cidrs) == 0 {
-					return ""
-				}
-				return strings.Join(p.Cidrs, ", ")
+		"Max Entries": {
+			GetValue: func(p *types.ManagedPrefixList) string {
+				return format.Int32ToStringOrDefault(p.MaxEntries, "-")
+			},
+		},
+		"Address Family": {
+			GetValue: func(p *types.ManagedPrefixList) string {
+				return format.StringOrEmpty(p.AddressFamily)
+			},
+		},
+		"State": {
+			GetValue: func(p *types.ManagedPrefixList) string {
+				return format.Status(string(p.State))
+			},
+		},
+		"Version": {
+			GetValue: func(p *types.ManagedPrefixList) string {
+				return format.Int64ToStringOrDefault(p.Version, "-")
+			},
+		},
+		"Prefix List ARN": {
+			GetValue: func(p *types.ManagedPrefixList) string {
+				return format.StringOrEmpty(p.PrefixListArn)
+			},
+		},
+		"Owner": {
+			GetValue: func(p *types.ManagedPrefixList) string {
+				return format.StringOrEmpty(p.OwnerId)
 			},
 		},
 	}
@@ -232,10 +351,6 @@ func GetRouteTableAttributeValue(fieldID string, instance any) (string, error) {
 		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
 	}
 	return attr.GetValue(&rt), nil
-}
-
-type RouteTableAttribute struct {
-	GetValue func(*types.RouteTable) string
 }
 
 func routeTableAttributes() map[string]RouteTableAttribute {
@@ -271,10 +386,6 @@ func GetSubnetAttributeValue(fieldID string, instance any) (string, error) {
 	return attr.GetValue(&sub), nil
 }
 
-type SubnetAttribute struct {
-	GetValue func(*types.Subnet) string
-}
-
 func subnetAttributes() map[string]SubnetAttribute {
 	return map[string]SubnetAttribute{
 		"Subnet ID": {
@@ -290,7 +401,7 @@ func subnetAttributes() map[string]SubnetAttribute {
 			GetValue: func(s *types.Subnet) string { return format.StringOrEmpty(s.AvailabilityZone) },
 		},
 		"State": {
-			GetValue: func(s *types.Subnet) string { return string(s.State) },
+			GetValue: func(s *types.Subnet) string { return format.Status(string(s.State)) },
 		},
 		"Available IPs": {
 			GetValue: func(s *types.Subnet) string { return fmt.Sprintf("%d", s.AvailableIpAddressCount) },
@@ -317,16 +428,12 @@ func GetIGWAttributeValue(fieldID string, instance any) (string, error) {
 	return attr.GetValue(&igw), nil
 }
 
-type IGWAttribute struct {
-	GetValue func(*types.InternetGateway) string
-}
-
 func igwAttributes() map[string]IGWAttribute {
 	return map[string]IGWAttribute{
 		"Internet Gateway ID": {
 			GetValue: func(i *types.InternetGateway) string { return format.StringOrEmpty(i.InternetGatewayId) },
 		},
-		"VPC Attachments": {
+		"VPC ID": {
 			GetValue: func(i *types.InternetGateway) string {
 				if len(i.Attachments) == 0 {
 					return ""
@@ -343,7 +450,15 @@ func igwAttributes() map[string]IGWAttribute {
 				if len(i.Attachments) == 0 {
 					return "-"
 				}
-				return string(i.Attachments[0].State)
+				if i.Attachments[0].State == "available" {
+					return format.Status("Attached")
+				}
+				return format.Status(string(i.Attachments[0].State))
+			},
+		},
+		"Owner": {
+			GetValue: func(i *types.InternetGateway) string {
+				return format.StringOrEmpty(i.OwnerId)
 			},
 		},
 	}
@@ -371,4 +486,41 @@ func FindMainNetworkACL(vpcID string, acls []types.NetworkAcl) string {
 		}
 	}
 	return "-"
+}
+
+// Helper: Determine whether an ACL entry is an inbound or outbound rule
+func isInboundRule(entry *types.NetworkAclEntry) bool {
+	return entry.Egress == nil || !*entry.Egress
+}
+
+// Helper: Count the number of inbound or outbound rules in an ACL
+func countNACLRules(acl *types.NetworkAcl, inbound bool) int {
+	count := 0
+	for _, entry := range acl.Entries {
+		if isInboundRule(&entry) == inbound {
+			count++
+		}
+	}
+	return count
+}
+
+func getNACLRuleAction(entry *types.NetworkAclEntry) string {
+	if entry.RuleAction == "allow" {
+		return "Allow"
+	}
+	return "Deny"
+}
+
+func getNatGatewayPrimaryPublicIP(nat *types.NatGateway) string {
+	if len(nat.NatGatewayAddresses) == 0 {
+		return ""
+	}
+	return format.StringOrEmpty(nat.NatGatewayAddresses[0].PublicIp)
+}
+
+func getNatGatewayPrimaryPrivateIP(nat *types.NatGateway) string {
+	if len(nat.NatGatewayAddresses) == 0 {
+		return ""
+	}
+	return format.StringOrEmpty(nat.NatGatewayAddresses[0].PrivateIp)
 }

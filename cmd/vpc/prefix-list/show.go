@@ -16,13 +16,12 @@ func prefixListShowFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Prefix List ID", Display: true},
 		{ID: "Prefix List ARN", Display: true},
-		{ID: "Name", Display: true},
+		{ID: "Prefix List Name", Display: true},
 		{ID: "State", Display: true},
 		{ID: "Version", Display: true},
-		{ID: "Max entries", Display: true},
+		{ID: "Max Entries", Display: true},
+		{ID: "Address Family", Display: true},
 		{ID: "Owner", Display: true},
-		{ID: "CIDRs", Display: true},
-		{ID: "Entries", Display: true},
 	}
 }
 
@@ -50,12 +49,14 @@ func ShowPrefixList(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	pls, err := svc.GetPrefixLists(ctx, &ascTypes.GetPrefixListsInput{PrefixListIDs: []string{id}})
+	pls, err := svc.GetPrefixLists(ctx, &ascTypes.GetPrefixListsInput{
+		// PrefixListIds: []string{id},
+	})
 	if err != nil {
 		return fmt.Errorf("get prefix lists: %w", err)
 	}
 	if len(pls) == 0 {
-		return fmt.Errorf("Prefix List not found: %s", id)
+		return fmt.Errorf("prefix list not found: %s", id)
 	}
 	pl := pls[0]
 
@@ -69,21 +70,6 @@ func ShowPrefixList(cmd *cobra.Command, id string) error {
 		Instance: pl,
 		Fields:   fields,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
-			// Placeholder logic for extra fields
-			switch fieldID {
-			case "Prefix List ARN":
-				return "-", nil // TODO: Lookup ARN
-			case "State":
-				return "-", nil // TODO: Lookup state
-			case "Version":
-				return "-", nil // TODO: Lookup version
-			case "Max entries":
-				return "-", nil // TODO: Lookup max entries
-			case "Owner":
-				return "-", nil // TODO: Lookup owner
-			case "Entries":
-				return "-", nil // TODO: Format entries (CIDR, Description)
-			}
 			return vpc.GetPrefixListAttributeValue(fieldID, instance)
 		},
 	}, opts)

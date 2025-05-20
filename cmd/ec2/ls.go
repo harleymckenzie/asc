@@ -75,17 +75,13 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Output
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
 	cobraCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
-	cobraCmd.Flags().
-		BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
-	cobraCmd.Flags().
-		BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
+	cobraCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
+	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
 
 	// Add flags - Sorting
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
-	cobraCmd.Flags().
-		BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
-	cobraCmd.Flags().
-		BoolVarP(&sortLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
+	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
+	cobraCmd.Flags().BoolVarP(&sortLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 	cobraCmd.MarkFlagsMutuallyExclusive("sort-id", "sort-type", "sort-launch-time")
 }

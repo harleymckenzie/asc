@@ -11,11 +11,14 @@ import (
 )
 
 type VPCAPI interface {
-	DescribeVpcs(
-		ctx context.Context,
-		params *ec2.DescribeVpcsInput,
-		optFns ...func(*ec2.Options),
-	) (*ec2.DescribeVpcsOutput, error)
+	DescribeVpcs(ctx context.Context, params *ec2.DescribeVpcsInput, optFns ...func(*ec2.Options)) (*ec2.DescribeVpcsOutput, error)
+	DescribeNetworkAcls(ctx context.Context, params *ec2.DescribeNetworkAclsInput, optFns ...func(*ec2.Options)) (*ec2.DescribeNetworkAclsOutput, error)
+	DescribeNatGateways(ctx context.Context, params *ec2.DescribeNatGatewaysInput, optFns ...func(*ec2.Options)) (*ec2.DescribeNatGatewaysOutput, error)
+	DescribePrefixLists(ctx context.Context, params *ec2.DescribePrefixListsInput, optFns ...func(*ec2.Options)) (*ec2.DescribePrefixListsOutput, error)
+	DescribeManagedPrefixLists(ctx context.Context, params *ec2.DescribeManagedPrefixListsInput, optFns ...func(*ec2.Options)) (*ec2.DescribeManagedPrefixListsOutput, error)
+	DescribeRouteTables(ctx context.Context, params *ec2.DescribeRouteTablesInput, optFns ...func(*ec2.Options)) (*ec2.DescribeRouteTablesOutput, error)
+	DescribeSubnets(ctx context.Context, params *ec2.DescribeSubnetsInput, optFns ...func(*ec2.Options)) (*ec2.DescribeSubnetsOutput, error)
+	DescribeInternetGateways(ctx context.Context, params *ec2.DescribeInternetGatewaysInput, optFns ...func(*ec2.Options)) (*ec2.DescribeInternetGatewaysOutput, error)
 }
 
 type VPCService struct {
@@ -35,10 +38,7 @@ func NewVPCService(ctx context.Context, profile string, region string) (*VPCServ
 	}, nil
 }
 
-func (svc *VPCService) GetVPCs(
-	ctx context.Context,
-	input *ascTypes.GetVPCsInput,
-) ([]types.Vpc, error) {
+func (svc *VPCService) GetVPCs(ctx context.Context, input *ascTypes.GetVPCsInput) ([]types.Vpc, error) {
 	output, err := svc.Client.DescribeVpcs(ctx, &ec2.DescribeVpcsInput{})
 	if err != nil {
 		return nil, err
@@ -48,15 +48,10 @@ func (svc *VPCService) GetVPCs(
 }
 
 // GetNACLs fetches Network ACLs from AWS.
-func (svc *VPCService) GetNACLs(
-	ctx context.Context,
-	input *ascTypes.GetNACLsInput,
-) ([]types.NetworkAcl, error) {
-	ec2Input := &ec2.DescribeNetworkAclsInput{}
-	if input != nil && len(input.NACLIDs) > 0 {
-		ec2Input.NetworkAclIds = input.NACLIDs
-	}
-	output, err := svc.Client.(*ec2.Client).DescribeNetworkAcls(ctx, ec2Input)
+func (svc *VPCService) GetNACLs(ctx context.Context, input *ascTypes.GetNACLsInput) ([]types.NetworkAcl, error) {
+	output, err := svc.Client.DescribeNetworkAcls(ctx, &ec2.DescribeNetworkAclsInput{
+		NetworkAclIds: input.NetworkAclIds,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -64,15 +59,10 @@ func (svc *VPCService) GetNACLs(
 }
 
 // GetNatGateways fetches NAT Gateways from AWS.
-func (svc *VPCService) GetNatGateways(
-	ctx context.Context,
-	input *ascTypes.GetNatGatewaysInput,
-) ([]types.NatGateway, error) {
-	ec2Input := &ec2.DescribeNatGatewaysInput{}
-	if input != nil && len(input.NatGatewayIDs) > 0 {
-		ec2Input.NatGatewayIds = input.NatGatewayIDs
-	}
-	output, err := svc.Client.(*ec2.Client).DescribeNatGateways(ctx, ec2Input)
+func (svc *VPCService) GetNatGateways(ctx context.Context, input *ascTypes.GetNatGatewaysInput) ([]types.NatGateway, error) {
+	output, err := svc.Client.DescribeNatGateways(ctx, &ec2.DescribeNatGatewaysInput{
+		NatGatewayIds: input.NatGatewayIds,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -80,15 +70,21 @@ func (svc *VPCService) GetNatGateways(
 }
 
 // GetPrefixLists fetches Prefix Lists from AWS.
-func (svc *VPCService) GetPrefixLists(
-	ctx context.Context,
-	input *ascTypes.GetPrefixListsInput,
-) ([]types.PrefixList, error) {
-	ec2Input := &ec2.DescribePrefixListsInput{}
-	if input != nil && len(input.PrefixListIDs) > 0 {
-		ec2Input.PrefixListIds = input.PrefixListIDs
+func (svc *VPCService) GetPrefixLists(ctx context.Context, input *ascTypes.GetPrefixListsInput) ([]types.PrefixList, error) {
+	output, err := svc.Client.DescribePrefixLists(ctx, &ec2.DescribePrefixListsInput{
+		PrefixListIds: input.PrefixListIds,
+	})
+	if err != nil {
+		return nil, err
 	}
-	output, err := svc.Client.(*ec2.Client).DescribePrefixLists(ctx, ec2Input)
+	return output.PrefixLists, nil
+}
+
+// GetManagedPrefixLists fetches Managed Prefix Lists from AWS.
+func (svc *VPCService) GetManagedPrefixLists(ctx context.Context, input *ascTypes.GetManagedPrefixListsInput) ([]types.ManagedPrefixList, error) {
+	output, err := svc.Client.DescribeManagedPrefixLists(ctx, &ec2.DescribeManagedPrefixListsInput{
+		PrefixListIds: input.PrefixListIds,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -96,15 +92,10 @@ func (svc *VPCService) GetPrefixLists(
 }
 
 // GetRouteTables fetches Route Tables from AWS.
-func (svc *VPCService) GetRouteTables(
-	ctx context.Context,
-	input *ascTypes.GetRouteTablesInput,
-) ([]types.RouteTable, error) {
-	ec2Input := &ec2.DescribeRouteTablesInput{}
-	if input != nil && len(input.RouteTableIDs) > 0 {
-		ec2Input.RouteTableIds = input.RouteTableIDs
-	}
-	output, err := svc.Client.(*ec2.Client).DescribeRouteTables(ctx, ec2Input)
+func (svc *VPCService) GetRouteTables(ctx context.Context, input *ascTypes.GetRouteTablesInput) ([]types.RouteTable, error) {
+	output, err := svc.Client.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{
+		RouteTableIds: input.RouteTableIds,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -112,15 +103,10 @@ func (svc *VPCService) GetRouteTables(
 }
 
 // GetSubnets fetches Subnets from AWS.
-func (svc *VPCService) GetSubnets(
-	ctx context.Context,
-	input *ascTypes.GetSubnetsInput,
-) ([]types.Subnet, error) {
-	ec2Input := &ec2.DescribeSubnetsInput{}
-	if input != nil && len(input.SubnetIDs) > 0 {
-		ec2Input.SubnetIds = input.SubnetIDs
-	}
-	output, err := svc.Client.(*ec2.Client).DescribeSubnets(ctx, ec2Input)
+func (svc *VPCService) GetSubnets(ctx context.Context, input *ascTypes.GetSubnetsInput) ([]types.Subnet, error) {
+	output, err := svc.Client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
+		SubnetIds: input.SubnetIds,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -128,17 +114,25 @@ func (svc *VPCService) GetSubnets(
 }
 
 // GetIGWs fetches Internet Gateways from AWS.
-func (svc *VPCService) GetIGWs(
-	ctx context.Context,
-	input *ascTypes.GetIGWsInput,
-) ([]types.InternetGateway, error) {
-	ec2Input := &ec2.DescribeInternetGatewaysInput{}
-	if input != nil && len(input.IGWIDs) > 0 {
-		ec2Input.InternetGatewayIds = input.IGWIDs
-	}
-	output, err := svc.Client.(*ec2.Client).DescribeInternetGateways(ctx, ec2Input)
+func (svc *VPCService) GetIGWs(ctx context.Context, input *ascTypes.GetIGWsInput) ([]types.InternetGateway, error) {
+	output, err := svc.Client.DescribeInternetGateways(ctx, &ec2.DescribeInternetGatewaysInput{
+		InternetGatewayIds: input.IGWIds,
+	})
 	if err != nil {
 		return nil, err
 	}
 	return output.InternetGateways, nil
+}
+
+// FilterNACLRules fetches Network ACL Rules from AWS.
+func (svc *VPCService) FilterNACLRules(rules []types.NetworkAclEntry, ingress bool) []types.NetworkAclEntry {
+	filteredRules := []types.NetworkAclEntry{}
+	for _, rule := range rules {
+		if ingress && *rule.Egress {
+			filteredRules = append(filteredRules, rule)
+		} else if !ingress && !*rule.Egress {
+			filteredRules = append(filteredRules, rule)
+		}
+	}
+	return filteredRules
 }

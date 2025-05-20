@@ -86,7 +86,6 @@ func (svc *AutoScalingService) GetAutoScalingGroupInstances(ctx context.Context,
 }
 
 func (svc *AutoScalingService) GetAutoScalingGroupSchedules(ctx context.Context, input *ascTypes.GetAutoScalingGroupSchedulesInput) ([]types.ScheduledUpdateGroupAction, error) {
-
 	describeScheduledActionsInput := &autoscaling.DescribeScheduledActionsInput{}
 	if input.AutoScalingGroupName != "" {
 		describeScheduledActionsInput.AutoScalingGroupName = &input.AutoScalingGroupName

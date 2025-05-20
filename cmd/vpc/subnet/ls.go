@@ -22,7 +22,7 @@ func init() {
 }
 
 // subnetListFields returns the fields for the Subnet list table.
-func subnetListFields() []tableformat.Field {
+func SubnetListFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Subnet ID", Display: true, DefaultSort: true},
 		{ID: "VPC ID", Display: true},
@@ -64,7 +64,7 @@ func ListSubnets(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get subnets: %w", err)
 	}
 
-	fields := subnetListFields()
+	fields := SubnetListFields()
 	opts := tableformat.RenderOptions{
 		Title:  "Subnets",
 		Style:  "rounded",

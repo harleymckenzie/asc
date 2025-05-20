@@ -69,8 +69,8 @@ func showVPC(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("VPC not found: %s", id)
 	}
 
-	routeTables, _ := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{RouteTableIDs: nil})
-	networkAcls, _ := svc.GetNACLs(ctx, &ascTypes.GetNACLsInput{NACLIDs: nil})
+	routeTables, _ := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{RouteTableIds: nil})
+	networkAcls, _ := svc.GetNACLs(ctx, &ascTypes.GetNACLsInput{NetworkAclIds: nil})
 
 	fields := vpcShowFields()
 	opts := tableformat.RenderOptions{

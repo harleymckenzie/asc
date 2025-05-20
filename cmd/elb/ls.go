@@ -71,30 +71,20 @@ var lsCmd = &cobra.Command{
 // Flag function
 func addLsFlags(cobraCmd *cobra.Command) {
 	// Output flags
-	cobraCmd.Flags().
-		BoolVarP(&list, "list", "l", false, "Outputs Elastic Load Balancers in list format.")
-	cobraCmd.Flags().
-		BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Elastic Load Balancer.")
-	cobraCmd.Flags().
-		BoolVarP(&showDNSName, "dns-name", "d", false, "Show the DNS name of the Elastic Load Balancer.")
-	cobraCmd.Flags().
-		BoolVarP(&showScheme, "scheme", "s", false, "Show the scheme for each Elastic Load Balancer.")
-	cobraCmd.Flags().
-		BoolVarP(&showAZs, "availability-zones", "z", false, "Show the availability zones for each Elastic Load Balancer.")
-	cobraCmd.Flags().
-		BoolVarP(&showIPAddressType, "ip-address-type", "i", false, "Show the IP address type for each Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elastic Load Balancers in list format.")
+	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&showDNSName, "dns-name", "d", false, "Show the DNS name of the Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&showScheme, "scheme", "s", false, "Show the scheme for each Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&showAZs, "availability-zones", "z", false, "Show the availability zones for each Elastic Load Balancer.")
+	cobraCmd.Flags().BoolVarP(&showIPAddressType, "ip-address-type", "i", false, "Show the IP address type for each Elastic Load Balancer.")
 
 	// Sorting flags
-	cobraCmd.Flags().
-		BoolVarP(&sortDNSName, "sort-dns-name", "D", false, "Sort by descending DNS name.")
-	cobraCmd.Flags().
-		BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elastic Load Balancer type.")
-	cobraCmd.Flags().
-		BoolVarP(&sortCreatedTime, "sort-created-time", "t", false, "Sort by descending date created.")
+	cobraCmd.Flags().BoolVarP(&sortDNSName, "sort-dns-name", "D", false, "Sort by descending DNS name.")
+	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elastic Load Balancer type.")
+	cobraCmd.Flags().BoolVarP(&sortCreatedTime, "sort-created-time", "t", false, "Sort by descending date created.")
 	cobraCmd.Flags().BoolVarP(&sortScheme, "sort-scheme", "S", false, "Sort by descending scheme.")
 	cobraCmd.Flags().BoolVarP(&sortVPCID, "sort-vpc-id", "V", false, "Sort by descending VPC ID.")
-	cobraCmd.Flags().
-		BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
+	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 }
 
 // Command functions

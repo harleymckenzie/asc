@@ -40,19 +40,13 @@ var addCmd = &cobra.Command{
 
 // NewAddFlags adds flags for the add subcommand.
 func NewAddFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().
-		StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group to add the schedule to.")
+	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group to add the schedule to.")
 	cobraCmd.MarkFlagRequired("asg-name")
-	cobraCmd.Flags().
-		IntVarP(&minSize, "min-size", "m", 0, "The minimum size of the Auto Scaling Group.")
-	cobraCmd.Flags().
-		IntVarP(&maxSize, "max-size", "M", 0, "The maximum size of the Auto Scaling Group.")
-	cobraCmd.Flags().
-		IntVarP(&desiredCapacity, "desired-capacity", "d", 0, "The desired capacity of the Auto Scaling Group.")
-	cobraCmd.Flags().
-		StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
-	cobraCmd.Flags().
-		StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
+	cobraCmd.Flags().IntVarP(&minSize, "min-size", "m", 0, "The minimum size of the Auto Scaling Group.")
+	cobraCmd.Flags().IntVarP(&maxSize, "max-size", "M", 0, "The maximum size of the Auto Scaling Group.")
+	cobraCmd.Flags().IntVarP(&desiredCapacity, "desired-capacity", "d", 0, "The desired capacity of the Auto Scaling Group.")
+	cobraCmd.Flags().StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
+	cobraCmd.Flags().StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
 	cobraCmd.Flags().StringVarP(&endTimeStr, "end-time", "e", "", "The end time of the schedule.")
 }
 

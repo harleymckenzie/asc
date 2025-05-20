@@ -16,13 +16,11 @@ func naclShowFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Network ACL ID", Display: true},
 		{ID: "VPC ID", Display: true},
-		{ID: "Is Default", Display: true},
+		{ID: "Default", Display: true},
 		{ID: "Owner", Display: true},
 		{ID: "Associated with", Display: true},
-		{ID: "Entry Count", Display: true},
-		{ID: "Association Count", Display: true},
-		{ID: "Inbound rules", Display: true},
-		{ID: "Outbound rules", Display: true},
+		{ID: "Inbound Rules", Display: true},
+		{ID: "Outbound Rules", Display: true},
 	}
 }
 
@@ -50,12 +48,12 @@ func ShowNACL(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	nacls, err := svc.GetNACLs(ctx, &ascTypes.GetNACLsInput{NACLIDs: []string{id}})
+	nacls, err := svc.GetNACLs(ctx, &ascTypes.GetNACLsInput{NetworkAclIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get network acls: %w", err)
 	}
 	if len(nacls) == 0 {
-		return fmt.Errorf("Network ACL not found: %s", id)
+		return fmt.Errorf("network ACL not found: %s", id)
 	}
 	nacl := nacls[0]
 
@@ -69,17 +67,6 @@ func ShowNACL(cmd *cobra.Command, id string) error {
 		Instance: nacl,
 		Fields:   fields,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
-			// Placeholder logic for extra fields
-			switch fieldID {
-			case "Owner":
-				return "-", nil // TODO: Lookup Owner
-			case "Associated with":
-				return "-", nil // TODO: List associated subnets
-			case "Inbound rules":
-				return "-", nil // TODO: Format inbound rules
-			case "Outbound rules":
-				return "-", nil // TODO: Format outbound rules
-			}
 			return vpc.GetNetworkAclAttributeValue(fieldID, instance)
 		},
 	}, opts)

@@ -11,6 +11,42 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// init initializes the subcommands and show commands for the VPC command.
+func init() {
+	// Add subcommands (ls aliases)
+	lsCmd.AddCommand(igwLsCmd)
+	lsCmd.AddCommand(naclLsCmd)
+	lsCmd.AddCommand(natGatewayLsCmd)
+	lsCmd.AddCommand(prefixListLsCmd)
+	lsCmd.AddCommand(routeTableLsCmd)
+	lsCmd.AddCommand(subnetLsCmd)
+
+	// Add subcommands (show aliases)
+	showCmd.AddCommand(igwShowCmd)
+	showCmd.AddCommand(naclShowCmd)
+	showCmd.AddCommand(natGatewayShowCmd)
+	showCmd.AddCommand(prefixListShowCmd)
+	showCmd.AddCommand(routeTableShowCmd)
+	showCmd.AddCommand(subnetShowCmd)
+
+	// Add flags
+	nacl.NewLsFlags(naclLsCmd)
+	nat_gateway.NewLsFlags(natGatewayLsCmd)
+	prefix_list.NewLsFlags(prefixListLsCmd)
+	route_table.NewLsFlags(routeTableLsCmd)
+	subnet.NewLsFlags(subnetLsCmd)
+
+	igw.NewShowFlags(igwShowCmd)
+	nacl.NewShowFlags(naclShowCmd)
+	nat_gateway.NewShowFlags(natGatewayShowCmd)
+	prefix_list.NewShowFlags(prefixListShowCmd)
+	route_table.NewShowFlags(routeTableShowCmd)
+	subnet.NewShowFlags(subnetShowCmd)
+
+	lsCmd.AddGroup(cmdutil.SubcommandGroups()...)
+	showCmd.AddGroup(cmdutil.SubcommandGroups()...)
+}
+
 // IGW
 var igwLsCmd = &cobra.Command{
 	Use:     "igws",
@@ -137,39 +173,3 @@ var subnetShowCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	// Add subcommands (ls aliases)
-	lsCmd.AddCommand(igwLsCmd)
-	lsCmd.AddCommand(naclLsCmd)
-	lsCmd.AddCommand(natGatewayLsCmd)
-	lsCmd.AddCommand(prefixListLsCmd)
-	lsCmd.AddCommand(routeTableLsCmd)
-	lsCmd.AddCommand(subnetLsCmd)
-
-	// Add subcommands (show aliases)
-	showCmd.AddCommand(igwShowCmd)
-	showCmd.AddCommand(naclShowCmd)
-	showCmd.AddCommand(natGatewayShowCmd)
-	showCmd.AddCommand(prefixListShowCmd)
-	showCmd.AddCommand(routeTableShowCmd)
-	showCmd.AddCommand(subnetShowCmd)
-
-	// Add flags
-	nacl.NewLsFlags(naclLsCmd)
-	nat_gateway.NewLsFlags(natGatewayLsCmd)
-	prefix_list.NewLsFlags(prefixListLsCmd)
-	route_table.NewLsFlags(routeTableLsCmd)
-	subnet.NewLsFlags(subnetLsCmd)
-
-	igw.NewShowFlags(igwShowCmd)
-	nacl.NewShowFlags(naclShowCmd)
-	nat_gateway.NewShowFlags(natGatewayShowCmd)
-	prefix_list.NewShowFlags(prefixListShowCmd)
-	route_table.NewShowFlags(routeTableShowCmd)
-	subnet.NewShowFlags(subnetShowCmd)
-
-	lsCmd.AddGroup(cmdutil.SubcommandGroups()...)
-	showCmd.AddGroup(cmdutil.SubcommandGroups()...)
-
-	// Only reference showCmd (from show.go) here
-}

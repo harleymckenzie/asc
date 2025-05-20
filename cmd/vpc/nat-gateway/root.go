@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CmdAliases = []string{"nat-gateways", "natgateway", "natgateways"}
+var CmdAliases = []string{"nat-gateways", "nat-gateway", "natgateway", "natgateways", "ngw"}
 
 // NewNatGatewayRootCmd returns the root command for NAT Gateway operations.
 func NewNatGatewayRootCmd() *cobra.Command {

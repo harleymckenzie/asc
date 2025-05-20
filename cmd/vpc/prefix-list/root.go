@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CmdAliases = []string{"prefix-lists", "prefixlist", "prefixlists"}
+var CmdAliases = []string{"prefix-lists", "prefix-list", "prefixlist", "prefixlists"}
 
 // NewPrefixListRootCmd returns the root command for Prefix List operations.
 func NewPrefixListRootCmd() *cobra.Command {

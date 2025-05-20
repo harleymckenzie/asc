@@ -74,19 +74,13 @@ var lsCmd = &cobra.Command{
 
 // newLsFlags is the function for adding flags to the ls command
 func newLsFlags(cobraCmd *cobra.Command) {
-	cobraCmd.Flags().
-		BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
-	cobraCmd.Flags().
-		BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Auto-Scaling Group.")
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Auto-Scaling Groups in list format.")
+	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Auto-Scaling Group.")
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending ASG name.")
-	cobraCmd.Flags().
-		BoolVarP(&sortInstances, "sort-instances", "i", false, "Sort by descending number of instances. (ASG output only)")
-	cobraCmd.Flags().
-		BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity. (ASG output only)")
-	cobraCmd.Flags().
-		BoolVarP(&sortMinCapacity, "sort-min-capacity", "m", false, "Sort by descending min capacity. (ASG output only)")
-	cobraCmd.Flags().
-		BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity. (ASG output only)")
+	cobraCmd.Flags().BoolVarP(&sortInstances, "sort-instances", "i", false, "Sort by descending number of instances. (ASG output only)")
+	cobraCmd.Flags().BoolVarP(&sortDesiredCapacity, "sort-desired-capacity", "d", false, "Sort by descending desired capacity. (ASG output only)")
+	cobraCmd.Flags().BoolVarP(&sortMinCapacity, "sort-min-capacity", "m", false, "Sort by descending min capacity. (ASG output only)")
+	cobraCmd.Flags().BoolVarP(&sortMaxCapacity, "sort-max-capacity", "M", false, "Sort by descending max capacity. (ASG output only)")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 }
 

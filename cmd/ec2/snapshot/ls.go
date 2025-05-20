@@ -59,13 +59,10 @@ var lsCmd = &cobra.Command{
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs snapshots in list format.")
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending snapshot ID.")
-	cobraCmd.Flags().
-		BoolVarP(&sortSize, "sort-size", "s", false, "Sort by descending snapshot size.")
-	cobraCmd.Flags().
-		BoolVarP(&showDesc, "show-description", "d", false, "Show the snapshot description column.")
+	cobraCmd.Flags().BoolVarP(&sortSize, "sort-size", "s", false, "Sort by descending snapshot size.")
+	cobraCmd.Flags().BoolVarP(&showDesc, "show-description", "d", false, "Show the snapshot description column.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
-	cobraCmd.Flags().
-		StringVar(&owner, "owner", "", "Accepts a single AWS account ID or 'all' to show all snapshots. If not provided, only your own snapshots are shown.")
+	cobraCmd.Flags().StringVar(&owner, "owner", "", "Accepts a single AWS account ID or 'all' to show all snapshots. If not provided, only your own snapshots are shown.")
 }
 
 // ListSnapshots is the handler for the ls subcommand.

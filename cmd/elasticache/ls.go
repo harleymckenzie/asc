@@ -94,18 +94,13 @@ func ListElasticacheClusters(cobraCmd *cobra.Command, args []string) error {
 // Flag function
 func newLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Output
-	cobraCmd.Flags().
-		BoolVarP(&list, "list", "l", false, "Outputs Elasticache clusters in list format.")
-	cobraCmd.Flags().
-		BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
+	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elasticache clusters in list format.")
+	cobraCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
 
 	// Add flags - Sorting
-	cobraCmd.Flags().
-		BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elasticache cluster type.")
-	cobraCmd.Flags().
-		BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending Elasticache cluster status.")
-	cobraCmd.Flags().
-		BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending Elasticache cluster engine version.")
+	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elasticache cluster type.")
+	cobraCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending Elasticache cluster status.")
+	cobraCmd.Flags().BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending Elasticache cluster engine version.")
 	cobraCmd.MarkFlagsMutuallyExclusive("sort-type", "sort-status", "sort-engine")
 
 	// Add flags - Reverse Sort

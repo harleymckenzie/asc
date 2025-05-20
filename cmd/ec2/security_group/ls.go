@@ -70,14 +70,10 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs security groups in list format.")
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending group ID.")
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending group name.")
-	cobraCmd.Flags().
-		BoolVarP(&showDesc, "show-description", "d", false, "Show the security group description column.")
+	cobraCmd.Flags().BoolVarP(&showDesc, "show-description", "d", false, "Show the security group description column.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
 	cobraCmd.Flags().BoolVarP(&sortVPCID, "sort-vpc-id", "v", false, "Sort by descending VPC ID.")
-	cobraCmd.Flags().
-		BoolVarP(&sortOwnerID, "sort-owner-id", "o", false, "Sort by descending owner ID.")
-	cobraCmd.Flags().
-		BoolVarP(&showOwnerID, "show-owner-id", "O", false, "Show the security group owner ID column.")
+	cobraCmd.Flags().BoolVarP(&showOwnerID, "show-owner-id", "O", false, "Show the security group owner ID column.")
 }
 
 // ListSecurityGroups is the handler for the ls subcommand.

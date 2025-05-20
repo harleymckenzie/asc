@@ -3,25 +3,30 @@ package types
 type GetVPCsInput struct{}
 
 type GetNACLsInput struct {
-	NACLIDs []string
+	NetworkAclIds []string
 }
 
 type GetNatGatewaysInput struct {
-	NatGatewayIDs []string
+	NatGatewayIds []string
 }
 
 type GetPrefixListsInput struct {
-	PrefixListIDs []string
+	PrefixListIds []string
+}
+
+type GetManagedPrefixListsInput struct {
+	PrefixListIds []string
 }
 
 type GetRouteTablesInput struct {
-	RouteTableIDs []string
+	RouteTableIds []string
 }
 
 type GetSubnetsInput struct {
-	SubnetIDs []string
+	SubnetIds []string
+	VPCIds    []string
 }
 
 type GetIGWsInput struct {
-	IGWIDs []string // List of Internet Gateway IDs to filter
+	IGWIds []string
 }

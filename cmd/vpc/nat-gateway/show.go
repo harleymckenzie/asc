@@ -15,16 +15,13 @@ import (
 func natGatewayShowFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "NAT Gateway ID", Display: true},
-		{ID: "NAT Gateway ARN", Display: true},
 		{ID: "VPC ID", Display: true},
 		{ID: "Subnet ID", Display: true},
-		{ID: "Connectivity type", Display: true},
+		{ID: "Connectivity", Display: true},
 		{ID: "State", Display: true},
-		{ID: "Primary public IPv4 address", Display: true},
-		{ID: "Primary private IPv4 address", Display: true},
+		{ID: "Primary Public IP", Display: true},
+		{ID: "Primary Private IP", Display: true},
 		{ID: "Created", Display: true},
-		{ID: "Owner", Display: true},
-		{ID: "IP Addresses", Display: true},
 	}
 }
 
@@ -52,12 +49,12 @@ func ShowNatGateway(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	nats, err := svc.GetNatGateways(ctx, &ascTypes.GetNatGatewaysInput{NatGatewayIDs: []string{id}})
+	nats, err := svc.GetNatGateways(ctx, &ascTypes.GetNatGatewaysInput{NatGatewayIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get nat gateways: %w", err)
 	}
 	if len(nats) == 0 {
-		return fmt.Errorf("NAT Gateway not found: %s", id)
+		return fmt.Errorf("nat gateway not found: %s", id)
 	}
 	nat := nats[0]
 
@@ -71,21 +68,6 @@ func ShowNatGateway(cmd *cobra.Command, id string) error {
 		Instance: nat,
 		Fields:   fields,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
-			// Placeholder logic for extra fields
-			switch fieldID {
-			case "NAT Gateway ARN":
-				return "-", nil // TODO: Lookup ARN
-			case "Connectivity type":
-				return string(nat.ConnectivityType), nil
-			case "Primary public IPv4 address":
-				return "-", nil // TODO: Lookup primary public IP
-			case "Primary private IPv4 address":
-				return "-", nil // TODO: Lookup primary private IP
-			case "Created":
-				return "-", nil // TODO: Format created time
-			case "Owner":
-				return "-", nil // TODO: Lookup Owner
-			}
 			return vpc.GetNatGatewayAttributeValue(fieldID, instance)
 		},
 	}, opts)

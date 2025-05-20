@@ -25,11 +25,13 @@ func init() {
 func natGatewayListFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "NAT Gateway ID", Display: true, DefaultSort: true},
+		{ID: "Connectivity", Display: true},
+		{ID: "State", Display: true},
 		{ID: "VPC ID", Display: true},
 		{ID: "Subnet ID", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Type", Display: true},
-		{ID: "IP Addresses", Display: true},
+		{ID: "Primary Public IP", Display: true},
+		{ID: "Primary Private IP", Display: false},
+		{ID: "Created", Display: false},
 	}
 }
 

@@ -25,8 +25,20 @@ func init() {
 func prefixListListFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Prefix List ID", Display: true, DefaultSort: true},
-		{ID: "Name", Display: true},
-		{ID: "CIDRs", Display: true},
+		{ID: "Prefix List Name", Display: true},
+		{ID: "Max Entries", Display: false},
+		{ID: "Address Family", Display: true},
+		{ID: "State", Display: true},
+		{ID: "Version", Display: false},
+		{ID: "ARN", Display: false},
+		{ID: "Owner", Display: true},
+	}
+}
+
+func prefixListEntriesFields() []tableformat.Field {
+	return []tableformat.Field{
+		{ID: "CIDR", Display: true},
+		{ID: "Description", Display: true},
 	}
 }
 
@@ -55,28 +67,60 @@ func ListPrefixLists(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	pls, err := svc.GetPrefixLists(ctx, &ascTypes.GetPrefixListsInput{})
+	if len(args) > 0 {
+		return ListPrefixListEntries(cmd, args)
+	} else {
+		pls, err := svc.GetManagedPrefixLists(ctx, &ascTypes.GetManagedPrefixListsInput{})
+		if err != nil {
+			return fmt.Errorf("get prefix lists: %w", err)
+		}
+
+		fields := prefixListListFields()
+		opts := tableformat.RenderOptions{
+			Title:  "Prefix Lists",
+			Style:  "rounded",
+			SortBy: tableformat.GetSortByField(fields, reverseSort),
+		}
+
+		if list {
+			opts.Style = "list"
+		}
+
+		tableformat.RenderTableList(&tableformat.ListTable{
+			Instances: utils.SlicesToAny(pls),
+			Fields:    fields,
+			GetAttribute: func(fieldID string, instance any) (string, error) {
+				return vpc.GetPrefixListAttributeValue(fieldID, instance)
+			},
+		}, opts)
+		return nil
+	}
+}
+
+func ListPrefixListEntries(cmd *cobra.Command, args []string) error {
+	ctx := context.TODO()
+	profile, region := cmdutil.GetPersistentFlags(cmd)
+	svc, err := vpc.NewVPCService(ctx, profile, region)
 	if err != nil {
-		return fmt.Errorf("get prefix lists: %w", err)
+		return fmt.Errorf("create new VPC service: %w", err)
+	}
+	
+	pl, err := svc.GetPrefixLists(ctx, &ascTypes.GetPrefixListsInput{
+		PrefixListIds: []string{args[0]},
+	})
+	if err != nil {
+		return fmt.Errorf("get prefix list: %w", err)
 	}
 
-	fields := prefixListListFields()
+	fields := prefixListEntriesFields()
 	opts := tableformat.RenderOptions{
-		Title:  "Prefix Lists",
+		Title:  fmt.Sprintf("%s - Entries", args[0]),
 		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
-	if list {
-		opts.Style = "list"
 	}
 
 	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(pls),
+		Instances: utils.SlicesToAny(pl),
 		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetPrefixListAttributeValue(fieldID, instance)
-		},
 	}, opts)
 	return nil
 }
