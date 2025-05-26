@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harleymckenzie/asc/cmd/vpc/subnet"
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
@@ -48,6 +47,18 @@ func vpcListFields() []tableformat.Field {
 		{ID: "IPv6 CIDR", Display: true, Sort: sortIPv6CIDR},
 		{ID: "Default VPC", Display: true},
 		{ID: "Owner ID", Display: true},
+	}
+}
+
+func subnetListFields() []tableformat.Field {
+	return []tableformat.Field{
+		{ID: "Subnet ID", Display: true, DefaultSort: true},
+		{ID: "VPC ID", Display: false},
+		{ID: "CIDR Block", Display: true},
+		{ID: "Availability Zone", Display: true},
+		{ID: "State", Display: true},
+		{ID: "Available IPs", Display: true},
+		{ID: "Default For AZ", Display: true},
 	}
 }
 
@@ -130,7 +141,7 @@ func ListVPCSubnets(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("list subnets: %w", err)
 	}
 
-	fields := subnet.SubnetListFields()
+	fields := subnetListFields()
 	opts := tableformat.RenderOptions{
 		Title:  fmt.Sprintf("%s - Subnets", args[0]),
 		Style:  "rounded",

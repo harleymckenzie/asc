@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-
+	"github.com/aws/aws-sdk-go-v2/aws"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 )
 
@@ -104,8 +104,15 @@ func (svc *VPCService) GetRouteTables(ctx context.Context, input *ascTypes.GetRo
 
 // GetSubnets fetches Subnets from AWS.
 func (svc *VPCService) GetSubnets(ctx context.Context, input *ascTypes.GetSubnetsInput) ([]types.Subnet, error) {
+	filters := []types.Filter{}
+	for _, vpcId := range input.VPCIds {
+		filters = append(filters, types.Filter{
+			Name: aws.String("vpc-id"),
+			Values: []string{vpcId},
+		})
+	}
 	output, err := svc.Client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
-		SubnetIds: input.SubnetIds,
+		Filters: filters,
 	})
 	if err != nil {
 		return nil, err

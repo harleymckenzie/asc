@@ -25,9 +25,21 @@ func init() {
 func routeTableListFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Route Table ID", Display: true, DefaultSort: true},
-		{ID: "VPC ID", Display: true},
 		{ID: "Association Count", Display: true},
-		{ID: "Route Count", Display: true},
+		{ID: "Route Count", Display: false},
+		{ID: "Main", Display: true},
+		{ID: "VPC ID", Display: true},
+		{ID: "Owner", Display: true},
+	}
+}
+
+// routeTableRouteFields returns the fields for the Route Table route list table.
+func routeTableRouteFields() []tableformat.Field {
+	return []tableformat.Field{
+		{ID: "Destination", Display: true},
+		{ID: "Target", Display: true},
+		{ID: "Status", Display: true},
+		{ID: "Propagated", Display: true},
 	}
 }
 
@@ -56,14 +68,56 @@ func ListRouteTables(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{})
+	if len(args) > 0 {
+		return ListRouteTableRules(cmd, args)
+	} else {
+		rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{})
+		if err != nil {
+			return fmt.Errorf("get route tables: %w", err)
+		}
+
+		fields := routeTableListFields()
+		opts := tableformat.RenderOptions{
+			Title:  "Route Tables",
+			Style:  "rounded",
+			SortBy: tableformat.GetSortByField(fields, reverseSort),
+		}
+
+		if list {
+			opts.Style = "list"
+		}
+
+		tableformat.RenderTableList(&tableformat.ListTable{
+			Instances: utils.SlicesToAny(rts),
+			Fields:    fields,
+			GetAttribute: func(fieldID string, instance any) (string, error) {
+				return vpc.GetRouteTableAttributeValue(fieldID, instance)
+			},
+		}, opts)
+		return nil
+	}
+}
+
+func ListRouteTableRules(cmd *cobra.Command, args []string) error {
+	ctx := context.TODO()
+	profile, region := cmdutil.GetPersistentFlags(cmd)
+	svc, err := vpc.NewVPCService(ctx, profile, region)
+	if err != nil {
+		return fmt.Errorf("create new VPC service: %w", err)
+	}
+
+	rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{
+		RouteTableIds: []string{args[0]},
+	})
 	if err != nil {
 		return fmt.Errorf("get route tables: %w", err)
 	}
 
-	fields := routeTableListFields()
+	routes := rts[0].Routes
+
+	fields := routeTableRouteFields()
 	opts := tableformat.RenderOptions{
-		Title:  "Route Tables",
+		Title:  fmt.Sprintf("%s - Routes", args[0]),
 		Style:  "rounded",
 		SortBy: tableformat.GetSortByField(fields, reverseSort),
 	}
@@ -73,10 +127,10 @@ func ListRouteTables(cmd *cobra.Command, args []string) error {
 	}
 
 	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(rts),
+		Instances: utils.SlicesToAny(routes),
 		Fields:    fields,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetRouteTableAttributeValue(fieldID, instance)
+			return vpc.GetRouteTableRouteAttributeValue(fieldID, instance)
 		},
 	}, opts)
 	return nil

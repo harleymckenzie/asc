@@ -24,6 +24,10 @@ type RouteTableAttribute struct {
 	GetValue func(*types.RouteTable) string
 }
 
+type RouteTableRouteAttribute struct {
+	GetValue func(*types.Route) string
+}
+
 type SubnetAttribute struct {
 	GetValue func(*types.Subnet) string
 }
@@ -367,6 +371,52 @@ func routeTableAttributes() map[string]RouteTableAttribute {
 		"Route Count": {
 			GetValue: func(r *types.RouteTable) string { return fmt.Sprintf("%d", len(r.Routes)) },
 		},
+		"Main": {
+			GetValue: func(r *types.RouteTable) string {
+				if len(r.Associations) == 0 {
+					return "No"
+				}
+				return format.BoolToLabel(r.Associations[0].Main, "Yes", "No")
+			},
+		},
+		"Owner": {
+			GetValue: func(r *types.RouteTable) string { return format.StringOrEmpty(r.OwnerId) },
+		},
+	}
+}
+
+func GetRouteTableRouteAttributeValue(fieldID string, instance any) (string, error) {
+	rt, ok := instance.(types.Route)
+	if !ok {
+		return "", fmt.Errorf("instance is not a types.Route")
+	}
+	attr, exists := routeTableRouteAttributes()[fieldID]
+	if !exists {
+		return "", fmt.Errorf("attribute %q does not exist", fieldID)
+	}
+	if attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q: GetValue is nil", fieldID)
+	}
+	return attr.GetValue(&rt), nil
+}
+
+func routeTableRouteAttributes() map[string]RouteTableRouteAttribute {
+	return map[string]RouteTableRouteAttribute{
+		"Destination": {
+			GetValue: func(r *types.Route) string { return format.StringOrEmpty(r.DestinationCidrBlock) },
+		},
+		"Target": {
+			GetValue: func(r *types.Route) string { return getRouteTableRouteTarget(r) },
+		},
+		"Status": {
+			GetValue: func(r *types.Route) string { return format.Status(string(r.State)) },
+		},
+		"Propagated": {
+			GetValue: func(r *types.Route) string {
+				b := isRouteTableRoutePropagated(r)
+				return format.BoolToLabel(&b, "Yes", "No")
+			},
+		},
 	}
 }
 
@@ -404,7 +454,7 @@ func subnetAttributes() map[string]SubnetAttribute {
 			GetValue: func(s *types.Subnet) string { return format.Status(string(s.State)) },
 		},
 		"Available IPs": {
-			GetValue: func(s *types.Subnet) string { return fmt.Sprintf("%d", s.AvailableIpAddressCount) },
+			GetValue: func(s *types.Subnet) string { return format.Int32ToStringOrDefault(s.AvailableIpAddressCount, "-") },
 		},
 		"Default For AZ": {
 			GetValue: func(s *types.Subnet) string { return format.BoolToLabel(s.DefaultForAz, "Yes", "No") },
@@ -523,4 +573,41 @@ func getNatGatewayPrimaryPrivateIP(nat *types.NatGateway) string {
 		return ""
 	}
 	return format.StringOrEmpty(nat.NatGatewayAddresses[0].PrivateIp)
+}
+
+func getRouteTableRouteTarget(route *types.Route) string {
+	if route.NatGatewayId != nil {
+		return format.StringOrEmpty(route.NatGatewayId)
+	}
+	if route.NetworkInterfaceId != nil {
+		return format.StringOrEmpty(route.NetworkInterfaceId)
+	}
+	if route.GatewayId != nil {
+		return format.StringOrEmpty(route.GatewayId)
+	}
+	if route.InstanceId != nil {
+		return format.StringOrEmpty(route.InstanceId)
+	}
+	if route.CarrierGatewayId != nil {
+		return format.StringOrEmpty(route.CarrierGatewayId)
+	}
+	if route.LocalGatewayId != nil {
+		return format.StringOrEmpty(route.LocalGatewayId)
+	}
+	if route.VpcPeeringConnectionId != nil {
+		return format.StringOrEmpty(route.VpcPeeringConnectionId)
+	}
+	if route.EgressOnlyInternetGatewayId != nil {
+		return format.StringOrEmpty(route.EgressOnlyInternetGatewayId)
+	}
+	if route.TransitGatewayId != nil {
+		return format.StringOrEmpty(route.TransitGatewayId)
+	}
+	return ""
+}
+
+// Determine whether a route is propagated based on
+// whether the Origin is "EnableVgwRoutePropagation"
+func isRouteTableRoutePropagated(route *types.Route) bool {
+	return route.Origin == "EnableVgwRoutePropagation"
 }

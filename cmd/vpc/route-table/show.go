@@ -17,12 +17,9 @@ func routeTableShowFields() []tableformat.Field {
 		{ID: "Route Table ID", Display: true},
 		{ID: "VPC ID", Display: true},
 		{ID: "Main", Display: true},
-		{ID: "Owner ID", Display: true},
-		{ID: "Explicit subnet associations", Display: true},
-		{ID: "Edge associations", Display: true},
+		{ID: "Owner", Display: true},
 		{ID: "Association Count", Display: true},
 		{ID: "Route Count", Display: true},
-		{ID: "Routes", Display: true},
 	}
 }
 

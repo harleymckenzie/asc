@@ -22,6 +22,7 @@ var StateColours = map[string]text.Color{
 	"allow":                       text.FgGreen,
 	"available":                   text.FgGreen,
 	"attached":                    text.FgGreen,
+	"blackhole":                   text.FgRed,
 	"completed":                   text.FgGreen,
 	"create_complete":             text.FgGreen,
 	"create-complete":             text.FgGreen,
