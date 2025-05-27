@@ -8,6 +8,7 @@ import (
 var TableStyles = map[string]table.Style{
 	"list":              ListTableStyle,
 	"rounded":           RoundedTableStyle,
+	"roundedAlt":        RoundedAltTableStyle,
 	"rounded-separated": RoundedSeparatedTableStyle,
 }
 
@@ -38,6 +39,16 @@ var (
 	// ╰─────────────────────┴─────────────────────┴─────────┴───────────────┴────────────────╯
 	RoundedTableStyle = table.Style{
 		Name:    "rounded",
+		Box:     table.StyleBoxRounded,
+		Color:   table.ColorOptions{Header: text.Colors{text.Bold}},
+		Format:  table.FormatOptions{Header: text.FormatTitle},
+		Options: table.OptionsDefault,
+		Size:    table.SizeOptionsDefault,
+		Title:   table.TitleOptions{Colors: text.Colors{text.Bold}},
+	}
+
+	RoundedAltTableStyle = table.Style{
+		Name:    "roundedAlt",
 		Box:     table.StyleBoxRounded,
 		Color:   table.ColorOptions{Header: text.Colors{text.Bold}},
 		Format:  table.FormatOptions{Header: text.FormatTitle},

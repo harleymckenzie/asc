@@ -98,6 +98,10 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 	opts := tableformat.RenderOptions{
 		Title: "EC2 Instance Details",
 		Style: "rounded",
+		Layout: tableformat.DetailTableLayout{
+			Type:          tableformat.DetailTableLayoutAlt,
+			ColumnsPerRow: 4,
+		},
 	}
 
 	err = tableformat.RenderTableDetail(&tableformat.DetailTable{

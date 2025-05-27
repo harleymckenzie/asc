@@ -5,6 +5,7 @@ package tableformat
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -21,6 +22,7 @@ type ListTableRenderable interface {
 type DetailTableRenderable interface {
 	WriteHeaders(t table.Writer)
 	WriteRows(t table.Writer)
+	WriteAltRows(t table.Writer, colsPerRow int)
 	ColumnConfigs() []table.ColumnConfig
 }
 
@@ -48,6 +50,9 @@ type DetailTable struct {
 
 	// GetAttribute is a function that returns the attribute of the instance
 	GetAttribute AttributeGetter
+
+	// Layout is the layout of the table
+	Layout DetailTableLayout
 }
 
 // Field is a struct that defines a field in a table.
@@ -135,7 +140,7 @@ func (dt *DetailTable) WriteHeaders(t table.Writer) {
 func (dt *DetailTable) WriteRows(t table.Writer) {
 	for _, field := range dt.Fields {
 		if field.Header {
-			row := table.Row{field.ID, field.ID}
+			row := table.Row{text.Bold.Sprint(field.ID), text.Bold.Sprint(field.ID)}
 			t.AppendSeparator()
 			t.AppendRow(row, table.RowConfig{AutoMerge: true})
 			t.AppendSeparator()
@@ -147,8 +152,58 @@ func (dt *DetailTable) WriteRows(t table.Writer) {
 			if val == "" {
 				val = "-"
 			}
-			row := table.Row{field.ID, val}
+			row := table.Row{text.Bold.Sprint(field.ID), val}
 			t.AppendRow(row)
+		}
+	}
+}
+
+func (dt *DetailTable) WriteAltRows(t table.Writer, colsPerRow int) {
+	// For alt layout, append 3x headers, then 3x rows. Repeat
+	var (
+		fieldIDs []string
+		values   []any
+	)
+
+	for i, field := range dt.Fields {
+		// Skip header markers
+		if field.Header {
+			headerRow := make([]any, colsPerRow)
+			for j := 0; j < colsPerRow; j++ {
+				headerRow[j] = text.Bold.Sprint(strings.ToUpper(field.ID))
+			}
+			t.AppendRow(table.Row(headerRow), table.RowConfig{
+				AutoMerge:      true,
+				AutoMergeAlign: text.AlignLeft,
+			})
+			t.AppendSeparator()
+			continue
+		}
+
+		fieldIDs = append(fieldIDs, field.ID)
+
+		val, err := dt.GetAttribute(field.ID, dt.Instance)
+		if err != nil {
+			val = fmt.Sprintf("[error: %v]", err)
+		}
+		if val == "" {
+			val = "-"
+		}
+		values = append(values, val)
+
+		// When we hit the 3rd column or last field, flush the row pair
+		if (i+1)%colsPerRow == 0 || i == len(dt.Fields)-1 {
+			fieldRow := make([]any, len(fieldIDs))
+			for j, h := range fieldIDs {
+				fieldRow[j] = text.Bold.Sprint(h)
+			}
+			t.AppendRow(table.Row(fieldRow))
+			t.AppendRow(table.Row(values))
+			t.AppendSeparator()
+
+			// Reset for next group
+			fieldIDs = []string{}
+			values = []any{}
 		}
 	}
 }
