@@ -75,7 +75,11 @@ func showVPC(cmd *cobra.Command, id string) error {
 	fields := vpcShowFields()
 	opts := tableformat.RenderOptions{
 		Title: "VPC Details",
-		Style: "rounded",
+		Style: "roundedAlt",
+		Layout: tableformat.DetailTableLayout{
+			Type:          "default",
+			ColumnsPerRow: 4,
+		},
 	}
 
 	return tableformat.RenderTableDetail(&tableformat.DetailTable{

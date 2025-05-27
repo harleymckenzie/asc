@@ -96,11 +96,11 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 
 	fields := ec2ShowFields()
 	opts := tableformat.RenderOptions{
-		Title: "EC2 Instance Details",
+		Title: "Instance summary for " + *instance[0].InstanceId,
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type:          tableformat.DetailTableLayoutAlt,
-			ColumnsPerRow: 4,
+			Type:          "horizontal",
+			ColumnsPerRow: 3,
 		},
 	}
 

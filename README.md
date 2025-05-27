@@ -145,10 +145,11 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Filesystem-like navigation                                  | ✗      |                                                  |
 | Optional terminal UI                                        | ✗      |                                                  |
 | Export data to CSV, JSON, or other formats                  | ✗      |                                                  |
-| Service agnostic `show` command                             | ✗      |                                                  |
+| Service agnostic action commands                            | ✗      |                                                  |
 | AWS Profile management                                      | ✗      |                                                  |
 | 'Select' resources to avoid repeating identifiers           | ✗      |                                                  |
 | Display pricing information on supported resources          | ✗      |                                                  |
+| `watch` command for monitoring resources                    | ✗      |                                                  |
 
 
 ## Output Format

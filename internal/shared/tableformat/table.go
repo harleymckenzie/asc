@@ -5,7 +5,6 @@ package tableformat
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -21,8 +20,7 @@ type ListTableRenderable interface {
 
 type DetailTableRenderable interface {
 	WriteHeaders(t table.Writer)
-	WriteRows(t table.Writer)
-	WriteAltRows(t table.Writer, colsPerRow int)
+	WriteRows(t table.Writer, layout DetailTableLayout)
 	ColumnConfigs() []table.ColumnConfig
 }
 
@@ -50,9 +48,6 @@ type DetailTable struct {
 
 	// GetAttribute is a function that returns the attribute of the instance
 	GetAttribute AttributeGetter
-
-	// Layout is the layout of the table
-	Layout DetailTableLayout
 }
 
 // Field is a struct that defines a field in a table.
@@ -129,6 +124,7 @@ func (lt *ListTable) ColumnConfigs() []table.ColumnConfig {
 
 // Detail Table Methods
 
+// WriteHeaders writes the headers of the table.
 func (dt *DetailTable) WriteHeaders(t table.Writer) {
 	headers := []string{}
 	for _, field := range dt.Fields {
@@ -137,51 +133,34 @@ func (dt *DetailTable) WriteHeaders(t table.Writer) {
 	t.AppendHeader(processDetailTableHeaders(dt.Fields))
 }
 
-func (dt *DetailTable) WriteRows(t table.Writer) {
-	for _, field := range dt.Fields {
-		if field.Header {
-			row := table.Row{text.Bold.Sprint(field.ID), text.Bold.Sprint(field.ID)}
-			t.AppendSeparator()
-			t.AppendRow(row, table.RowConfig{AutoMerge: true})
-			t.AppendSeparator()
-		} else {
-			val, err := dt.GetAttribute(field.ID, dt.Instance)
-			if err != nil {
-				val = fmt.Sprintf("[error: %v]", err)
-			}
-			if val == "" {
-				val = "-"
-			}
-			row := table.Row{text.Bold.Sprint(field.ID), val}
-			t.AppendRow(row)
-		}
+// WriteRows writes the rows of the table in either horizontal or vertical layout.
+func (dt *DetailTable) WriteRows(t table.Writer, layout DetailTableLayout) {
+	switch layout.Type {
+	case "vertical":
+		dt.writeRowsVertical(t)
+	default: // "horizontal" or any other
+		dt.writeRowsHorizontal(t, layout.ColumnsPerRow)
 	}
 }
 
-func (dt *DetailTable) WriteAltRows(t table.Writer, colsPerRow int) {
-	// For alt layout, append 3x headers, then 3x rows. Repeat
-	var (
-		fieldIDs []string
-		values   []any
-	)
+// writeRowsHorizontal writes rows in horizontal layout (fields and values in rows).
+func (dt *DetailTable) writeRowsHorizontal(t table.Writer, colsPerRow int) {
+	var fieldIDs []string
+	var values []any
 
 	for i, field := range dt.Fields {
-		// Skip header markers
 		if field.Header {
-			headerRow := make([]any, colsPerRow)
-			for j := 0; j < colsPerRow; j++ {
-				headerRow[j] = text.Bold.Sprint(strings.ToUpper(field.ID))
+			// Flush any pending data row before a header row
+			if len(fieldIDs) > 0 {
+				appendHorizontalRow(t, fieldIDs, values, colsPerRow)
+				fieldIDs = nil
+				values = nil
 			}
-			t.AppendRow(table.Row(headerRow), table.RowConfig{
-				AutoMerge:      true,
-				AutoMergeAlign: text.AlignLeft,
-			})
-			t.AppendSeparator()
+			appendHeaderRow(t, field.ID, colsPerRow)
 			continue
 		}
 
 		fieldIDs = append(fieldIDs, field.ID)
-
 		val, err := dt.GetAttribute(field.ID, dt.Instance)
 		if err != nil {
 			val = fmt.Sprintf("[error: %v]", err)
@@ -189,25 +168,37 @@ func (dt *DetailTable) WriteAltRows(t table.Writer, colsPerRow int) {
 		if val == "" {
 			val = "-"
 		}
-		values = append(values, val)
+		values = append(values, text.Colors{text.FgWhite}.Sprint(val))
 
-		// When we hit the 3rd column or last field, flush the row pair
-		if (i+1)%colsPerRow == 0 || i == len(dt.Fields)-1 {
-			fieldRow := make([]any, len(fieldIDs))
-			for j, h := range fieldIDs {
-				fieldRow[j] = text.Bold.Sprint(h)
-			}
-			t.AppendRow(table.Row(fieldRow))
-			t.AppendRow(table.Row(values))
-			t.AppendSeparator()
-
-			// Reset for next group
-			fieldIDs = []string{}
-			values = []any{}
+		// If row is full or last field, flush
+		if len(fieldIDs) == colsPerRow || i == len(dt.Fields)-1 {
+			appendHorizontalRow(t, fieldIDs, values, colsPerRow)
+			fieldIDs = nil
+			values = nil
 		}
 	}
 }
 
+// writeRowsVertical writes rows in vertical layout (field, value per row).
+func (dt *DetailTable) writeRowsVertical(t table.Writer) {	
+	for _, field := range dt.Fields {
+		if field.Header {
+			t.AppendSeparator()
+			appendHeaderRow(t, field.ID, 2)
+			continue
+		}
+		val, err := dt.GetAttribute(field.ID, dt.Instance)
+		if err != nil {
+			val = fmt.Sprintf("[error: %v]", err)
+		}
+		if val == "" {
+			val = "-"
+		}
+		appendVerticalRow(t, field.ID, val)
+	}
+}
+
+// ColumnConfigs returns the column configurations for the table.
 func (dt *DetailTable) ColumnConfigs() []table.ColumnConfig {
 	return []table.ColumnConfig{
 		{Number: 1, Colors: text.Colors{text.Bold}},
