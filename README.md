@@ -121,18 +121,37 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | SSM            | session stop              | ✗      | Stop SSM sessions                                                           |
 | SSM            | session rm                | ✗      | Delete SSM sessions                                                         |
 | SSM            | session show              | ✗      | Show SSM session details                                                    |
-| VPC            | ls                        | ✗      | List VPCs                                                                   |
+| VPC            | ls                        | ✓      | List VPCs                                                                   |
 | VPC            | modify                    | ✗      | Modify VPCs                                                                 |
 | VPC            | rm                        | ✗      | Terminate VPCs                                                              |
-| VPC            | show / describe           | ✗      | Show VPC details                                                            |
-| VPC            | subnet ls                 | ✗      | List VPC subnets                                                            |
-| VPC            | subnet add                | ✗      | Add VPC subnet                                                              |
-| VPC            | subnet rm                 | ✗      | Remove VPC subnet                                                           |
-| VPC            | subnet show               | ✗      | Show VPC subnet details                                                     |
-| VPC            | route-table ls            | ✗      | List VPC route tables                                                       |
+| VPC            | show / describe           | ✓      | Show VPC details                                                            |
+| VPC            | igw ls                    | ✓      | List VPC internet gateways                                                  |
+| VPC            | igw add                   | ✗      | Add VPC internet gateway                                                    |
+| VPC            | igw rm                    | ✗      | Remove VPC internet gateway                                                 |
+| VPC            | igw show                  | ✓      | Show VPC internet gateway details                                           |
+| VPC            | nacl ls                   | ✓      | List VPC network access control lists                                       |
+| VPC            | nacl add                  | ✗      | Add VPC network access control list                                         |
+| VPC            | nacl rm                   | ✗      | Remove VPC network access control list                                      |
+| VPC            | nacl show                 | ✓      | Show VPC network access control list details                                |
+| VPC            | nat-gateway ls            | ✓      | List VPC NAT gateways                                                       |
+| VPC            | nat-gateway add           | ✗      | Add VPC NAT gateway                                                         |
+| VPC            | nat-gateway rm            | ✗      | Remove VPC NAT gateway                                                      |
+| VPC            | nat-gateway show          | ✓      | Show VPC NAT gateway details                                                |
+| VPC            | prefix-list ls            | ✓      | List VPC prefix lists                                                       |
+| VPC            | prefix-list add           | ✗      | Add VPC prefix list                                                         |
+| VPC            | prefix-list rm            | ✗      | Remove VPC prefix list                                                      |
+| VPC            | prefix-list show          | ✓      | Show VPC prefix list details                                                |
+| VPC            | route-table ls            | ✓      | List VPC route tables                                                       |
 | VPC            | route-table add           | ✗      | Add VPC route table                                                         |
 | VPC            | route-table rm            | ✗      | Remove VPC route table                                                      |
-| VPC            | route-table show          | ✗      | Show VPC route table details                                                |
+| VPC            | subnet ls                 | ✓      | List VPC subnets                                                            |
+| VPC            | subnet add                | ✗      | Add VPC subnet                                                              |
+| VPC            | subnet rm                 | ✗      | Remove VPC subnet                                                           |
+| VPC            | subnet show               | ✓      | Show VPC subnet details                                                     |
+| VPC            | route-table ls            | ✓      | List VPC route tables                                                       |
+| VPC            | route-table add           | ✗      | Add VPC route table                                                         |
+| VPC            | route-table rm            | ✗      | Remove VPC route table                                                      |
+| VPC            | route-table show          | ✓      | Show VPC route table details                                                |
 | VPC            | route-table rule add      | ✗      | Add VPC route table rule                                                    |
 | VPC            | route-table rule rm       | ✗      | Remove VPC route table rule                                                 |
 
