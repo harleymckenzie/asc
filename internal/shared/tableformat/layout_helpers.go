@@ -1,16 +1,12 @@
 package tableformat
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
-
-type DetailTableLayout struct {
-	Type          string
-	ColumnsPerRow int
-}
 
 func appendHeaderRow(t table.Writer, fieldID string, colsPerRow int) {
 	headerIDs := make([]string, colsPerRow)
@@ -30,23 +26,26 @@ func appendHeaderRow(t table.Writer, fieldID string, colsPerRow int) {
 }
 
 func appendHorizontalRow(t table.Writer, fieldIDs []string, values []any, colsPerRow int) {
-	// Pad fieldIDs and values to colsPerRow
 	for len(fieldIDs) < colsPerRow {
 		fieldIDs = append(fieldIDs, "")
 		values = append(values, "")
 	}
+	if len(fieldIDs) != colsPerRow || len(values) != colsPerRow {
+		panic(fmt.Sprintf("row has %d columns, expected %d", len(fieldIDs), colsPerRow))
+	}
 	fieldRow := make([]any, len(fieldIDs))
 	for j, h := range fieldIDs {
-		fieldRow[j] = text.Colors{text.Bold, text.FgBlue}.Sprint(strings.ToUpper(h))
+		fieldRow[j] = text.Colors{text.Bold, text.FgBlue}.Sprint(h)
 	}
 	t.AppendRow(table.Row(fieldRow))
-
-	// Distribute the values across the columns
 	t.AppendRow(table.Row(values))
 	t.AppendSeparator()
 }
 
 func appendVerticalRow(t table.Writer, fieldID string, value any) {
-	row := table.Row{text.Bold.Sprint(fieldID), value}
+	row := table.Row{
+		text.Colors{text.Bold, text.FgHiBlue}.Sprint(fieldID),
+		text.Colors{text.FgWhite}.Sprint(value),
+	}
 	t.AppendRow(row)
 }
