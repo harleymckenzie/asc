@@ -76,6 +76,12 @@ func ShowCloudFormationStack(cmd *cobra.Command, args []string) error {
 	opts := tableformat.RenderOptions{
 		Title: fmt.Sprintf("Stack Details\n(%s)", args[0]),
 		Style: "rounded",
+		Layout: tableformat.DetailTableLayout{
+			Type: "vertical",
+			ColumnsPerRow: 3,
+			// ColumnMinWidth: 20,
+			// ColumnMaxWidth: 80,
+		},
 	}
 
 	err = tableformat.RenderTableDetail(&tableformat.DetailTable{

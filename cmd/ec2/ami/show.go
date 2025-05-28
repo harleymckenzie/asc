@@ -80,6 +80,9 @@ func ShowEC2AMI(cmd *cobra.Command, arg string) error {
 	opts := tableformat.RenderOptions{
 		Title:  fmt.Sprintf("AMI Details\n(%s)", aws.ToString(images[0].ImageId)),
 		Style:  "rounded",
+		Layout: tableformat.DetailTableLayout{
+			Type: "vertical",
+		},
 		SortBy: tableformat.GetSortByField(fields, false),
 	}
 

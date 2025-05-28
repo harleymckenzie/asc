@@ -286,6 +286,9 @@ func imageAttributes() map[string]ImageAttribute {
 		},
 		"State Reason": {
 			GetValue: func(i *types.Image) string {
+				if i == nil || i.StateReason == nil || i.StateReason.Message == nil {
+					return ""
+				}
 				return format.StringOrEmpty(i.StateReason.Message)
 			},
 		},

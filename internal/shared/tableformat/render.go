@@ -16,7 +16,7 @@ type RenderOptions struct {
 	SortBy []table.SortBy
 }
 
-// RenderTableList renders a list table.
+// RenderTableList renders a list table using the provided options.
 func RenderTableList(tl ListTableRenderable, opts RenderOptions) {
 	t := table.NewWriter()
 	style := TableStyles[opts.Style]
@@ -32,18 +32,20 @@ func RenderTableList(tl ListTableRenderable, opts RenderOptions) {
 	}
 	t.SetColumnConfigs(tl.ColumnConfigs())
 	t.SortBy(sortBy)
-	if t.Length() == 0 {
-		panic("cannot render table: no columns defined (header missing?)")
-	}
 	t.Render()
 }
 
-// RenderTableDetail renders a detailed table.
+// RenderTableDetail renders a detailed table using the provided options.
 func RenderTableDetail(td DetailTableRenderable, opts RenderOptions) error {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.SetTitle(opts.Title)
 	t.SetStyle(TableStyles[opts.Style])
+
+	// Ensure ColumnsPerRow is set to a sensible default
+	if opts.Layout.ColumnsPerRow <= 0 {
+		opts.Layout.ColumnsPerRow = 3
+	}
 
 	td.WriteRows(t, opts.Layout)
 	t.SetColumnConfigs(td.ColumnConfigs())
@@ -60,7 +62,7 @@ func RenderTableDetail(td DetailTableRenderable, opts RenderOptions) error {
 	return nil
 }
 
-// SetColumnWidths sets the minimum width for each column in the table.
+// SetColumnWidths sets the minimum and maximum width for each column in the table.
 // This can be used in RenderTableDetail if you want to enforce column widths.
 func SetColumnWidths(t table.Writer, cols int, minWidth int, maxWidth int) {
 	columnConfigs := make([]table.ColumnConfig, cols)

@@ -13,6 +13,7 @@ type DetailTable struct {
 	GetAttribute AttributeGetter
 }
 
+// WriteHeaders writes the header row for the detail table.
 func (dt *DetailTable) WriteHeaders(t table.Writer) {
 	if len(dt.Fields) == 0 {
 		panic("cannot render table: no fields defined")
@@ -24,6 +25,7 @@ func (dt *DetailTable) WriteHeaders(t table.Writer) {
 	t.AppendHeader(processDetailTableHeaders(dt.Fields))
 }
 
+// WriteRows writes the data rows for the detail table, using the specified layout.
 func (dt *DetailTable) WriteRows(t table.Writer, layout DetailTableLayout) {
 	if len(dt.Fields) == 0 {
 		panic("cannot render table: no fields defined")
@@ -36,6 +38,7 @@ func (dt *DetailTable) WriteRows(t table.Writer, layout DetailTableLayout) {
 	}
 }
 
+// writeRowsHorizontal writes rows in horizontal layout (fields and values in rows).
 func (dt *DetailTable) writeRowsHorizontal(t table.Writer, colsPerRow int) {
 	var fieldIDs []string
 	var values []any
@@ -59,7 +62,7 @@ func (dt *DetailTable) writeRowsHorizontal(t table.Writer, colsPerRow int) {
 		if val == "" {
 			val = "-"
 		}
-		values = append(values, text.Colors{text.FgWhite}.Sprint(val))
+		values = append(values, text.Colors{}.Sprint(val))
 
 		if len(fieldIDs) == colsPerRow || i == len(dt.Fields)-1 {
 			appendHorizontalRow(t, fieldIDs, values, colsPerRow)
@@ -69,6 +72,7 @@ func (dt *DetailTable) writeRowsHorizontal(t table.Writer, colsPerRow int) {
 	}
 }
 
+// writeRowsVertical writes rows in vertical layout (field, value per row).
 func (dt *DetailTable) writeRowsVertical(t table.Writer) {
 	for _, field := range dt.Fields {
 		if field.Header {
@@ -87,12 +91,12 @@ func (dt *DetailTable) writeRowsVertical(t table.Writer) {
 	}
 }
 
+// REVIEW: Confirm if this is needed
 func (dt *DetailTable) ColumnConfigs() []table.ColumnConfig {
-	return []table.ColumnConfig{
-		{Number: 1, Colors: text.Colors{text.Bold}},
-	}
+	return []table.ColumnConfig{}
 }
 
+// processDetailTableHeaders returns a table.Row of column headers for the detail table.
 func processDetailTableHeaders(fields []Field) table.Row {
 	headers := table.Row{}
 	for _, field := range fields {

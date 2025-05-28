@@ -12,6 +12,7 @@ type ListTable struct {
 	GetAttribute AttributeGetter
 }
 
+// WriteHeaders writes the header row for the list table.
 func (lt *ListTable) WriteHeaders(t table.Writer) {
 	if len(lt.Fields) == 0 {
 		panic("cannot render table: no fields defined")
@@ -25,6 +26,7 @@ func (lt *ListTable) WriteHeaders(t table.Writer) {
 	t.AppendHeader(headers, table.RowConfig{AutoMerge: true})
 }
 
+// WriteRows writes all data rows for the list table.
 func (lt *ListTable) WriteRows(t table.Writer) {
 	if len(lt.Fields) == 0 {
 		panic("cannot render table: no fields defined")
@@ -46,6 +48,7 @@ func (lt *ListTable) WriteRows(t table.Writer) {
 	t.AppendRows(rows, table.RowConfig{AutoMerge: false})
 }
 
+// ColumnConfigs returns the column configuration for the list table.
 func (lt *ListTable) ColumnConfigs() []table.ColumnConfig {
 	columnConfigs := []table.ColumnConfig{}
 	for _, field := range lt.Fields {

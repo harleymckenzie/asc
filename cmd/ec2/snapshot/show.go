@@ -78,6 +78,10 @@ func ShowEC2Snapshot(cmd *cobra.Command, arg string) error {
 	opts := tableformat.RenderOptions{
 		Title: fmt.Sprintf("Snapshot Details\n(%s)", arg),
 		Style: "rounded",
+		Layout: tableformat.DetailTableLayout{
+			Type: "vertical",
+			ColumnsPerRow: 2,
+		},
 	}
 
 	return tableformat.RenderTableDetail(&tableformat.DetailTable{
