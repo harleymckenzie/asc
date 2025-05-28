@@ -65,6 +65,10 @@ func ShowSecurityGroup(cmd *cobra.Command, arg string) error {
 	opts := tableformat.RenderOptions{
 		Title: "Security Group Details",
 		Style: "rounded",
+		Layout: tableformat.DetailTableLayout{
+			Type: "vertical",
+			ColumnsPerRow: 2,
+		},
 	}
 
 	return tableformat.RenderTableDetail(&tableformat.DetailTable{

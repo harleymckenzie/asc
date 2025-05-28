@@ -74,6 +74,10 @@ func ShowSubnet(cmd *cobra.Command, id string) error {
 	opts := tableformat.RenderOptions{
 		Title: fmt.Sprintf("Subnet Details\n(%s)", id),
 		Style: "rounded",
+		Layout: tableformat.DetailTableLayout{
+			Type: "vertical",
+			ColumnsPerRow: 2,
+		},
 	}
 
 	return tableformat.RenderTableDetail(&tableformat.DetailTable{

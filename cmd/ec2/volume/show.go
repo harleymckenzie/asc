@@ -85,6 +85,10 @@ func ShowEC2Volume(cobraCmd *cobra.Command, args string) error {
 	opts := tableformat.RenderOptions{
 		Title: "EC2 Volume Details",
 		Style: "rounded",
+		Layout: tableformat.DetailTableLayout{
+			Type: "vertical",
+			ColumnsPerRow: 2,
+		},
 	}
 
 	err = tableformat.RenderTableDetail(&tableformat.DetailTable{

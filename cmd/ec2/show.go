@@ -5,7 +5,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/harleymckenzie/asc/cmd/ec2/ami"
@@ -15,8 +14,6 @@ import (
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -96,8 +93,12 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 
 	fields := ec2ShowFields()
 	opts := tableformat.RenderOptions{
-		Title: "EC2 Instance Details",
+		Title: "Instance summary for " + *instance[0].InstanceId,
 		Style: "rounded",
+		Layout: tableformat.DetailTableLayout{
+			Type:          "horizontal",
+			ColumnsPerRow: 3,
+		},
 	}
 
 	err = tableformat.RenderTableDetail(&tableformat.DetailTable{
@@ -111,62 +112,4 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("render table: %w", err)
 	}
 	return nil
-}
-
-// printInstanceDetailsStyle1 is a function that was created to preview a concept for the table format
-// It is not currently used, but is kept here for reference
-func printInstanceDetailsStyle1() {
-	instance_id := "i-0123456789abcdefg"
-	instance_name := "Test Instance"
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.SetStyle(table.StyleLight) // Clean look
-	t.SetTitle(fmt.Sprintf("Instance details for: %s (%s)", instance_id, instance_name))
-	t.AppendHeader(table.Row{"Instance ID", "Public IP(s)", "Private IP(s)"})
-	t.AppendRow(table.Row{"i-0123456789abcdefg", "1.2.3.4", "1.2.3.4"})
-	t.AppendRow(table.Row{"IPv6 Address", "Instance State", "Instance Type"})
-	t.AppendRow(table.Row{"2001:db8:1234:5678:90ab:cdef:1234:5678", "running", "t3.micro"})
-	t.AppendRow(table.Row{"Launch Time", "VPC ID", "IAM Role"})
-	t.AppendRow(table.Row{"2021-01-01 12:00:00", "vpc-0123456789abcdefg", "ec2-user"})
-	t.AppendRow(table.Row{"Subnet ID", "Security Group(s)", "Key Name"})
-	t.AppendRow(table.Row{"subnet-0123456789abcdefg", "sg-0123456789abcdefg", "my-key-pair"})
-
-	t.SetStyle(table.StyleRounded)
-	t.Style().Options.DrawBorder = true
-	t.Style().Options.SeparateColumns = true
-	t.Style().Options.SeparateHeader = true
-	t.Style().Options.SeparateRows = true
-
-	t.Style().Format.Header = text.FormatDefault
-
-	t.Style().Size.WidthMin = 70
-	t.Style().Color.Header = text.Colors{text.Bold}
-	t.Style().Color.RowAlternate = text.Colors{text.Bold}
-	t.Style().Format.Header = text.FormatDefault
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{
-			Name:        "Instance ID",
-			WidthMin:    25,
-			WidthMax:    25,
-			Align:       text.AlignCenter,
-			AlignHeader: text.AlignCenter,
-		},
-		{
-			Name:        "Public IP(s)",
-			WidthMin:    25,
-			WidthMax:    25,
-			Align:       text.AlignCenter,
-			AlignHeader: text.AlignCenter,
-		},
-		{
-			Name:        "Private IP(s)",
-			WidthMin:    25,
-			WidthMax:    25,
-			Align:       text.AlignCenter,
-			AlignHeader: text.AlignCenter,
-		},
-	})
-
-	t.Render()
-
 }

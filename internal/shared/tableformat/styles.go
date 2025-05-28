@@ -5,13 +5,16 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-var TableStyles = map[string]table.Style{
+// TableStyle is a type alias for the table.Style type.
+type TableStyle = table.Style
+
+// TableStyles is a map of table styles. It is used to select the style of the table.
+var TableStyles = map[string]TableStyle{
 	"list":              ListTableStyle,
 	"rounded":           RoundedTableStyle,
 	"rounded-separated": RoundedSeparatedTableStyle,
 }
 
-// Table styles
 var (
 	// ListTableStyle is a table style that displays a list of items.
 	// NAME                INSTANCE ID          STATE    INSTANCE TYPE  PUBLIC IP

@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CmdAliases = []string{"amis", "images", "image"}
+var CmdAliases = []string{"ami", "amis", "images", "image"}
 
 // Root command
 func NewAMIRootCmd() *cobra.Command {
