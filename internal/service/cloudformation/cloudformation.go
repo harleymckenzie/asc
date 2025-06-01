@@ -3,9 +3,9 @@ package cloudformation
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 
 	ascTypes "github.com/harleymckenzie/asc/internal/service/cloudformation/types"
 )
@@ -25,13 +25,13 @@ type CloudFormationService struct {
 //
 
 func NewCloudFormationService(ctx context.Context, profile string, region string) (*CloudFormationService, error) {
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(profile))
+	cfg, err := awsutil.LoadDefaultConfig(ctx, profile, region)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a new CloudFormation client
-	client := cloudformation.NewFromConfig(cfg)
+	client := cloudformation.NewFromConfig(cfg.Config)
 
 	// Return a new CloudFormation service with the client
 	return &CloudFormationService{

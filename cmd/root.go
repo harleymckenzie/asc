@@ -16,7 +16,7 @@ import (
 var (
 	Profile string
 	Region  string
-	Version = "0.0.29"
+	Version = "0.0.30"
 )
 
 func NewRootCmd() *cobra.Command {

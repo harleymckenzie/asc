@@ -3,11 +3,11 @@ package vpc
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 )
 
 type VPCAPI interface {
@@ -26,12 +26,12 @@ type VPCService struct {
 }
 
 func NewVPCService(ctx context.Context, profile string, region string) (*VPCService, error) {
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(profile))
+	cfg, err := awsutil.LoadDefaultConfig(ctx, profile, region)
 	if err != nil {
 		return nil, err
 	}
 
-	client := ec2.NewFromConfig(cfg)
+	client := ec2.NewFromConfig(cfg.Config)
 
 	return &VPCService{
 		Client: client,
@@ -107,7 +107,7 @@ func (svc *VPCService) GetSubnets(ctx context.Context, input *ascTypes.GetSubnet
 	filters := []types.Filter{}
 	for _, vpcId := range input.VPCIds {
 		filters = append(filters, types.Filter{
-			Name: aws.String("vpc-id"),
+			Name:   aws.String("vpc-id"),
 			Values: []string{vpcId},
 		})
 	}
