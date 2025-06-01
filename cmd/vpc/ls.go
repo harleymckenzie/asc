@@ -92,7 +92,6 @@ func addLsFlags(lsCmd *cobra.Command) {
 func ListVPCs(cmd *cobra.Command, args []string) error {
 	ctx := context.TODO()
 	profile, region := cmdutil.GetPersistentFlags(cmd)
-	fmt.Printf("selected region is: %s\n", region)
 	svc, err := vpc.NewVPCService(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
