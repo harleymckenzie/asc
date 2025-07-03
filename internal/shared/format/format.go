@@ -96,6 +96,14 @@ func Int32ToStringOrEmpty(i *int32) string {
 	return strconv.FormatInt(int64(*i), 10)
 }
 
+// Float64ToStringOrEmpty safely converts a *float64 to string, returns "" if nil.
+func Float64ToStringOrEmpty(f *float64) string {
+	if f == nil {
+		return ""
+	}
+	return strconv.FormatFloat(*f, 'f', -1, 64)
+}
+
 // TimeToStringOrEmpty formats a *time.Time or returns "" if nil.
 func TimeToStringOrEmpty(t *time.Time) string {
 	if t == nil {

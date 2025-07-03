@@ -14,6 +14,7 @@ func NewRDSRootCmd() *cobra.Command {
 
 	// Add commands
 	cmd.AddCommand(lsCmd)
+	cmd.AddCommand(showCmd)
 
 	// Add groups
 	cmd.AddGroup(cmdutil.ActionGroups()...)
