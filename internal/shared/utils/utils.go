@@ -32,3 +32,11 @@ func SlicesToAny[T any](slices []T) []any {
 	}
 	return anySlices
 }
+
+// StringPtr returns a pointer to the string, or nil if the string is empty.
+func StringPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}

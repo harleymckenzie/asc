@@ -1,9 +1,30 @@
 package format
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/url"
 	"strconv"
 	"time"
 )
+
+// DecodeAndFormatJSON decodes a JSON string and formats it with indentation.
+func DecodeAndFormatJSON(encoded *string) string {
+    if encoded == nil {
+        return ""
+    }
+    decoded, err := url.QueryUnescape(*encoded)
+    if err != nil {
+        return *encoded // fallback to raw if decode fails
+    }
+    // Optional: pretty-print JSON
+    var prettyJSON map[string]interface{}
+    if err := json.Unmarshal([]byte(decoded), &prettyJSON); err == nil {
+        pretty, _ := json.MarshalIndent(prettyJSON, "", "  ")
+        return string(pretty)
+    }
+    return decoded
+}
 
 // StringOrEmpt safely dereferences a *string, returning "" if nil.
 func StringOrEmpty(s *string) string {
@@ -102,4 +123,26 @@ func TimeToStringOrEmpty(t *time.Time) string {
 		return ""
 	}
 	return t.Local().Format("2006-01-02 15:04:05 MST")
+}
+
+// TimeToStringRelative formats a *time.Time or returns "" if nil. It shows the relative time since the time.
+func TimeToStringRelative(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	now := time.Now()
+	diff := now.Sub(*t)
+
+	switch {
+	case diff < time.Minute:
+		return "just now"
+	case diff < time.Hour:
+		return fmt.Sprintf("%d minutes ago", int(diff.Minutes()))
+	case diff < 24*time.Hour:
+		return fmt.Sprintf("%d hours ago", int(diff.Hours()))
+	case diff < 30*24*time.Hour:
+		return fmt.Sprintf("%d days ago", int(diff.Hours()/24))
+	default:
+		return t.Local().Format("2006-01-02 15:04:05 MST")
+	}
 }
