@@ -78,4 +78,5 @@ var StateColours = map[string]text.Color{
 	"update_rollback_complete":    text.FgRed,
 	"update_rollback_failed":      text.FgRed,
 	"update_rollback_in_progress": text.FgRed,
+	"upgrading":                   text.FgYellow,
 }
