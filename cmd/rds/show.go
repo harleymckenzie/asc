@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/rds"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/rds/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/spf13/cobra"
@@ -93,7 +94,9 @@ func ShowRDSInstance(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new RDS service: %w", err)
 	}
 
-	instance, err := svc.GetInstances(ctx)
+	instance, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{
+		DBInstanceIdentifier: args[0],
+	})
 	if err != nil {
 		return fmt.Errorf("get instances: %w", err)
 	}

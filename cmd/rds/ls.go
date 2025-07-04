@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/rds"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/rds/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
@@ -18,6 +19,7 @@ var (
 	list              bool
 	showEndpoint      bool
 	showEngineVersion bool
+	showMaintenanceWindow bool
 
 	sortName    bool
 	sortCluster bool
@@ -45,6 +47,7 @@ func rdsFields() []tableformat.Field {
 		{ID: "Engine Version", Display: showEngineVersion, Sort: false, SortDirection: "desc"},
 		{ID: "Size", Display: true, Sort: false},
 		{ID: "Endpoint", Display: showEndpoint, Sort: false},
+		{ID: "Maintenance Window", Display: showMaintenanceWindow, Sort: false},
 	}
 }
 
@@ -64,6 +67,7 @@ func addLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs RDS clusters and instances in list format.")
 	cobraCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
 	cobraCmd.Flags().BoolVarP(&showEngineVersion, "engine-version", "v", false, "Show the engine version of the cluster")
+	cobraCmd.Flags().BoolVarP(&showMaintenanceWindow, "maintenance-window", "P", false, "Show the maintenance window of the cluster")
 
 	// Add flags - Sorting
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending RDS instance identifier.")
@@ -90,7 +94,7 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new RDS service: %w", err)
 	}
 
-	instances, err := svc.GetInstances(ctx)
+	instances, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{})
 	if err != nil {
 		return fmt.Errorf("list RDS instances: %w", err)
 	}

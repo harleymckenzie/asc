@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 
 	"github.com/harleymckenzie/asc/internal/shared/awsutil"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/rds/types"
 )
 
 // RDSClientAPI is the interface for the RDS client.
@@ -33,8 +34,10 @@ func NewRDSService(ctx context.Context, profile string, region string) (*RDSServ
 }
 
 // GetInstances gets all the RDS instances.
-func (svc *RDSService) GetInstances(ctx context.Context) ([]types.DBInstance, error) {
-	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{})
+func (svc *RDSService) GetInstances(ctx context.Context, input *ascTypes.GetInstancesInput) ([]types.DBInstance, error) {
+	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{
+		DBInstanceIdentifier: &input.DBInstanceIdentifier,
+	})
 	if err != nil {
 		return nil, err
 	}
