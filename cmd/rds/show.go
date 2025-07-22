@@ -31,14 +31,16 @@ func rdsShowFields() []tableformat.Field {
 		{ID: "Role", Display: true},
 		{ID: "Engine", Display: true},
 		{ID: "Engine Version", Display: true},
+		{ID: "Certificate Authority", Display: true},
+		{ID: "Certificate Authority Date", Display: true},
+
+		{ID: "Networking", Header: true},
 		{ID: "VPC ID", Display: true},
 		{ID: "Subnet Group", Display: true},
 		{ID: "Subnet IDs", Display: true},
 		{ID: "Network Type", Display: true},
 		{ID: "VPC Security Group(s)", Display: true},
 		{ID: "Public Access", Display: true},
-		{ID: "Certificate Authority", Display: true},
-		{ID: "Certificate Authority Date", Display: true},
 
 		{ID: "Configuration", Header: true},
 		{ID: "Cluster ID", Display: true},
