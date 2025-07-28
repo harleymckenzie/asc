@@ -15,6 +15,8 @@ type Field struct {
 
 type AttributeGetter func(fieldID string, instance any) (string, error)
 
+type TagGetter func(tag string, instance any) (string, error)
+
 type DetailTableLayout struct {
 	Type           string // "horizontal" or "vertical"
 	ColumnsPerRow  int

@@ -9,7 +9,9 @@ import (
 type ListTable struct {
 	Instances    []any
 	Fields       []Field
+	Tags         []string
 	GetAttribute AttributeGetter
+	GetTagValue  TagGetter
 }
 
 // WriteHeaders writes the header row for the list table.
@@ -22,6 +24,14 @@ func (lt *ListTable) WriteHeaders(t table.Writer) {
 		if field.Display || field.Hidden {
 			headers = append(headers, field.ID)
 		}
+	}
+	if len(lt.Tags) > 0 {
+		for _, tag := range lt.Tags {
+			headers = append(headers, fmt.Sprintf("Tag: %s", tag))
+		}
+	}
+	if len(headers) == 0 {
+		panic("cannot render table: no headers defined")
 	}
 	t.AppendHeader(headers, table.RowConfig{AutoMerge: true})
 }
@@ -42,6 +52,18 @@ func (lt *ListTable) WriteRows(t table.Writer) {
 				}
 				row = append(row, val)
 			}
+		}
+		if len(lt.Tags) > 0 {
+			for _, tag := range lt.Tags {
+				tagValue, err := lt.GetTagValue(tag, instance)
+				if err != nil {
+					tagValue = fmt.Sprintf("[error: %v]", err)
+				}
+				row = append(row, tagValue)
+			}
+		}
+		if len(row) == 0 {
+			panic("cannot render table: no data in row")
 		}
 		rows = append(rows, row)
 	}

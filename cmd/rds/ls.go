@@ -5,7 +5,6 @@ package rds
 import (
 	"context"
 	"fmt"
-
 	"github.com/harleymckenzie/asc/internal/service/rds"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
@@ -64,6 +63,7 @@ func addLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs RDS clusters and instances in list format.")
 	cobraCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
 	cobraCmd.Flags().BoolVarP(&showEngineVersion, "engine-version", "v", false, "Show the engine version of the cluster")
+	cmdutil.AddTagFlag(cobraCmd)
 
 	// Add flags - Sorting
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending RDS instance identifier.")
@@ -115,8 +115,12 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(instances),
 		Fields:    fields,
+		Tags:      cmdutil.Tags,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return rds.GetAttributeValue(fieldID, instance, clusters)
+		},
+		GetTagValue: func(tag string, instance any) (string, error) {
+			return rds.GetTagValue(tag, instance)
 		},
 	}, opts)
 

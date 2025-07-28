@@ -77,6 +77,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
 	cobraCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
 	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
+	cmdutil.AddTagFlag(cobraCmd)
 
 	// Add flags - Sorting
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
@@ -117,8 +118,12 @@ func ListEC2Instances(cmd *cobra.Command, args []string) error {
 	tableformat.RenderTableList(&tableformat.ListTable{
 		Instances: utils.SlicesToAny(instances),
 		Fields:    fields,
+		Tags:      cmdutil.Tags,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return ec2.GetAttributeValue(fieldID, instance)
+		},
+		GetTagValue: func(tag string, instance any) (string, error) {
+			return ec2.GetTagValue(tag, instance)
 		},
 	}, opts)
 	return nil

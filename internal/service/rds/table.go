@@ -73,3 +73,17 @@ func availableAttributes() map[string]Attribute {
 		},
 	}
 }
+
+// GetTagValue is a function that returns the value of a tag for a DB instance.
+func GetTagValue(tagKey string, instance any) (string, error) {
+	inst, ok := instance.(types.DBInstance)
+	if !ok {
+		return "", fmt.Errorf("instance is not a types.DBInstance")
+	}
+	for _, tag := range inst.TagList {
+		if aws.ToString(tag.Key) == tagKey {
+			return aws.ToString(tag.Value), nil
+		}
+	}
+	return "", nil
+}
