@@ -85,6 +85,11 @@ func ModifyAutoScalingGroup(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get Auto Scaling Groups: %w", err)
 	}
 
+	// Check if the Auto Scaling Group exists
+	if len(asgOutput) == 0 {
+		return fmt.Errorf("Auto Scaling Group not found: %s", args[0])
+	}
+
 	// Create a ModifyAutoScalingGroupInput struct to be updated with the new information
 	input := &ascTypes.ModifyAutoScalingGroupInput{
 		AutoScalingGroupName: args[0],
@@ -158,7 +163,6 @@ func ModifyAutoScalingGroup(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
-
 
 func addRevertSchedule(ctx context.Context, svc *asg.AutoScalingService, input *ascTypes.AddAutoScalingGroupScheduleInput) error {
 	err := svc.AddAutoScalingGroupSchedule(ctx, input)
