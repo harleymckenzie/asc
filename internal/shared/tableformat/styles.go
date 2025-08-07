@@ -8,6 +8,8 @@ import (
 // TableStyle is a type alias for the table.Style type.
 type TableStyle = table.Style
 
+const DefaultTableStyle = "rounded"
+
 // TableStyles is a map of table styles. It is used to select the style of the table.
 var TableStyles = map[string]TableStyle{
 	"list":              ListTableStyle,

@@ -19,6 +19,12 @@ type RenderOptions struct {
 // RenderTableList renders a list table using the provided options.
 func RenderTableList(tl ListTableRenderable, opts RenderOptions) {
 	t := table.NewWriter()
+
+	// Set default style if not specified
+	if opts.Style == "" {
+		opts.Style = DefaultTableStyle
+	}
+
 	style := TableStyles[opts.Style]
 	sortBy := opts.SortBy
 

@@ -42,9 +42,9 @@ var addCmd = &cobra.Command{
 func NewAddFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().StringVarP(&asgName, "asg-name", "a", "", "The name of the Auto Scaling Group to add the schedule to.")
 	cobraCmd.MarkFlagRequired("asg-name")
-	cobraCmd.Flags().IntVarP(&minSize, "min-size", "m", 0, "The minimum size of the Auto Scaling Group.")
-	cobraCmd.Flags().IntVarP(&maxSize, "max-size", "M", 0, "The maximum size of the Auto Scaling Group.")
-	cobraCmd.Flags().IntVarP(&desiredCapacity, "desired-capacity", "d", 0, "The desired capacity of the Auto Scaling Group.")
+	cobraCmd.Flags().IntVarP(&minSize, "min-size", "m", -1, "The minimum size of the Auto Scaling Group.")
+	cobraCmd.Flags().IntVarP(&maxSize, "max-size", "M", -1, "The maximum size of the Auto Scaling Group.")
+	cobraCmd.Flags().IntVarP(&desiredCapacity, "desired-capacity", "d", -1, "The desired capacity of the Auto Scaling Group.")
 	cobraCmd.Flags().StringVarP(&recurrence, "recurrence", "R", "", "The recurrence of the schedule.")
 	cobraCmd.Flags().StringVarP(&startTimeStr, "start-time", "s", "", "The start time of the schedule.")
 	cobraCmd.Flags().StringVarP(&endTimeStr, "end-time", "e", "", "The end time of the schedule.")
@@ -94,17 +94,17 @@ func AddSchedule(cmd *cobra.Command, args []string) error {
 		AutoScalingGroupName: asgName,
 	}
 
-	if minSize != 0 {
+	if minSize != -1 {
 		minSizeInt32 := int32(minSize)
 		input.MinSize = &minSizeInt32
 	}
 
-	if maxSize != 0 {
+	if maxSize != -1 {
 		maxSizeInt32 := int32(maxSize)
 		input.MaxSize = &maxSizeInt32
 	}
 
-	if desiredCapacity != 0 {
+	if desiredCapacity != -1 {
 		desiredCapacityInt32 := int32(desiredCapacity)
 		input.DesiredCapacity = &desiredCapacityInt32
 	}
