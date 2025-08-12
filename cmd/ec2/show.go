@@ -95,6 +95,11 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get instances: %w", err)
 	}
 
+	// Check if any instances were returned
+	if len(instance) == 0 {
+		return fmt.Errorf("instance not found: %s", args[0])
+	}
+
 	tags, err := awsutil.NormalizeTags(instance[0].Tags)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
@@ -104,7 +109,7 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		Title: "Instance summary for " + *instance[0].InstanceId,
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type:           "horizontal",
+			Type:           "vertical",
 			ColumnsPerRow:  3,
 			ColumnMaxWidth: 50,
 		},

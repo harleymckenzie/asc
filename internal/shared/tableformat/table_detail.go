@@ -83,14 +83,22 @@ func (dt *DetailTable) writeRowsVertical(t table.Writer) {
 			appendHeaderRow(t, field.ID, 2)
 			continue
 		}
-		val, err := dt.GetAttribute(field.ID, dt.Instance)
-		if err != nil {
-			val = fmt.Sprintf("[error: %v]", err)
+
+		if field.ID == "Tags" && field.Display {
+			// Display each tag as a separate row in vertical layout
+			for _, tag := range dt.Tags {
+				appendVerticalRow(t, tag.Name, tag.Value)
+			}
+		} else {
+			val, err := dt.GetAttribute(field.ID, dt.Instance)
+			if err != nil {
+				val = fmt.Sprintf("[error: %v]", err)
+			}
+			if val == "" {
+				val = "-"
+			}
+			appendVerticalRow(t, field.ID, val)
 		}
-		if val == "" {
-			val = "-"
-		}
-		appendVerticalRow(t, field.ID, val)
 	}
 }
 
