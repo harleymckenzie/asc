@@ -57,7 +57,7 @@ func RenderTableDetail(td DetailTableRenderable, opts RenderOptions) error {
 	t.SetColumnConfigs(td.ColumnConfigs())
 
 	// Optionally set column widths if specified in layout
-	if opts.Layout.ColumnMinWidth > 0 && opts.Layout.ColumnsPerRow > 0 {
+	if (opts.Layout.ColumnMinWidth > 0 || opts.Layout.ColumnMaxWidth > 0) && opts.Layout.ColumnsPerRow > 0 {
 		SetColumnWidths(t, opts.Layout.ColumnsPerRow, opts.Layout.ColumnMinWidth, opts.Layout.ColumnMaxWidth)
 	}
 

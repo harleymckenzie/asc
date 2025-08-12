@@ -12,6 +12,7 @@ import (
 	"github.com/harleymckenzie/asc/cmd/ec2/volume"
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/spf13/cobra"
@@ -51,6 +52,9 @@ func ec2ShowFields() []tableformat.Field {
 		{ID: "Security", Header: true},
 		{ID: "Security Group(s)", Display: true},
 		{ID: "Key Name", Display: true},
+
+		{ID: "Tags", Header: true},
+		{ID: "Tags", Display: true},
 	}
 }
 
@@ -91,19 +95,25 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get instances: %w", err)
 	}
 
-	fields := ec2ShowFields()
+	tags, err := awsutil.NormalizeTags(instance[0].Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
+	}
+
 	opts := tableformat.RenderOptions{
 		Title: "Instance summary for " + *instance[0].InstanceId,
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type:          "horizontal",
-			ColumnsPerRow: 3,
+			Type:           "horizontal",
+			ColumnsPerRow:  3,
+			ColumnMaxWidth: 50,
 		},
 	}
 
 	err = tableformat.RenderTableDetail(&tableformat.DetailTable{
 		Instance: instance[0],
-		Fields:   fields,
+		Fields:   ec2ShowFields(),
+		Tags:     tags,
 		GetAttribute: func(fieldID string, instance any) (string, error) {
 			return ec2.GetAttributeValue(fieldID, instance)
 		},

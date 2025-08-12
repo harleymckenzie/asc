@@ -15,7 +15,14 @@ type Field struct {
 
 type AttributeGetter func(fieldID string, instance any) (string, error)
 
-type TagGetter func(tag string, instance any) (string, error)
+type Tag struct {
+	Name  string
+	Value string
+}
+
+type TagValueGetter func(tag string, instance any) (string, error)
+
+type TagsGetter func(instance any) (map[string]string, error)
 
 type DetailTableLayout struct {
 	Type           string // "horizontal" or "vertical"
@@ -31,7 +38,6 @@ type ListTableRenderable interface {
 }
 
 type DetailTableRenderable interface {
-	WriteHeaders(t table.Writer)
 	WriteRows(t table.Writer, layout DetailTableLayout)
 	ColumnConfigs() []table.ColumnConfig
 }

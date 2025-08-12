@@ -154,7 +154,7 @@ func availableAttributes() map[string]Attribute {
 	}
 }
 
-// GetTagValue is a function that returns the value of a tag for an instance.
+// GetTagValue returns the value of a tag for an instance.
 func GetTagValue(tagKey string, instance any) (string, error) {
 	inst, ok := instance.(types.Instance)
 	if !ok {

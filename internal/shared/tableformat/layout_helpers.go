@@ -44,8 +44,14 @@ func appendHorizontalRow(t table.Writer, fieldIDs []string, values []any, colsPe
 		fieldRow[j] = text.Colors{text.Bold, text.FgBlue}.Sprint(h)
 	}
 
-	t.AppendRow(table.Row(fieldRow))
-	t.AppendRow(table.Row(values))
+	t.AppendRow(table.Row(fieldRow), table.RowConfig{
+		AutoMerge:      true,
+		AutoMergeAlign: text.AlignLeft,
+	})
+	t.AppendRow(table.Row(values), table.RowConfig{
+		AutoMerge:      true,
+		AutoMergeAlign: text.AlignLeft,
+	})
 	t.AppendSeparator()
 }
 

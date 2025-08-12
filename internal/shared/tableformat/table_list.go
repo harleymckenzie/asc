@@ -11,7 +11,7 @@ type ListTable struct {
 	Fields       []Field
 	Tags         []string
 	GetAttribute AttributeGetter
-	GetTagValue  TagGetter
+	GetTagValue  TagValueGetter
 }
 
 // WriteHeaders writes the header row for the list table.
