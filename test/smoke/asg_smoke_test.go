@@ -55,9 +55,9 @@ func TestASGLsNameSmoke(t *testing.T) {
 	if os.Getenv("SMOKE") != "1" {
 		t.Skip("skipping smoke test; set SMOKE=1 to run")
 	}
-	asgName := os.Getenv("ASG_SMOKE_NAME")
+	asgName := os.Getenv("SMOKE_ASG_NAME")
 	if asgName == "" {
-		t.Skip("set ASG_SMOKE_NAME to an ASG name to run this test")
+		t.Skip("set SMOKE_ASG_NAME to an ASG name to run this test")
 	}
 	cmd := exec.Command("go", "run", "../../main.go", "asg", "ls", asgName)
 	out, err := cmd.CombinedOutput()

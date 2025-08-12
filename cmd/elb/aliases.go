@@ -8,17 +8,17 @@ import (
 
 func init() {
 	// Add subcommands
-	lsCmd.AddCommand(tg.NewTargetGroupRootCmd())
+	lsCmd.AddCommand(targetGroupLsCmd)
 
 	// Add flags
-	tg.NewLsFlags(lsTargetGroupCmd)
+	tg.NewLsFlags(targetGroupLsCmd)
 
 	// Add groups
 	lsCmd.AddGroup(cmdutil.SubcommandGroups()...)
 }
 
 // Subcommand variable
-var lsTargetGroupCmd = &cobra.Command{
+var targetGroupLsCmd = &cobra.Command{
 	Use:   "target-groups",
 	Short: "List target groups",
 	Run: func(cobraCmd *cobra.Command, args []string) {
