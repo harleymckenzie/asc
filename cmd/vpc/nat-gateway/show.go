@@ -11,6 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // natGatewayShowFields returns the fields for the NAT Gateway detail table.
 func natGatewayShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -38,7 +46,9 @@ var showCmd = &cobra.Command{
 }
 
 // NewShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 // ShowNatGateway displays detailed information for a specified NAT Gateway.
 func ShowNatGateway(cmd *cobra.Command, id string) error {
@@ -47,6 +57,12 @@ func ShowNatGateway(cmd *cobra.Command, id string) error {
 	svc, err := vpc.NewVPCService(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	nats, err := svc.GetNatGateways(ctx, &ascTypes.GetNatGatewaysInput{NatGatewayIds: []string{id}})
@@ -63,8 +79,7 @@ func ShowNatGateway(cmd *cobra.Command, id string) error {
 		Title: fmt.Sprintf("NAT Gateway Details\n(%s)", id),
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cmd),
 		},
 	}
 

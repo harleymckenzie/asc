@@ -63,7 +63,9 @@ var showCmd = &cobra.Command{
 }
 
 // Flag function
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 // ShowEC2Volume is the function for showing EC2 volumes
 func ShowEC2Volume(cobraCmd *cobra.Command, args string) error {
@@ -72,6 +74,12 @@ func ShowEC2Volume(cobraCmd *cobra.Command, args string) error {
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new EC2 service: %w", err)
+	}
+
+	if cobraCmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cobraCmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	volume, err := svc.GetVolumes(ctx, &ascTypes.GetVolumesInput{
@@ -86,8 +94,7 @@ func ShowEC2Volume(cobraCmd *cobra.Command, args string) error {
 		Title: "EC2 Volume Details",
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cobraCmd),
 		},
 	}
 

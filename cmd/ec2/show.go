@@ -59,7 +59,9 @@ func ec2ShowFields() []tableformat.Field {
 }
 
 // Flag function
-func newShowFlags(cmd *cobra.Command) {}
+func newShowFlags(cmd *cobra.Command) {
+	cmdutil.AddShowFlags(cmd, "horizontal")
+}
 
 // Command functions
 // ShowEC2Resource displays detailed information for a specified EC2 resource.
@@ -88,6 +90,12 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new EC2 service: %w", err)
 	}
 
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
+	}
+
 	instance, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{
 		InstanceIDs: args,
 	})
@@ -109,7 +117,7 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		Title: "Instance summary for " + *instance[0].InstanceId,
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type:           "vertical",
+			Type:           cmdutil.GetLayout(cmd),
 			ColumnsPerRow:  3,
 			ColumnMaxWidth: 50,
 		},

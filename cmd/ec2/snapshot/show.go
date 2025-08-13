@@ -12,6 +12,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // ec2SnapshotShowFields returns the fields for the snapshot detail table.
 func ec2SnapshotShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -27,11 +35,11 @@ func ec2SnapshotShowFields() []tableformat.Field {
 		{ID: "Started", Display: true, DefaultSort: true, SortDirection: "desc"},
 		{ID: "Progress", Display: true},
 		{ID: "Owner ID", Display: true},
-		
+
 		{ID: "Source Volume", Header: true},
 		{ID: "Volume ID", Display: true},
 		{ID: "Volume Size", Display: true},
-		
+
 		{ID: "Encryption", Header: true},
 		{ID: "Encryption", Display: true},
 		{ID: "KMS Key ID", Display: true},
@@ -43,7 +51,9 @@ func ec2SnapshotShowFields() []tableformat.Field {
 }
 
 // NewShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 // showCmd is the cobra command for showing snapshot details.
 var showCmd = &cobra.Command{
@@ -66,6 +76,12 @@ func ShowEC2Snapshot(cmd *cobra.Command, arg string) error {
 		return fmt.Errorf("create new EC2 service: %w", err)
 	}
 
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
+	}
+
 	snapshots, err := svc.GetSnapshots(ctx, &ascTypes.GetSnapshotsInput{SnapshotIDs: []string{arg}})
 	if err != nil {
 		return fmt.Errorf("get snapshots: %w", err)
@@ -79,8 +95,7 @@ func ShowEC2Snapshot(cmd *cobra.Command, arg string) error {
 		Title: fmt.Sprintf("Snapshot Details\n(%s)", arg),
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cmd),
 		},
 	}
 

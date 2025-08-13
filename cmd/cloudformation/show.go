@@ -18,27 +18,27 @@ var ()
 
 // Init function
 func init() {
-
+	NewShowFlags(showCmd)
 }
 
 // Column functions
 func cloudformationShowFields() []tableformat.Field {
 	return []tableformat.Field{
-        {ID: "Overview", Display: true, Header: true},
-        {ID: "Stack ID", Display: true},
+		{ID: "Overview", Display: true, Header: true},
+		{ID: "Stack ID", Display: true},
 		{ID: "Description", Display: true},
 		{ID: "Status", Display: true},
 		{ID: "Detailed Status", Display: true},
 		{ID: "Status Reason", Display: true},
 		{ID: "Creation Time", Display: true},
-        {ID: "Last Updated", Display: true},
-        {ID: "Deletion Time", Display: true},
-        {ID: "Deletion Mode", Display: true},
-        {ID: "Drift Status", Display: true},
-        {ID: "Root Stack", Display: true},
-        {ID: "Parent Stack", Display: true},
-        {ID: "Termination Protection", Display: true},
-        {ID: "IAM Role", Display: true},
+		{ID: "Last Updated", Display: true},
+		{ID: "Deletion Time", Display: true},
+		{ID: "Deletion Mode", Display: true},
+		{ID: "Drift Status", Display: true},
+		{ID: "Root Stack", Display: true},
+		{ID: "Parent Stack", Display: true},
+		{ID: "Termination Protection", Display: true},
+		{ID: "IAM Role", Display: true},
 	}
 }
 
@@ -53,7 +53,9 @@ var showCmd = &cobra.Command{
 }
 
 // Flag function
-func addShowFlags(showCmd *cobra.Command) {}
+func NewShowFlags(showCmd *cobra.Command) {
+	cmdutil.AddShowFlags(showCmd, "horizontal")
+}
 
 // Show function
 func ShowCloudFormationStack(cmd *cobra.Command, args []string) error {
@@ -64,6 +66,12 @@ func ShowCloudFormationStack(cmd *cobra.Command, args []string) error {
 	svc, err := cloudformation.NewCloudFormationService(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new CloudFormation service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	stack, err := svc.GetStacks(ctx, &ascTypes.GetStacksInput{
@@ -77,10 +85,7 @@ func ShowCloudFormationStack(cmd *cobra.Command, args []string) error {
 		Title: fmt.Sprintf("Stack Details\n(%s)", args[0]),
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 3,
-			// ColumnMinWidth: 20,
-			// ColumnMaxWidth: 80,
+			Type: cmdutil.GetLayout(cmd),
 		},
 	}
 

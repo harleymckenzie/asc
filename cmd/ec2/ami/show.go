@@ -13,6 +13,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // ec2AMIShowFields returns the fields for the AMI detail table.
 func ec2AMIShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -57,7 +65,9 @@ var showCmd = &cobra.Command{
 }
 
 // NewShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "horizontal")
+}
 
 // ShowEC2AMI displays detailed information for a specified AMI.
 func ShowEC2AMI(cmd *cobra.Command, arg string) error {
@@ -66,6 +76,12 @@ func ShowEC2AMI(cmd *cobra.Command, arg string) error {
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new EC2 service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	images, err := svc.GetImages(ctx, &ascTypes.GetImagesInput{ImageIDs: []string{arg}})
@@ -78,10 +94,11 @@ func ShowEC2AMI(cmd *cobra.Command, arg string) error {
 
 	fields := ec2AMIShowFields()
 	opts := tableformat.RenderOptions{
-		Title:  fmt.Sprintf("AMI Details\n(%s)", aws.ToString(images[0].ImageId)),
-		Style:  "rounded",
+		Title: fmt.Sprintf("AMI Details\n(%s)", aws.ToString(images[0].ImageId)),
+		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
+			Type:           cmdutil.GetLayout(cmd),
+			ColumnsPerRow:  3,
 		},
 		SortBy: tableformat.GetSortByField(fields, false),
 	}

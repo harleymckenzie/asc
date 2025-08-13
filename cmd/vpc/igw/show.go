@@ -44,7 +44,9 @@ var showCmd = &cobra.Command{
 }
 
 // Flag function
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 // ShowVPCIGW is the function for showing VPC internet gateways
 func ShowVPCIGW(cmd *cobra.Command, id string) error {
@@ -53,6 +55,12 @@ func ShowVPCIGW(cmd *cobra.Command, id string) error {
 	svc, err := vpc.NewVPCService(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	igws, err := svc.GetIGWs(ctx, &ascTypes.GetIGWsInput{IGWIds: []string{id}})
@@ -69,8 +77,8 @@ func ShowVPCIGW(cmd *cobra.Command, id string) error {
 		Title: fmt.Sprintf("Internet Gateway Details\n(%s)", id),
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cmd),
+			ColumnsPerRow: 4,
 		},
 	}
 

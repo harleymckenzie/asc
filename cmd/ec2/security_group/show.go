@@ -12,6 +12,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // ec2SecurityGroupShowFields returns the fields for the security group detail table.
 func ec2SecurityGroupShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -39,7 +47,9 @@ var showCmd = &cobra.Command{
 }
 
 // newShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 // ShowSecurityGroup displays detailed information for a specified security group.
 func ShowSecurityGroup(cmd *cobra.Command, arg string) error {
@@ -48,6 +58,12 @@ func ShowSecurityGroup(cmd *cobra.Command, arg string) error {
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new EC2 service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	groups, err := svc.GetSecurityGroups(
@@ -66,8 +82,7 @@ func ShowSecurityGroup(cmd *cobra.Command, arg string) error {
 		Title: "Security Group Details",
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cmd),
 		},
 	}
 

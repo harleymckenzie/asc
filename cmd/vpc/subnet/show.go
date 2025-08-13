@@ -11,16 +11,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // subnetShowFields returns the fields for the Subnet detail table.
 func subnetShowFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Subnet ID", Display: true},
 		{ID: "Subnet ARN", Display: true},
 		{ID: "VPC ID", Display: true},
-		{ID: "IPv4 CIDR", Display: true},
-		{ID: "IPv6 CIDR", Display: true},
+		// {ID: "IPv4 CIDR", Display: false}, // TODO: Implement in attributes table
+		// {ID: "IPv6 CIDR", Display: false}, // TODO: Implement in attributes table
 		{ID: "Availability Zone", Display: true},
-		{ID: "Availability Zone ID", Display: true},
+		// {ID: "Availability Zone ID", Display: true}, // TODO: Implement in attributes table
 		{ID: "Network ACL", Display: true},
 		{ID: "Route Table", Display: true},
 		{ID: "State", Display: true},
@@ -50,7 +58,9 @@ var showCmd = &cobra.Command{
 }
 
 // NewShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 // ShowSubnet displays detailed information for a specified Subnet.
 func ShowSubnet(cmd *cobra.Command, id string) error {
@@ -59,6 +69,12 @@ func ShowSubnet(cmd *cobra.Command, id string) error {
 	svc, err := vpc.NewVPCService(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	subnets, err := svc.GetSubnets(ctx, &ascTypes.GetSubnetsInput{SubnetIds: []string{id}})
@@ -75,8 +91,7 @@ func ShowSubnet(cmd *cobra.Command, id string) error {
 		Title: fmt.Sprintf("Subnet Details\n(%s)", id),
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cmd),
 		},
 	}
 

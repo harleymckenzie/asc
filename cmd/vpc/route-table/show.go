@@ -11,6 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // routeTableShowFields returns the fields for the Route Table detail table.
 func routeTableShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -36,7 +44,9 @@ var showCmd = &cobra.Command{
 }
 
 // NewShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 // ShowRouteTable displays detailed information for a specified Route Table.
 func ShowRouteTable(cmd *cobra.Command, id string) error {
@@ -45,6 +55,12 @@ func ShowRouteTable(cmd *cobra.Command, id string) error {
 	svc, err := vpc.NewVPCService(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{RouteTableIds: []string{id}})
@@ -61,8 +77,9 @@ func ShowRouteTable(cmd *cobra.Command, id string) error {
 		Title: fmt.Sprintf("Route Table Details\n(%s)", id),
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cmd),
+			ColumnsPerRow: 3,
+			ColumnMinWidth: 20,
 		},
 	}
 

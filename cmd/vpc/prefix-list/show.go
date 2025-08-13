@@ -11,6 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // prefixListShowFields returns the fields for the Prefix List detail table.
 func prefixListShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -38,7 +46,9 @@ var showCmd = &cobra.Command{
 }
 
 // NewShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "horizontal")
+}
 
 // ShowPrefixList displays detailed information for a specified Prefix List.
 func ShowPrefixList(cmd *cobra.Command, id string) error {
@@ -49,7 +59,13 @@ func ShowPrefixList(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	pls, err := svc.GetPrefixLists(ctx, &ascTypes.GetPrefixListsInput{
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
+	}
+
+	pls, err := svc.GetManagedPrefixLists(ctx, &ascTypes.GetManagedPrefixListsInput{
 		// PrefixListIds: []string{id},
 	})
 	if err != nil {
@@ -65,8 +81,7 @@ func ShowPrefixList(cmd *cobra.Command, id string) error {
 		Title: fmt.Sprintf("Prefix List Details\n(%s)", id),
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cmd),
 		},
 	}
 

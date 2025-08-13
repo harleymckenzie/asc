@@ -12,6 +12,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // showCmd is the cobra command for showing VPC details.
 var showCmd = &cobra.Command{
 	Use:     "show",
@@ -25,7 +33,9 @@ var showCmd = &cobra.Command{
 }
 
 // NewShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 func vpcShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -50,6 +60,12 @@ func showVPC(cmd *cobra.Command, id string) error {
 	svc, err := vpc.NewVPCService(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	vpcs, err := svc.GetVPCs(ctx, &ascTypes.GetVPCsInput{})
@@ -77,7 +93,7 @@ func showVPC(cmd *cobra.Command, id string) error {
 		Title: id + " VPC Details",
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type:           "horizontal",
+			Type:           cmdutil.GetLayout(cmd),
 			ColumnsPerRow:  3,
 			ColumnMinWidth: 20,
 		},

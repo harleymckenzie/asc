@@ -11,6 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Variables
+var ()
+
+// Init function
+func init() {
+	NewShowFlags(showCmd)
+}
+
 // naclShowFields returns the fields for the NACL detail table.
 func naclShowFields() []tableformat.Field {
 	return []tableformat.Field{
@@ -37,7 +45,9 @@ var showCmd = &cobra.Command{
 }
 
 // NewShowFlags adds flags for the show subcommand.
-func NewShowFlags(cobraCmd *cobra.Command) {}
+func NewShowFlags(cobraCmd *cobra.Command) {
+	cmdutil.AddShowFlags(cobraCmd, "vertical")
+}
 
 // ShowNACL displays detailed information for a specified NACL.
 func ShowNACL(cmd *cobra.Command, id string) error {
@@ -46,6 +56,12 @@ func ShowNACL(cmd *cobra.Command, id string) error {
 	svc, err := vpc.NewVPCService(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
+	}
+
+	if cmd.Flags().Changed("output") {
+		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
+			return err
+		}
 	}
 
 	nacls, err := svc.GetNACLs(ctx, &ascTypes.GetNACLsInput{NetworkAclIds: []string{id}})
@@ -62,8 +78,8 @@ func ShowNACL(cmd *cobra.Command, id string) error {
 		Title: fmt.Sprintf("Network ACL Details\n(%s)", id),
 		Style: "rounded",
 		Layout: tableformat.DetailTableLayout{
-			Type: "vertical",
-			ColumnsPerRow: 2,
+			Type: cmdutil.GetLayout(cmd),
+			ColumnsPerRow: 4,
 		},
 	}
 
