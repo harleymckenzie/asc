@@ -15,6 +15,10 @@ type Attribute struct {
 	GetValue func(*types.LoadBalancer) string
 }
 
+type LoadBalancerAttribute struct {
+	GetValue func(*types.LoadBalancerAttribute) string
+}
+
 type TargetGroupAttribute struct {
 	GetValue func(*types.TargetGroup) string
 }
@@ -63,9 +67,23 @@ func availableAttributes() map[string]Attribute {
 				return string(i.IpAddressType)
 			},
 		},
+		"Hosted Zone": {
+			GetValue: func(i *types.LoadBalancer) string {
+				return aws.ToString(i.CanonicalHostedZoneId)
+			},
+		},
 		"VPC ID": {
 			GetValue: func(i *types.LoadBalancer) string {
 				return aws.ToString(i.VpcId)
+			},
+		},
+		"Subnets": {
+			GetValue: func(i *types.LoadBalancer) string {
+				subnets := []string{}
+				for _, az := range i.AvailabilityZones {
+					subnets = append(subnets, aws.ToString(az.SubnetId))
+				}
+				return strings.Join(subnets, ", ")
 			},
 		},
 		"Created Time": {
@@ -85,6 +103,34 @@ func availableAttributes() map[string]Attribute {
 					azs = append(azs, aws.ToString(az.ZoneName))
 				}
 				return strings.Join(azs, ", ")
+			},
+		},
+	}
+}
+
+// GetLoadBalancerAttributeAttributeValue gets the value of a load balancer "attribute".
+func GetLoadBalancerAttributeAttributeValue(fieldID string, instance any) (string, error) {
+	attributes, ok := instance.([]types.LoadBalancerAttribute)
+	if !ok {
+		return "", fmt.Errorf("instance is not a types.LoadBalancerAttribute")
+	}
+	attr, ok := availableLoadBalancerAttributeAttributes()[fieldID]
+	if !ok || attr.GetValue == nil {
+		return "", fmt.Errorf("error getting attribute %q", fieldID)
+	}
+	return attr.GetValue(&attributes[0]), nil
+}
+
+func availableLoadBalancerAttributeAttributes() map[string]LoadBalancerAttribute {
+	return map[string]LoadBalancerAttribute{
+		"Name": {
+			GetValue: func(i *types.LoadBalancerAttribute) string {
+				return aws.ToString(i.Key)
+			},
+		},
+		"Value": {
+			GetValue: func(i *types.LoadBalancerAttribute) string {
+				return aws.ToString(i.Value)
 			},
 		},
 	}

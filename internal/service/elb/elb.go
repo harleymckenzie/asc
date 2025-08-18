@@ -14,6 +14,7 @@ import (
 type ELBClientAPI interface {
 	DescribeLoadBalancers(ctx context.Context, params *elbv2.DescribeLoadBalancersInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeLoadBalancersOutput, error)
 	DescribeTargetGroups(ctx context.Context, params *elbv2.DescribeTargetGroupsInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeTargetGroupsOutput, error)
+	DescribeLoadBalancerAttributes(ctx context.Context, params *elbv2.DescribeLoadBalancerAttributesInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeLoadBalancerAttributesOutput, error)
 }
 
 type ELBService struct {
@@ -46,6 +47,17 @@ func (svc *ELBService) GetLoadBalancers(ctx context.Context, input *ascTypes.Get
 	var loadBalancers []types.LoadBalancer
 	loadBalancers = append(loadBalancers, output.LoadBalancers...)
 	return loadBalancers, nil
+}
+
+// GetLoadBalancerAttributes gets the attributes for a load balancer.
+func (svc *ELBService) GetLoadBalancerAttributes(ctx context.Context, loadBalancerArn string) ([]types.LoadBalancerAttribute, error) {
+	output, err := svc.Client.DescribeLoadBalancerAttributes(ctx, &elbv2.DescribeLoadBalancerAttributesInput{
+		LoadBalancerArn: &loadBalancerArn,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return output.Attributes, nil
 }
 
 // GetTargetGroups gets all the target groups.

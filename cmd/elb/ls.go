@@ -77,6 +77,7 @@ func addLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&showScheme, "scheme", "s", false, "Show the scheme for each Elastic Load Balancer.")
 	cobraCmd.Flags().BoolVarP(&showAZs, "availability-zones", "z", false, "Show the availability zones for each Elastic Load Balancer.")
 	cobraCmd.Flags().BoolVarP(&showIPAddressType, "ip-address-type", "i", false, "Show the IP address type for each Elastic Load Balancer.")
+	// TODO: Add flag for display tags
 
 	// Sorting flags
 	cobraCmd.Flags().BoolVarP(&sortDNSName, "sort-dns-name", "D", false, "Sort by descending DNS name.")

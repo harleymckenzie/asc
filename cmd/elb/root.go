@@ -13,13 +13,14 @@ func NewELBRootCmd() *cobra.Command {
 		Aliases: []string{"alb"},
 		GroupID: "service",
 	}
-	
+
 	// Action commands
 	cmd.AddCommand(lsCmd)
+	cmd.AddCommand(showCmd)
 	// cmd.AddCommand(addCmd)
 	// cmd.AddCommand(rmCmd)
 	// cmd.AddCommand(modifyCmd)
-	
+
 	// Subcommands
 	cmd.AddCommand(tg.NewTargetGroupRootCmd())
 
