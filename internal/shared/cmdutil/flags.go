@@ -10,7 +10,7 @@ import (
 
 var (
 	Tags         []string
-	ValidLayouts = []string{"horizontal", "vertical"}
+	ValidLayouts = []string{"horizontal", "vertical", "grid"}
 )
 
 // GetPersistentFlags returns the profile and region from the command line flags.

@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter/builder"
 )
 
 // NormalizeTags turns the provided tags into a map
@@ -26,4 +27,21 @@ func NormalizeTags(tags any) ([]tableformat.Tag, error) {
 		return nil, fmt.Errorf("provided tag type %s is currently not supported", reflect.TypeOf(tags))
 	}
 	return result, nil
+}
+
+func PopulateTagFields(tags []types.Tag) ([]builder.Field, error) {
+	normalizedTags, err := NormalizeTags(tags)
+	if err != nil {
+		return nil, err
+	}
+
+	var fields []builder.Field
+	for _, tag := range normalizedTags {
+		fields = append(fields, builder.Field{
+			Category: "Tag",
+			Name:     tag.Name,
+			Value:    tag.Value,
+		})
+	}
+	return fields, nil
 }

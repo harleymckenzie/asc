@@ -1,7 +1,6 @@
 package builder
 
 import (
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 )
 
@@ -77,9 +76,16 @@ func AddSections(t tablewriter.AscWriter, s []Section) {
 	}
 }
 
-func BuildSections(fields []Field) []Section {
+// BuildSections builds a list of sections from a list of fields with a grid layout.
+// The title of each section is the category of the fields.
+func BuildSections(fields []Field, layout Layout) []Section {
 	categories := make(map[string][]tablewriter.Field)
+	categoryOrder := make([]string, 0)
+	
 	for _, f := range fields {
+		if _, exists := categories[f.Category]; !exists {
+			categoryOrder = append(categoryOrder, f.Category)
+		}
 		categories[f.Category] = append(categories[f.Category], tablewriter.Field{
 			Name:  f.Name,
 			Value: f.Value,
@@ -87,32 +93,33 @@ func BuildSections(fields []Field) []Section {
 	}
 
 	var sections []Section
-	for name, fields := range categories {
+	for _, name := range categoryOrder {
 		sections = append(sections, Section{
 			Title:  name,
-			Fields: fields,
+			Fields: categories[name],
 			SectionConfig: SectionConfig{
-				Layout: Grid,
+				Layout: layout,
 			},
 		})
 	}
 	return sections
 }
 
-func BuildTagSection(tags []tableformat.Tag) Section {
-	var fields []tablewriter.Field
-	for _, tag := range tags {
-		fields = append(fields, tablewriter.Field{
-			Name:  tag.Name,
-			Value: tag.Value,
+// BuildRowSection builds a section with a row layout.
+func BuildRowSection(title string, fields []Field, layout Layout) Section {
+	var rowFields []tablewriter.Field
+	for _, f := range fields {
+		rowFields = append(rowFields, tablewriter.Field{
+			Name:  f.Name,
+			Value: f.Value,
 		})
 	}
 
 	section := Section{
-		Title:  "Tags",
-		Fields: fields,
+		Title:  title,
+		Fields: rowFields,
 		SectionConfig: SectionConfig{
-			Layout: Row,
+			Layout: layout,
 		},
 	}
 	return section

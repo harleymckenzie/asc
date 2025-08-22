@@ -65,6 +65,13 @@ func NewAscWriter(renderOptions AscTableRenderOptions) AscWriter {
 }
 
 // AppendAttributeRow creates a new attribute row with the provided fields and values.
+//
+//	┌───────────────────────┬─────────────────────────┬───────────────────────┐
+//	│ FirstName             │ LastName                │ Age                   │
+//	├───────────────────────┼─────────────────────────┼───────────────────────┤
+//	│ John                  │ Doe                     │ 30                    │
+//	├───────────────────────┼─────────────────────────┼───────────────────────┤
+//
 func (at *AscTable) AppendAttributeRow(ar AttributeRow) {
 	nr := make(table.Row, at.renderOptions.Columns)
 	vr := make(table.Row, at.renderOptions.Columns)
@@ -92,18 +99,29 @@ func (at *AscTable) AppendAttributeRows(ar []AttributeRow) {
 }
 
 // AppendHeaderRow creates a new row that is made up of the provided title * at.columns times.
+//
+//	┌─────────────────────────────────────────────────────────────────────────┐
+//	│ Title                                                                   │
+//	╰─────────────────────────────────────────────────────────────────────────╯
+//
 func (at *AscTable) AppendHeaderRow(hr HeaderRow) {
 	row := make(table.Row, at.renderOptions.Columns)
 	for i := 0; i < at.renderOptions.Columns; i++ {
-		row[i] = hr.Title
+		row[i] = text.Colors{text.Bold}.Sprint(hr.Title)
 	}
 
+	at.table.AppendSeparator()
 	at.table.AppendRow(row, table.RowConfig{AutoMerge: true, AutoMergeAlign: text.AlignLeft})
 	at.table.AppendSeparator()
 }
 
 // AppendHorizontalRow creates a new row that is made up of the provided name (column 1)
-// and the value (all remaining columns, merged)
+// and the value (all remaining columns, merged).
+//
+//	┌───────────────────────┬─────────────────────────────────────────────────┐
+//	│ Name                  │ John Doe                                        │
+//	╰───────────────────────┴─────────────────────────────────────────────────╯
+//
 func (at *AscTable) AppendHorizontalRow(hr HorizontalRow) {
 	row := make(table.Row, at.renderOptions.Columns)
 	row[0] = text.Colors{text.Bold, text.FgBlue}.Sprint(hr.Field.Name)
@@ -111,7 +129,6 @@ func (at *AscTable) AppendHorizontalRow(hr HorizontalRow) {
 		row[i] = text.Colors{}.Sprint(hr.Field.Value)
 	}
 	at.table.AppendRow(row, table.RowConfig{AutoMerge: true, AutoMergeAlign: text.AlignLeft})
-	at.table.AppendSeparator()
 }
 
 // AppendHorizontalRow accepts a list of Rows and creates new horizontal rows for each.
@@ -124,7 +141,7 @@ func (at *AscTable) AppendHorizontalRows(hr []HorizontalRow) {
 // Render writes the table to the console.
 func (at *AscTable) Render() {
 	at.table.SetOutputMirror(os.Stdout)
-	at.table.SetTitle(at.renderOptions.Title)
+	at.table.SetTitle(text.Colors{text.Bold}.Sprint(at.renderOptions.Title))
 	at.table.SetStyle(table.StyleRounded)
 	at.SetColumnWidth(at.renderOptions.MinColumnWidth, at.renderOptions.MaxColumnWidth)
 	at.table.Render()
