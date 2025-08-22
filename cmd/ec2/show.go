@@ -15,11 +15,15 @@ import (
 	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter/builder"
 	"github.com/spf13/cobra"
 )
 
 // Variables
-var ()
+var (
+	testing bool
+)
 
 // Init function
 func init() {
@@ -61,6 +65,9 @@ func ec2ShowFields() []tableformat.Field {
 // Flag function
 func newShowFlags(cmd *cobra.Command) {
 	cmdutil.AddShowFlags(cmd, "horizontal")
+	// Experimental flags
+	cmd.Flags().BoolVar(&testing, "testing", false, "Enable experimental features.")
+	cmd.Flags().MarkHidden("testing")
 }
 
 // Command functions
@@ -88,6 +95,10 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 	svc, err := ec2.NewEC2Service(ctx, profile, region)
 	if err != nil {
 		return fmt.Errorf("create new EC2 service: %w", err)
+	}
+
+	if testing {
+		return ShowEC2InstanceV2(cmd, args)
 	}
 
 	if cmd.Flags().Changed("output") {
@@ -119,6 +130,7 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		Layout: tableformat.DetailTableLayout{
 			Type:           cmdutil.GetLayout(cmd),
 			ColumnsPerRow:  3,
+			ColumnMinWidth: 10,
 			ColumnMaxWidth: 50,
 		},
 	}
@@ -134,5 +146,46 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("render table: %w", err)
 	}
+	return nil
+}
+
+func ShowEC2InstanceV2(cmd *cobra.Command, args []string) error {
+	ctx := context.TODO()
+	profile, region := cmdutil.GetPersistentFlags(cmd)
+	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	if err != nil {
+		return fmt.Errorf("create new EC2 service: %w", err)
+	}
+
+	instance, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{
+		InstanceIDs: args,
+	})
+	if err != nil {
+		return fmt.Errorf("get instances: %w", err)
+	}
+
+	fields := ec2.GetFields(instance[0])
+	fields = ec2.PopulateFieldValues(fields, instance[0])
+	tags, err := awsutil.NormalizeTags(instance[0].Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
+	}
+
+	renderOptions := tablewriter.AscTableRenderOptions{
+		Title:          "Instance summary for " + *instance[0].InstanceId,
+		Style:          "rounded",
+		Columns:        3,
+		MinColumnWidth: 20,
+		MaxColumnWidth: 50,
+	}
+
+	t := tablewriter.NewAscWriter(renderOptions)
+
+	builder.AddSections(t, builder.BuildSections(fields))
+	builder.AddSection(t, builder.BuildTagSection(tags))
+
+
+	t.Render()
+
 	return nil
 }
