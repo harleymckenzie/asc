@@ -13,7 +13,6 @@ import (
 	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
-	"github.com/harleymckenzie/asc/internal/shared/tablewriter/builder"
 	"github.com/spf13/cobra"
 )
 
@@ -26,8 +25,8 @@ func init() {
 }
 
 // getShowFields returns a list of Field objects for the given instance.
-func getShowFields() []builder.Field {
-	return []builder.Field{
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
 		{Name: "Instance ID", Category: "Instance Details", Visible: true},
 		{Name: "State", Category: "Instance Details", Visible: true},
 		{Name: "AMI ID", Category: "Instance Details", Visible: true},
@@ -93,32 +92,29 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
 	}
 
-	renderOptions := tablewriter.AscTableRenderOptions{
+	// Create detail table
+	dt := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
 		Title:          "Instance summary for " + *instance[0].InstanceId,
 		Style:          "rounded",
 		Columns:        3,
 		MinColumnWidth: 0,
 		MaxColumnWidth: 70,
-	}
-	t := tablewriter.NewAscWriter(renderOptions)
+	})
 
-	switch cmdutil.GetLayout(cmd) {
-	case "grid":
-		appendGridSection(t, fields, tags)
-	case "vertical":
-		appendVerticalSection(t, fields, tags)
+	// Determine layout and add sections
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
 	}
 
-	t.Render()
+	// Add field sections
+	sections := tablewriter.BuildSections(fields, layout)
+	dt.AddSections(sections)
+
+	// Add tags section
+	tagsSection := tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal)
+	dt.AddSection(tagsSection)
+
+	dt.Render()
 	return nil
-}
-
-func appendGridSection(t tablewriter.AscWriter, fields []builder.Field, tags []builder.Field) {
-	builder.AddSections(t, builder.BuildSections(fields, builder.Grid))
-	builder.AddSection(t, builder.BuildSection("Tags", tags, builder.Horizontal))
-}
-
-func appendVerticalSection(t tablewriter.AscWriter, fields []builder.Field, tags []builder.Field) {
-	builder.AddSections(t, builder.BuildSections(fields, builder.Horizontal))
-	builder.AddSection(t, builder.BuildSection("Tags", tags, builder.Horizontal))
 }

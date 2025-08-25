@@ -15,7 +15,6 @@ import (
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
-	"github.com/harleymckenzie/asc/internal/shared/tablewriter/builder"
 )
 
 // Variables
@@ -25,9 +24,9 @@ var (
 	showLaunchTime bool
 	showPrivateIP  bool
 
-	sortID         bool
-	sortType       bool
-	sortLaunchTime bool
+	sortByID         bool
+	sortByType       bool
+	sortByLaunchTime bool
 
 	reverseSort bool
 
@@ -49,26 +48,26 @@ func init() {
 func ec2ListFields() []tableformat.Field {
 	return []tableformat.Field{
 		{ID: "Name", Display: true, Merge: false, DefaultSort: true},
-		{ID: "Instance ID", Display: true, Sort: sortID},
+		{ID: "Instance ID", Display: true, Sort: sortByID},
 		{ID: "State", Display: true, Sort: false},
-		{ID: "Instance Type", Display: true, Sort: sortType},
+		{ID: "Instance Type", Display: true, Sort: sortByType},
 		{ID: "Public IP", Display: true, Sort: false},
 		{ID: "AMI ID", Display: showAMI, Sort: false},
-		{ID: "Launch Time", Display: showLaunchTime, Sort: sortLaunchTime, SortDirection: "desc"},
+		{ID: "Launch Time", Display: showLaunchTime, Sort: sortByLaunchTime, SortDirection: "desc"},
 		{ID: "Private IP", Display: showPrivateIP, Sort: false},
 	}
 }
 
 // getShowFields returns a list of Field objects for the given instance.
-func getListFields() []builder.Field {
-	return []builder.Field{
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
 		{Name: "Name", Category: "Instance Details", Visible: true},
-		{Name: "Instance ID", Category: "Instance Details", Visible: true},
+		{Name: "Instance ID", Category: "Instance Details", Visible: true, SortBy: sortByID, SortDirection: tablewriter.Asc},
 		{Name: "State", Category: "Instance Details", Visible: true},
 		{Name: "AMI ID", Category: "Instance Details", Visible: false},
 		{Name: "AMI Name", Category: "Instance Details", Visible: false},
-		{Name: "Launch Time", Category: "Instance Details", Visible: false},
-		{Name: "Instance Type", Category: "Instance Details", Visible: true},
+		{Name: "Launch Time", Category: "Instance Details", Visible: false, SortBy: sortByLaunchTime, SortDirection: tablewriter.Desc},
+		{Name: "Instance Type", Category: "Instance Details", Visible: true, SortBy: sortByType, SortDirection: tablewriter.Asc},
 		{Name: "Placement Group", Category: "Instance Details", Visible: false},
 		{Name: "Root Device Type", Category: "Instance Details", Visible: false},
 		{Name: "Root Device Name", Category: "Instance Details", Visible: false},
@@ -116,9 +115,9 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVar(&testing, "testing", false, "Enable experimental features.")
 
 	// Add flags - Sorting
-	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
-	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
-	cobraCmd.Flags().BoolVarP(&sortLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
+	cobraCmd.Flags().BoolVarP(&sortByID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
+	cobraCmd.Flags().BoolVarP(&sortByType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
+	cobraCmd.Flags().BoolVarP(&sortByLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 	cobraCmd.MarkFlagsMutuallyExclusive("sort-id", "sort-type", "sort-launch-time")
 }
@@ -188,20 +187,21 @@ func ListEC2InstancesV2(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("append rows: %w", err)
 	}
+	table.SortBy(fields, reverseSort)
 
 	table.Render()
 	return nil
 }
 
 // appendTagFields appends tag fields to the fields slice.
-func appendTagFields(fields []builder.Field, tags []string, instances []types.Instance) []builder.Field {
+func appendTagFields(fields []tablewriter.Field, tags []string, instances []types.Instance) []tablewriter.Field {
 	for _, tag := range tags {
-		fields = append(fields, builder.Field{Name: tag, Category: "Tags", Visible: true})
+		fields = append(fields, tablewriter.Field{Name: tag, Category: "Tags", Visible: true})
 	}
 	return fields
 }
 
-func appendHeaders(t tablewriter.AscWriter, fields []builder.Field) {
+func appendHeaders(t tablewriter.AscWriter, fields []tablewriter.Field) {
 	headerRow := tablewriter.Row{
 		Values: make([]string, 0, len(fields)),
 	}
@@ -210,10 +210,10 @@ func appendHeaders(t tablewriter.AscWriter, fields []builder.Field) {
 			headerRow.Values = append(headerRow.Values, field.Name)
 		}
 	}
-	t.AppendHeaderRow(headerRow.Values)
+	t.AppendHeader(headerRow.Values)
 }
 
-func appendRows(t tablewriter.AscWriter, instances []types.Instance, fields []builder.Field) error {
+func appendRows(t tablewriter.AscWriter, instances []types.Instance, fields []tablewriter.Field) error {
 	for _, instance := range instances {
 		instanceRow := tablewriter.Row{
 			Values: make([]string, 0, len(fields)),

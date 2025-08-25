@@ -10,7 +10,7 @@ import (
 // AscWriter is the interface for the AscTable.
 type AscWriter interface {
 	AppendRow(row Row)
-	AppendHeaderRow(headers []string)
+	AppendHeader(headers []string)
 	AppendTitleRow(title string)
 	AppendHorizontalRow(hr HorizontalRow)
 	AppendHorizontalRows([]HorizontalRow)
@@ -19,12 +19,14 @@ type AscWriter interface {
 	Render()
 	SetColumnWidth(minWidth int, maxWidth int)
 	GetColumns() int
+	SortBy(fields []Field, reverse bool)
 }
 
 // AscTable is the implementation of the AscWriter interface.
 type AscTable struct {
 	table         table.Writer
 	renderOptions AscTableRenderOptions
+	sortByFields  []Field
 }
 
 // AscTableRenderOptions is the options for the AscTable.
@@ -36,125 +38,29 @@ type AscTableRenderOptions struct {
 	MaxColumnWidth int
 }
 
-type Row struct {
-	Values []string
-}
-
 // Field is a single field in a row. It contains a name and a value.
 type Field struct {
-	Name  string
-	Value string
+	Category      string
+	Name          string
+	Value         string
+	Visible       bool
+	SortBy        bool
+	SortDirection SortDirection
 }
 
-// GridRow is made up of two go-pretty table.Row objects.
-// The first row is one or more field names, and the second row is the value(s) for each field.
-type GridRow struct {
-	Fields []Field
-}
+// SortDirection is the direction of the sort.
+type SortDirection table.SortMode
 
-// HorizontalRow is made up of a single field. The field name is the first column, and the value is the rest of the columns.
-type HorizontalRow struct {
-	Field Field
-}
+const (
+	Asc  SortDirection = SortDirection(table.AscNumericAlpha)
+	Desc SortDirection = SortDirection(table.DscNumericAlpha)
+)
 
 // NewAscWriter creates a new AscWriter with the provided number of columns.
 func NewAscWriter(renderOptions AscTableRenderOptions) AscWriter {
 	return &AscTable{
 		table:         table.NewWriter(),
 		renderOptions: renderOptions,
-	}
-}
-
-// AppendRow creates a standard row with the provided values.
-func (at *AscTable) AppendRow(row Row) {
-	rowValues := make(table.Row, len(row.Values))
-	for i := 0; i < len(row.Values); i++ {
-		rowValues[i] = text.Colors{}.Sprint(row.Values[i])
-	}
-	at.table.AppendRow(rowValues)
-}
-
-// AppendHeader creates a header row that will be formatted according to the table style.
-//
-//	┌───────────────────────┬─────────────────────────┬───────────────────────┐
-//	│ FirstName             │ LastName                │ Age                   │
-//	├───────────────────────┼─────────────────────────┼───────────────────────┤
-func (at *AscTable) AppendHeaderRow(headers []string) {
-	headerRow := make(table.Row, len(headers))
-	for i, header := range headers {
-		headerRow[i] = header
-	}
-	at.table.AppendHeader(headerRow)
-}
-
-// AppendGridRow creates a new grid row with the provided fields and values.
-//
-//	┌───────────────────────┬─────────────────────────┬───────────────────────┐
-//	│ FirstName             │ LastName                │ Age                   │
-//	├───────────────────────┼─────────────────────────┼───────────────────────┤
-//	│ John                  │ Doe                     │ 30                    │
-//	├───────────────────────┼─────────────────────────┼───────────────────────┤
-func (at *AscTable) AppendGridRow(ar GridRow) {
-	nr := make(table.Row, at.renderOptions.Columns)
-	vr := make(table.Row, at.renderOptions.Columns)
-
-	for i := 0; i < at.renderOptions.Columns; i++ {
-		if i < len(ar.Fields) {
-			nr[i] = text.Colors{text.Bold, text.FgBlue}.Sprint(ar.Fields[i].Name)
-			vr[i] = ar.Fields[i].Value
-		} else {
-			nr[i] = ""
-			vr[i] = ""
-		}
-	}
-
-	at.table.AppendRow(nr)
-	at.table.AppendRow(vr)
-	at.table.AppendSeparator()
-}
-
-// AppendGridRows accepts a list of GridRows and creates new grid rows for each.
-func (at *AscTable) AppendGridRows(ar []GridRow) {
-	for _, row := range ar {
-		at.AppendGridRow(row)
-	}
-}
-
-// AppendHeaderRow creates a new row that is made up of the provided title * at.columns times.
-//
-//	┌─────────────────────────────────────────────────────────────────────────┐
-//	│ Title                                                                   │
-//	╰─────────────────────────────────────────────────────────────────────────╯
-func (at *AscTable) AppendTitleRow(title string) {
-	row := make(table.Row, at.renderOptions.Columns)
-	for i := 0; i < at.renderOptions.Columns; i++ {
-		row[i] = text.Colors{text.Bold}.Sprint(title)
-	}
-
-	at.table.AppendSeparator()
-	at.table.AppendRow(row, table.RowConfig{AutoMerge: true, AutoMergeAlign: text.AlignLeft})
-	at.table.AppendSeparator()
-}
-
-// AppendHorizontalRow creates a new row that is made up of the provided name (column 1)
-// and the value (all remaining columns, merged).
-//
-//	┌───────────────────────┬─────────────────────────────────────────────────┐
-//	│ Name                  │ John Doe                                        │
-//	╰───────────────────────┴─────────────────────────────────────────────────╯
-func (at *AscTable) AppendHorizontalRow(hr HorizontalRow) {
-	row := make(table.Row, at.renderOptions.Columns)
-	row[0] = text.Colors{text.Bold, text.FgBlue}.Sprint(hr.Field.Name)
-	for i := 1; i < at.renderOptions.Columns; i++ {
-		row[i] = text.Colors{}.Sprint(hr.Field.Value)
-	}
-	at.table.AppendRow(row, table.RowConfig{AutoMerge: true, AutoMergeAlign: text.AlignLeft})
-}
-
-// AppendHorizontalRow accepts a list of Rows and creates new horizontal rows for each.
-func (at *AscTable) AppendHorizontalRows(hr []HorizontalRow) {
-	for _, row := range hr {
-		at.AppendHorizontalRow(row)
 	}
 }
 
@@ -165,6 +71,14 @@ func (at *AscTable) Render() {
 	at.table.SetStyle(table.StyleRounded)
 	at.table.Style().Format.Header = text.FormatUpper
 	at.SetColumnWidth(at.renderOptions.MinColumnWidth, at.renderOptions.MaxColumnWidth)
+
+	if len(at.sortByFields) > 0 {
+		sortBy := parseSortBy(at.sortByFields)
+		if len(sortBy) > 0 {
+			at.table.SortBy(sortBy)
+		}
+	}
+
 	at.table.Render()
 }
 
@@ -180,4 +94,36 @@ func (at *AscTable) SetColumnWidth(minWidth int, maxWidth int) {
 // GetColumns returns the number of columns in the table
 func (at *AscTable) GetColumns() int {
 	return at.renderOptions.Columns
+}
+
+// SortBy applies sorting based on fields configuration
+func (at *AscTable) SortBy(fields []Field, reverse bool) {
+	at.sortByFields = fields
+	if reverse {
+		for i := 0; i < len(at.sortByFields)/2; i++ {
+			at.sortByFields[i].SortDirection = reverseSortDirection(at.sortByFields[i].SortDirection)
+		}
+	}
+}
+
+// parseSortBy converts fields with SortBy=true to table.SortBy
+func parseSortBy(fields []Field) []table.SortBy {
+	var sortBy []table.SortBy
+	for _, field := range fields {
+		if field.SortBy {
+			sortBy = append(sortBy, table.SortBy{
+				Name: field.Name,
+				Mode: table.SortMode(field.SortDirection),
+			})
+		}
+	}
+	return sortBy
+}
+
+// reverseSortDirection reverses the sort direction.
+func reverseSortDirection(sortDirection SortDirection) SortDirection {
+	if sortDirection == Asc {
+		return Desc
+	}
+	return Asc
 }

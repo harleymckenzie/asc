@@ -23,5 +23,3 @@ func getInstances(svc *ec2.EC2Service, args []string) ([]types.Instance, error) 
 		InstanceIDs: args,
 	})
 }
-
-

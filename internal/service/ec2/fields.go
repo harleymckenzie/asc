@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/format"
-	"github.com/harleymckenzie/asc/internal/shared/tablewriter/builder"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 )
 
 // FieldValueGetter is a function that returns the value of a field for the given instance.
@@ -39,11 +39,11 @@ var fieldValueGetters = map[string]FieldValueGetter{
 }
 
 // PopulateFieldValues populates the values of the fields for the given instance.
-func PopulateFieldValues(fields []builder.Field, instance any) ([]builder.Field, error) {
-	var populated []builder.Field
+func PopulateFieldValues(fields []tablewriter.Field, instance any) ([]tablewriter.Field, error) {
+	var populated []tablewriter.Field
 	for _, field := range fields {
 		value := GetFieldValue(field.Name, instance)
-		populated = append(populated, builder.Field{
+		populated = append(populated, tablewriter.Field{
 			Category: field.Category,
 			Name:     field.Name,
 			Value:    value,
