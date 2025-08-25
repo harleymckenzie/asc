@@ -10,6 +10,7 @@ import (
 // AscWriter is the interface for the AscTable.
 type AscWriter interface {
 	AppendRow(row Row)
+	AppendRows(rows []Row)
 	AppendHeader(headers []string)
 	AppendTitleRow(title string)
 	AppendHorizontalRow(hr HorizontalRow)

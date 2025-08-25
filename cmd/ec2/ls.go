@@ -3,10 +3,8 @@
 package ec2
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
@@ -29,8 +27,6 @@ var (
 	sortByLaunchTime bool
 
 	reverseSort bool
-
-	testing bool
 )
 
 type ListInstancesInput struct {
@@ -45,20 +41,7 @@ func init() {
 }
 
 // Column functions
-func ec2ListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Name", Display: true, Merge: false, DefaultSort: true},
-		{ID: "Instance ID", Display: true, Sort: sortByID},
-		{ID: "State", Display: true, Sort: false},
-		{ID: "Instance Type", Display: true, Sort: sortByType},
-		{ID: "Public IP", Display: true, Sort: false},
-		{ID: "AMI ID", Display: showAMI, Sort: false},
-		{ID: "Launch Time", Display: showLaunchTime, Sort: sortByLaunchTime, SortDirection: "desc"},
-		{ID: "Private IP", Display: showPrivateIP, Sort: false},
-	}
-}
-
-// getShowFields returns a list of Field objects for the given instance.
+// getListFields returns a list of Field objects for the given instance.
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
 		{Name: "Name", Category: "Instance Details", Visible: true},
@@ -95,9 +78,6 @@ var lsCmd = &cobra.Command{
 		"  asc ec2 ls snapshots         # List all snapshots\n" +
 		"  asc ec2 ls volumes           # List all volumes",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if testing {
-			return cmdutil.DefaultErrorHandler(ListEC2InstancesV2(cmd, args))
-		}
 		return cmdutil.DefaultErrorHandler(ListEC2Instances(cmd, args))
 	},
 }
@@ -111,9 +91,6 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
 	cmdutil.AddTagFlag(cobraCmd)
 
-	// Experimental flags
-	cobraCmd.Flags().BoolVar(&testing, "testing", false, "Enable experimental features.")
-
 	// Add flags - Sorting
 	cobraCmd.Flags().BoolVarP(&sortByID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
 	cobraCmd.Flags().BoolVarP(&sortByType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
@@ -124,47 +101,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 
 // Command functions
 
-// ListEC2Instances is the function for listing EC2 instances
 func ListEC2Instances(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
-	if err != nil {
-		return fmt.Errorf("create ec2 service: %w", err)
-	}
-
-	instances, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{})
-	if err != nil {
-		return fmt.Errorf("list ec2 instances: %w", err)
-	}
-
-	fields := ec2ListFields()
-	opts := tableformat.RenderOptions{
-		Title:  "Instances",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
-	if list {
-		opts.Style = "list"
-	}
-
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(instances),
-		Fields:    fields,
-		Tags:      cmdutil.Tags,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetAttributeValue(fieldID, instance)
-		},
-		GetTagValue: func(tag string, instance any) (string, error) {
-			return ec2.GetTagValue(tag, instance)
-		},
-	}, opts)
-	return nil
-}
-
-func ListEC2InstancesV2(cmd *cobra.Command, args []string) error {
 	svc, err := createEC2Service(cmd)
 	if err != nil {
 		return fmt.Errorf("create ec2 service: %w", err)
@@ -180,59 +117,13 @@ func ListEC2InstancesV2(cmd *cobra.Command, args []string) error {
 		Style: "rounded",
 	})
 	fields := getListFields()
-	fields = appendTagFields(fields, cmdutil.Tags, instances)
+	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
 
-	appendHeaders(table, fields)
-	err = appendRows(table, instances, fields)
-	if err != nil {
-		return fmt.Errorf("append rows: %w", err)
-	}
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(instances), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()
-	return nil
-}
-
-// appendTagFields appends tag fields to the fields slice.
-func appendTagFields(fields []tablewriter.Field, tags []string, instances []types.Instance) []tablewriter.Field {
-	for _, tag := range tags {
-		fields = append(fields, tablewriter.Field{Name: tag, Category: "Tags", Visible: true})
-	}
-	return fields
-}
-
-func appendHeaders(t tablewriter.AscWriter, fields []tablewriter.Field) {
-	headerRow := tablewriter.Row{
-		Values: make([]string, 0, len(fields)),
-	}
-	for _, field := range fields {
-		if field.Visible {
-			headerRow.Values = append(headerRow.Values, field.Name)
-		}
-	}
-	t.AppendHeader(headerRow.Values)
-}
-
-func appendRows(t tablewriter.AscWriter, instances []types.Instance, fields []tablewriter.Field) error {
-	for _, instance := range instances {
-		instanceRow := tablewriter.Row{
-			Values: make([]string, 0, len(fields)),
-		}
-		for _, field := range fields {
-			if field.Visible {
-				if field.Category == "Tags" {
-					fieldValue, err := ec2.GetTagValue(field.Name, instance)
-					if err != nil {
-						return fmt.Errorf("get tag value: %w", err)
-					}
-					instanceRow.Values = append(instanceRow.Values, fieldValue)
-				} else {
-					fieldValue := ec2.GetFieldValue(field.Name, instance)
-					instanceRow.Values = append(instanceRow.Values, fieldValue)
-				}
-			}
-		}
-		t.AppendRow(instanceRow)
-	}
 	return nil
 }

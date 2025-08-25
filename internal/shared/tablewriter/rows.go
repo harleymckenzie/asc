@@ -30,6 +30,13 @@ func (at *AscTable) AppendRow(row Row) {
 	at.table.AppendRow(rowValues)
 }
 
+// AppendRows creates a new row for each of the provided rows.
+func (at *AscTable) AppendRows(rows []Row) {
+	for _, row := range rows {
+		at.AppendRow(row)
+	}
+}
+
 // AppendHeader creates a header row that will be formatted according to the table style.
 //
 //	┌───────────────────────┬─────────────────────────┬───────────────────────┐
