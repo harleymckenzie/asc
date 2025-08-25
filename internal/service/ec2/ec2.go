@@ -63,7 +63,7 @@ func (svc *EC2Service) GetInstances(ctx context.Context, input *ascTypes.GetInst
 }
 
 // getInstanceName gets the name of the instance from the tags.
-func getInstanceName(instance types.Instance) string {
+func getInstanceNameTag(instance types.Instance) string {
 	// Get instance name from tags
 	name := "-" // Use as default name if "Name" tag doesn't exist
 	for _, tag := range instance.Tags {

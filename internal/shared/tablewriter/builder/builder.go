@@ -9,8 +9,8 @@ type Layout string
 
 // Layout constants.
 const (
-	Grid Layout = "grid"
-	Row  Layout = "row"
+	Grid       Layout = "grid"
+	Horizontal Layout = "horizontal"
 )
 
 type Field struct {
@@ -29,7 +29,7 @@ type Section struct {
 
 // SectionConfig is the configuration for a section.
 // For now the SectionConfig only contains a "Layout"
-// The Layout can be "Grid" or "Row"
+// The Layout can be "Grid" or "Horizontal"
 type SectionConfig struct {
 	Layout Layout
 }
@@ -38,9 +38,7 @@ type SectionConfig struct {
 // If the section uses the 'Grid' layout type, fields will be divided amongst AttributeRow's (num of Fields / t.columns)
 func AddSection(t tablewriter.AscWriter, s Section) {
 	// A section is made up of a header row and fields
-	t.AppendHeaderRow(tablewriter.HeaderRow{
-		Title: s.Title,
-	})
+	t.AppendTitleRow(s.Title)
 
 	if s.SectionConfig.Layout == Grid {
 		numFields := len(s.Fields)
@@ -56,7 +54,7 @@ func AddSection(t tablewriter.AscWriter, s Section) {
 				end = numFields
 			}
 
-			t.AppendAttributeRow(tablewriter.AttributeRow{
+			t.AppendGridRow(tablewriter.GridRow{
 				Fields: s.Fields[start:end],
 			})
 		}
@@ -81,7 +79,7 @@ func AddSections(t tablewriter.AscWriter, s []Section) {
 func BuildSections(fields []Field, layout Layout) []Section {
 	categories := make(map[string][]tablewriter.Field)
 	categoryOrder := make([]string, 0)
-	
+
 	for _, f := range fields {
 		if _, exists := categories[f.Category]; !exists {
 			categoryOrder = append(categoryOrder, f.Category)
@@ -105,8 +103,8 @@ func BuildSections(fields []Field, layout Layout) []Section {
 	return sections
 }
 
-// BuildRowSection builds a section with a row layout.
-func BuildRowSection(title string, fields []Field, layout Layout) Section {
+// BuildSection builds a section with a row layout.
+func BuildSection(title string, fields []Field, layout Layout) Section {
 	var rowFields []tablewriter.Field
 	for _, f := range fields {
 		rowFields = append(rowFields, tablewriter.Field{

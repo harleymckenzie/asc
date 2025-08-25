@@ -3,7 +3,6 @@
 package ec2
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/harleymckenzie/asc/cmd/ec2/snapshot"
 	"github.com/harleymckenzie/asc/cmd/ec2/volume"
 	"github.com/harleymckenzie/asc/internal/service/ec2"
-	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
@@ -75,16 +73,12 @@ func ShowEC2Resource(cmd *cobra.Command, arg string) error {
 }
 
 func ShowEC2Instance(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := createEC2Service(cmd)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	instance, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{
-		InstanceIDs: args,
-	})
+	instance, err := getInstances(svc, args)
 	if err != nil {
 		return fmt.Errorf("get instances: %w", err)
 	}
@@ -110,14 +104,21 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 
 	switch cmdutil.GetLayout(cmd) {
 	case "grid":
-		builder.AddSections(t, builder.BuildSections(fields, builder.Grid))
-		builder.AddSection(t, builder.BuildRowSection("Tags", tags, builder.Row))
+		appendGridSection(t, fields, tags)
 	case "vertical":
-		builder.AddSections(t, builder.BuildSections(fields, builder.Row))
-		builder.AddSection(t, builder.BuildRowSection("Tags", tags, builder.Row))
+		appendVerticalSection(t, fields, tags)
 	}
 
 	t.Render()
-
 	return nil
+}
+
+func appendGridSection(t tablewriter.AscWriter, fields []builder.Field, tags []builder.Field) {
+	builder.AddSections(t, builder.BuildSections(fields, builder.Grid))
+	builder.AddSection(t, builder.BuildSection("Tags", tags, builder.Horizontal))
+}
+
+func appendVerticalSection(t tablewriter.AscWriter, fields []builder.Field, tags []builder.Field) {
+	builder.AddSections(t, builder.BuildSections(fields, builder.Horizontal))
+	builder.AddSection(t, builder.BuildSection("Tags", tags, builder.Horizontal))
 }

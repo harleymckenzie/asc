@@ -17,6 +17,7 @@ type FieldValueGetter func(instance any) (string, error)
 
 // fieldValueGetters is a map of field names to their respective getter functions.
 var fieldValueGetters = map[string]FieldValueGetter{
+	"Name":                getInstanceName,
 	"Instance ID":         getInstanceID,
 	"State":               getState,
 	"AMI ID":              getAMIID,
@@ -41,7 +42,7 @@ var fieldValueGetters = map[string]FieldValueGetter{
 func PopulateFieldValues(fields []builder.Field, instance any) ([]builder.Field, error) {
 	var populated []builder.Field
 	for _, field := range fields {
-		value := getFieldValue(field.Name, instance)
+		value := GetFieldValue(field.Name, instance)
 		populated = append(populated, builder.Field{
 			Category: field.Category,
 			Name:     field.Name,
@@ -52,7 +53,7 @@ func PopulateFieldValues(fields []builder.Field, instance any) ([]builder.Field,
 }
 
 // getFieldValue returns the value of a field for the given instance.
-func getFieldValue(fieldName string, instance any) string {
+func GetFieldValue(fieldName string, instance any) string {
 	if getter, exists := fieldValueGetters[fieldName]; exists {
 		value, err := getter(instance)
 		if err != nil {
@@ -64,6 +65,9 @@ func getFieldValue(fieldName string, instance any) string {
 }
 
 // Individual field value getters
+func getInstanceName(instance any) (string, error) {
+	return GetTagValue("Name", instance)
+}
 
 func getInstanceID(instance any) (string, error) {
 	return aws.ToString(instance.(types.Instance).InstanceId), nil
@@ -140,4 +144,15 @@ func getSecurityGroupNames(instance any) (string, error) {
 
 func getKeyName(instance any) (string, error) {
 	return aws.ToString(instance.(types.Instance).KeyName), nil
+}
+
+// Tag value getter
+
+func GetTagValue(tagKey string, instance any) (string, error) {
+	for _, tag := range instance.(types.Instance).Tags {
+		if aws.ToString(tag.Key) == tagKey {
+			return aws.ToString(tag.Value), nil
+		}
+	}
+	return "", nil
 }

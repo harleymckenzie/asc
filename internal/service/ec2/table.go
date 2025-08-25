@@ -58,7 +58,7 @@ func availableAttributes() map[string]Attribute {
 	return map[string]Attribute{
 		"Name": {
 			GetValue: func(i *types.Instance) string {
-				return getInstanceName(*i)
+				return getInstanceNameTag(*i)
 			},
 		},
 		"Instance ID": {
@@ -152,20 +152,6 @@ func availableAttributes() map[string]Attribute {
 			},
 		},
 	}
-}
-
-// GetTagValue returns the value of a tag for an instance.
-func GetTagValue(tagKey string, instance any) (string, error) {
-	inst, ok := instance.(types.Instance)
-	if !ok {
-		return "", fmt.Errorf("instance is not a types.Instance")
-	}
-	for _, tag := range inst.Tags {
-		if aws.ToString(tag.Key) == tagKey {
-			return aws.ToString(tag.Value), nil
-		}
-	}
-	return "", nil
 }
 
 // GetImageAttributeValue is a function that returns the value of a field in a detailed table.

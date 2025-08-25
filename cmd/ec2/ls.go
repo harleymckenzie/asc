@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	"github.com/harleymckenzie/asc/internal/shared/tableformat"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
@@ -13,6 +14,8 @@ import (
 
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter/builder"
 )
 
 // Variables
@@ -27,6 +30,8 @@ var (
 	sortLaunchTime bool
 
 	reverseSort bool
+
+	testing bool
 )
 
 type ListInstancesInput struct {
@@ -54,6 +59,31 @@ func ec2ListFields() []tableformat.Field {
 	}
 }
 
+// getShowFields returns a list of Field objects for the given instance.
+func getListFields() []builder.Field {
+	return []builder.Field{
+		{Name: "Name", Category: "Instance Details", Visible: true},
+		{Name: "Instance ID", Category: "Instance Details", Visible: true},
+		{Name: "State", Category: "Instance Details", Visible: true},
+		{Name: "AMI ID", Category: "Instance Details", Visible: false},
+		{Name: "AMI Name", Category: "Instance Details", Visible: false},
+		{Name: "Launch Time", Category: "Instance Details", Visible: false},
+		{Name: "Instance Type", Category: "Instance Details", Visible: true},
+		{Name: "Placement Group", Category: "Instance Details", Visible: false},
+		{Name: "Root Device Type", Category: "Instance Details", Visible: false},
+		{Name: "Root Device Name", Category: "Instance Details", Visible: false},
+		{Name: "Virtualization Type", Category: "Instance Details", Visible: false},
+		{Name: "vCPUs", Category: "Instance Details", Visible: false},
+		{Name: "Public IP", Category: "Network", Visible: true},
+		{Name: "Private IP", Category: "Network", Visible: false},
+		{Name: "Subnet ID", Category: "Network", Visible: false},
+		{Name: "VPC ID", Category: "Network", Visible: false},
+		{Name: "Availability Zone", Category: "Network", Visible: false},
+		{Name: "Security Group(s)", Category: "Security", Visible: false},
+		{Name: "Key Name", Category: "Security", Visible: false},
+	}
+}
+
 // Command variable
 var lsCmd = &cobra.Command{
 	Use:     "ls",
@@ -66,6 +96,9 @@ var lsCmd = &cobra.Command{
 		"  asc ec2 ls snapshots         # List all snapshots\n" +
 		"  asc ec2 ls volumes           # List all volumes",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if testing {
+			return cmdutil.DefaultErrorHandler(ListEC2InstancesV2(cmd, args))
+		}
 		return cmdutil.DefaultErrorHandler(ListEC2Instances(cmd, args))
 	},
 }
@@ -78,6 +111,9 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
 	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
 	cmdutil.AddTagFlag(cobraCmd)
+
+	// Experimental flags
+	cobraCmd.Flags().BoolVar(&testing, "testing", false, "Enable experimental features.")
 
 	// Add flags - Sorting
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
@@ -126,5 +162,77 @@ func ListEC2Instances(cmd *cobra.Command, args []string) error {
 			return ec2.GetTagValue(tag, instance)
 		},
 	}, opts)
+	return nil
+}
+
+func ListEC2InstancesV2(cmd *cobra.Command, args []string) error {
+	svc, err := createEC2Service(cmd)
+	if err != nil {
+		return fmt.Errorf("create ec2 service: %w", err)
+	}
+
+	instances, err := getInstances(svc, args)
+	if err != nil {
+		return fmt.Errorf("get instances: %w", err)
+	}
+
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Instances",
+		Style: "rounded",
+	})
+	fields := getListFields()
+	fields = appendTagFields(fields, cmdutil.Tags, instances)
+
+	appendHeaders(table, fields)
+	err = appendRows(table, instances, fields)
+	if err != nil {
+		return fmt.Errorf("append rows: %w", err)
+	}
+
+	table.Render()
+	return nil
+}
+
+// appendTagFields appends tag fields to the fields slice.
+func appendTagFields(fields []builder.Field, tags []string, instances []types.Instance) []builder.Field {
+	for _, tag := range tags {
+		fields = append(fields, builder.Field{Name: tag, Category: "Tags", Visible: true})
+	}
+	return fields
+}
+
+func appendHeaders(t tablewriter.AscWriter, fields []builder.Field) {
+	headerRow := tablewriter.Row{
+		Values: make([]string, 0, len(fields)),
+	}
+	for _, field := range fields {
+		if field.Visible {
+			headerRow.Values = append(headerRow.Values, field.Name)
+		}
+	}
+	t.AppendHeaderRow(headerRow.Values)
+}
+
+func appendRows(t tablewriter.AscWriter, instances []types.Instance, fields []builder.Field) error {
+	for _, instance := range instances {
+		instanceRow := tablewriter.Row{
+			Values: make([]string, 0, len(fields)),
+		}
+		for _, field := range fields {
+			if field.Visible {
+				if field.Category == "Tags" {
+					fieldValue, err := ec2.GetTagValue(field.Name, instance)
+					if err != nil {
+						return fmt.Errorf("get tag value: %w", err)
+					}
+					instanceRow.Values = append(instanceRow.Values, fieldValue)
+				} else {
+					fieldValue := ec2.GetFieldValue(field.Name, instance)
+					instanceRow.Values = append(instanceRow.Values, fieldValue)
+				}
+			}
+		}
+		t.AppendRow(instanceRow)
+	}
 	return nil
 }

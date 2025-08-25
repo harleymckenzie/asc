@@ -9,11 +9,13 @@ import (
 
 // AscWriter is the interface for the AscTable.
 type AscWriter interface {
-	AppendAttributeRow(ar AttributeRow)
-	AppendAttributeRows([]AttributeRow)
-	AppendHeaderRow(hr HeaderRow)
+	AppendRow(row Row)
+	AppendHeaderRow(headers []string)
+	AppendTitleRow(title string)
 	AppendHorizontalRow(hr HorizontalRow)
 	AppendHorizontalRows([]HorizontalRow)
+	AppendGridRow(ar GridRow)
+	AppendGridRows([]GridRow)
 	Render()
 	SetColumnWidth(minWidth int, maxWidth int)
 	GetColumns() int
@@ -34,21 +36,20 @@ type AscTableRenderOptions struct {
 	MaxColumnWidth int
 }
 
+type Row struct {
+	Values []string
+}
+
 // Field is a single field in a row. It contains a name and a value.
 type Field struct {
 	Name  string
 	Value string
 }
 
-// AttributeRow is made up of two go-pretty table.Row objects.
+// GridRow is made up of two go-pretty table.Row objects.
 // The first row is one or more field names, and the second row is the value(s) for each field.
-type AttributeRow struct {
+type GridRow struct {
 	Fields []Field
-}
-
-// HeaderRow is made up of a single field. The field name is the first column, and the value is the rest of the columns.
-type HeaderRow struct {
-	Title string
 }
 
 // HorizontalRow is made up of a single field. The field name is the first column, and the value is the rest of the columns.
@@ -64,15 +65,36 @@ func NewAscWriter(renderOptions AscTableRenderOptions) AscWriter {
 	}
 }
 
-// AppendAttributeRow creates a new attribute row with the provided fields and values.
+// AppendRow creates a standard row with the provided values.
+func (at *AscTable) AppendRow(row Row) {
+	rowValues := make(table.Row, len(row.Values))
+	for i := 0; i < len(row.Values); i++ {
+		rowValues[i] = text.Colors{}.Sprint(row.Values[i])
+	}
+	at.table.AppendRow(rowValues)
+}
+
+// AppendHeader creates a header row that will be formatted according to the table style.
+//
+//	┌───────────────────────┬─────────────────────────┬───────────────────────┐
+//	│ FirstName             │ LastName                │ Age                   │
+//	├───────────────────────┼─────────────────────────┼───────────────────────┤
+func (at *AscTable) AppendHeaderRow(headers []string) {
+	headerRow := make(table.Row, len(headers))
+	for i, header := range headers {
+		headerRow[i] = header
+	}
+	at.table.AppendHeader(headerRow)
+}
+
+// AppendGridRow creates a new grid row with the provided fields and values.
 //
 //	┌───────────────────────┬─────────────────────────┬───────────────────────┐
 //	│ FirstName             │ LastName                │ Age                   │
 //	├───────────────────────┼─────────────────────────┼───────────────────────┤
 //	│ John                  │ Doe                     │ 30                    │
 //	├───────────────────────┼─────────────────────────┼───────────────────────┤
-//
-func (at *AscTable) AppendAttributeRow(ar AttributeRow) {
+func (at *AscTable) AppendGridRow(ar GridRow) {
 	nr := make(table.Row, at.renderOptions.Columns)
 	vr := make(table.Row, at.renderOptions.Columns)
 
@@ -91,10 +113,10 @@ func (at *AscTable) AppendAttributeRow(ar AttributeRow) {
 	at.table.AppendSeparator()
 }
 
-// AppendAttributeRows accepts a list of AttributeRows and creates new attribute rows for each.
-func (at *AscTable) AppendAttributeRows(ar []AttributeRow) {
+// AppendGridRows accepts a list of GridRows and creates new grid rows for each.
+func (at *AscTable) AppendGridRows(ar []GridRow) {
 	for _, row := range ar {
-		at.AppendAttributeRow(row)
+		at.AppendGridRow(row)
 	}
 }
 
@@ -103,11 +125,10 @@ func (at *AscTable) AppendAttributeRows(ar []AttributeRow) {
 //	┌─────────────────────────────────────────────────────────────────────────┐
 //	│ Title                                                                   │
 //	╰─────────────────────────────────────────────────────────────────────────╯
-//
-func (at *AscTable) AppendHeaderRow(hr HeaderRow) {
+func (at *AscTable) AppendTitleRow(title string) {
 	row := make(table.Row, at.renderOptions.Columns)
 	for i := 0; i < at.renderOptions.Columns; i++ {
-		row[i] = text.Colors{text.Bold}.Sprint(hr.Title)
+		row[i] = text.Colors{text.Bold}.Sprint(title)
 	}
 
 	at.table.AppendSeparator()
@@ -121,7 +142,6 @@ func (at *AscTable) AppendHeaderRow(hr HeaderRow) {
 //	┌───────────────────────┬─────────────────────────────────────────────────┐
 //	│ Name                  │ John Doe                                        │
 //	╰───────────────────────┴─────────────────────────────────────────────────╯
-//
 func (at *AscTable) AppendHorizontalRow(hr HorizontalRow) {
 	row := make(table.Row, at.renderOptions.Columns)
 	row[0] = text.Colors{text.Bold, text.FgBlue}.Sprint(hr.Field.Name)
@@ -143,6 +163,7 @@ func (at *AscTable) Render() {
 	at.table.SetOutputMirror(os.Stdout)
 	at.table.SetTitle(text.Colors{text.Bold}.Sprint(at.renderOptions.Title))
 	at.table.SetStyle(table.StyleRounded)
+	at.table.Style().Format.Header = text.FormatUpper
 	at.SetColumnWidth(at.renderOptions.MinColumnWidth, at.renderOptions.MaxColumnWidth)
 	at.table.Render()
 }
