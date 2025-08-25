@@ -1,11 +1,13 @@
 package cmdutil
 
 import (
+	"fmt"
+
 	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 )
 
 // AttributeGetter is a function type that retrieves a field value from an instance
-type AttributeGetter func(fieldName string, instance any) string
+type AttributeGetter func(fieldName string, instance any) (string, error)
 
 // TagGetter is a function type that retrieves a tag value from an instance
 type TagGetter func(tagKey string, instance any) (string, error)
@@ -40,7 +42,11 @@ func BuildRows(instances []any, fields []tablewriter.Field, getFieldValue Attrib
 					}
 					instanceRow.Values = append(instanceRow.Values, fieldValue)
 				} else {
-					instanceRow.Values = append(instanceRow.Values, getFieldValue(field.Name, instance))
+					fieldValue, err := getFieldValue(field.Name, instance)
+					if err != nil {
+						fieldValue = ""
+					}
+					instanceRow.Values = append(instanceRow.Values, fieldValue)
 				}
 			}
 		}
@@ -54,4 +60,26 @@ func AppendTagFields(fields []tablewriter.Field, tags []string, instances []any)
 		fields = append(fields, tablewriter.Field{Name: tag, Category: "Tags", Visible: true})
 	}
 	return fields
+}
+
+func PopulateFieldValues(instance any, fields []tablewriter.Field, getFieldValue AttributeGetter) ([]tablewriter.Field, error) {
+	var populated []tablewriter.Field
+	for _, field := range fields {
+		if field.Category != "Tags" {
+			fieldValue, err := getFieldValue(field.Name, instance)
+			if err != nil {
+				return nil, fmt.Errorf("get field value: %w", err)
+			}
+			populated = append(populated, tablewriter.Field{
+				Category: field.Category,
+				Name:     field.Name,
+				Value:    fieldValue,
+				Visible:  field.Visible,
+			})
+		} else {
+			// For Tags category, keep the original field
+			populated = append(populated, field)
+		}
+	}
+	return populated, nil
 }

@@ -42,7 +42,10 @@ var fieldValueGetters = map[string]FieldValueGetter{
 func PopulateFieldValues(fields []tablewriter.Field, instance any) ([]tablewriter.Field, error) {
 	var populated []tablewriter.Field
 	for _, field := range fields {
-		value := GetFieldValue(field.Name, instance)
+		value, err := GetFieldValue(field.Name, instance)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get field value for %s: %w", field.Name, err)
+		}
 		populated = append(populated, tablewriter.Field{
 			Category: field.Category,
 			Name:     field.Name,
@@ -53,15 +56,15 @@ func PopulateFieldValues(fields []tablewriter.Field, instance any) ([]tablewrite
 }
 
 // getFieldValue returns the value of a field for the given instance.
-func GetFieldValue(fieldName string, instance any) string {
+func GetFieldValue(fieldName string, instance any) (string, error) {
 	if getter, exists := fieldValueGetters[fieldName]; exists {
 		value, err := getter(instance)
 		if err != nil {
-			return fmt.Sprintf("\033[31merror: Failed to get field value for %s: %v\033[0m", fieldName, err)
+			return "", fmt.Errorf("failed to get field value for %s: %w", fieldName, err)
 		}
-		return value
+		return value, nil
 	}
-	return fmt.Sprintf("\033[31merror: Field \"%s\" not found in fieldValueGetters\033[0m", fieldName)
+	return "", fmt.Errorf("field %s not found in fieldValueGetters", fieldName)
 }
 
 // Individual field value getters

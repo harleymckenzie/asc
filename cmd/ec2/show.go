@@ -82,39 +82,30 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get instances: %w", err)
 	}
 
-	fields := getShowFields()
-	fields, err = ec2.PopulateFieldValues(fields, instance[0])
-	if err != nil {
-		return fmt.Errorf("populate field values: %w", err)
-	}
-	tags, err := awsutil.PopulateTagFields(instance[0].Tags)
-	if err != nil {
-		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
-	}
-
-	// Create detail table
-	dt := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
 		Title:          "Instance summary for " + *instance[0].InstanceId,
 		Style:          "rounded",
 		Columns:        3,
 		MinColumnWidth: 0,
 		MaxColumnWidth: 70,
 	})
+	fields, err := cmdutil.PopulateFieldValues(instance[0], getShowFields(), ec2.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
+	}
 
-	// Determine layout and add sections
+	// Layout = Horizontal or Grid
 	layout := tablewriter.Horizontal
 	if cmdutil.GetLayout(cmd) == "grid" {
 		layout = tablewriter.Grid
 	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+	tags, err := awsutil.PopulateTagFields(instance[0].Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
 
-	// Add field sections
-	sections := tablewriter.BuildSections(fields, layout)
-	dt.AddSections(sections)
-
-	// Add tags section
-	tagsSection := tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal)
-	dt.AddSection(tagsSection)
-
-	dt.Render()
+	table.Render()
 	return nil
 }
