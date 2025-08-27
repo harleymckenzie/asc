@@ -7,7 +7,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -22,16 +22,16 @@ func init() {
 }
 
 // natGatewayListFields returns the fields for the NAT Gateway list table.
-func natGatewayListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "NAT Gateway ID", Display: true, DefaultSort: true},
-		{ID: "Connectivity", Display: true},
-		{ID: "State", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Subnet ID", Display: true},
-		{ID: "Primary Public IP", Display: true},
-		{ID: "Primary Private IP", Display: false},
-		{ID: "Created", Display: false},
+func natGatewayListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "NAT Gateway ID", Category: "VPC", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "Connectivity", Category: "VPC", Visible: true},
+		{Name: "State", Category: "VPC", Visible: true},
+		{Name: "VPC ID", Category: "VPC", Visible: true},
+		{Name: "Subnet ID", Category: "VPC", Visible: true},
+		{Name: "Primary Public IP", Category: "VPC", Visible: true},
+		{Name: "Primary Private IP", Category: "VPC", Visible: false},
+		{Name: "Created", Category: "VPC", Visible: false},
 	}
 }
 
@@ -53,35 +53,31 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 
 // ListNatGateways is the handler for the ls subcommand.
 func ListNatGateways(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create service: %w", err)
 	}
 
-	nats, err := svc.GetNatGateways(ctx, &ascTypes.GetNatGatewaysInput{})
+	nats, err := svc.GetNatGateways(context.TODO(), &ascTypes.GetNatGatewaysInput{})
 	if err != nil {
 		return fmt.Errorf("get nat gateways: %w", err)
 	}
 
-	fields := natGatewayListFields()
-	opts := tableformat.RenderOptions{
-		Title:  "NAT Gateways",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "NAT Gateways",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(nats),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetNatGatewayAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	fields := natGatewayListFields()
+	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(nats))
+
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(nats), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.SortBy(fields, reverseSort)
+
+	table.Render()
 	return nil
 }

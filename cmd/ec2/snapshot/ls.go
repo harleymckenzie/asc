@@ -8,7 +8,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -27,21 +27,19 @@ func init() {
 	NewLsFlags(lsCmd)
 }
 
-// ec2SnapshotListFields returns the fields for the snapshot list table.
-func ec2SnapshotListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Snapshot ID", Display: true, Sort: sortID},
-		{ID: "Volume Size", Display: true},
-		{ID: "Volume Size Raw", Hidden: true, Sort: sortSize, SortDirection: "desc"}, // This is used for sorting, as Size is a combination of numbers and letters
-		{ID: "Description", Display: showDesc},
-		{ID: "Tier", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Started", Display: true, DefaultSort: true, SortDirection: "desc"},
-		{ID: "Progress", Display: true, SortDirection: "desc"},
-		{ID: "Encryption", Display: true},
-		{ID: "Data Transfer Progress", Display: false, SortDirection: "desc"},
-		{ID: "KMS Key ID", Display: false},
-		{ID: "Owner ID", Display: true},
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Snapshot ID", Category: "Snapshot Details", Visible: true, SortBy: sortID, SortDirection: tablewriter.Asc},
+		{Name: "Volume Size", Category: "Snapshot Details", Visible: true},
+		{Name: "Description", Category: "Snapshot Details", Visible: showDesc},
+		{Name: "Tier", Category: "Snapshot Details", Visible: true},
+		{Name: "State", Category: "Snapshot Details", Visible: true},
+		{Name: "Started", Category: "Snapshot Details", Visible: true},
+		{Name: "Progress", Category: "Snapshot Details", Visible: true},
+		{Name: "Encryption", Category: "Snapshot Details", Visible: true},
+		{Name: "Data Transfer Progress", Category: "Snapshot Details", Visible: false},
+		{Name: "KMS Key ID", Category: "Snapshot Details", Visible: false},
+		{Name: "Owner ID", Category: "Snapshot Details", Visible: true},
 	}
 }
 
@@ -67,16 +65,41 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 
 // ListSnapshots is the handler for the ls subcommand.
 func ListSnapshots(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	// If 'all' is provided, dont use a filter
-	// If a specific owner is provided, use the owner-id filter
-	// Otherwise, use the self filter
+	ownerIds := getOwnerIds(owner)
+	snapshots, err := svc.GetSnapshots(context.TODO(), &ascTypes.GetSnapshotsInput{
+		OwnerIds: ownerIds,
+	})
+	if err != nil {
+		return fmt.Errorf("get snapshots: %w", err)
+	}
+
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Snapshots",
+	})
+	if list {
+		table.SetStyle("plain")
+	}
+	fields := getListFields()
+	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(snapshots))
+
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(snapshots), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.SortBy(fields, reverseSort)
+
+	table.Render()
+	return nil
+}
+
+// If 'all' is provided, dont use a filter
+// If a specific owner is provided, use the owner-id filter
+// Otherwise, use the self filter
+func getOwnerIds(owner string) []string {
 	ownerIds := []string{}
 	if owner == "all" {
 		// Do nothing
@@ -85,31 +108,5 @@ func ListSnapshots(cmd *cobra.Command, args []string) error {
 	} else {
 		ownerIds = append(ownerIds, "self")
 	}
-
-	snapshots, err := svc.GetSnapshots(ctx, &ascTypes.GetSnapshotsInput{
-		OwnerIds: ownerIds,
-	})
-	if err != nil {
-		return fmt.Errorf("get snapshots: %w", err)
-	}
-
-	fields := ec2SnapshotListFields()
-	style := "rounded"
-	if list {
-		style = "list"
-	}
-	opts := tableformat.RenderOptions{
-		Title:  "Snapshots",
-		Style:  style,
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(snapshots),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetSnapshotAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	return nil
+	return ownerIds
 }

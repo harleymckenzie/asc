@@ -6,8 +6,9 @@ import (
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -20,16 +21,16 @@ func init() {
 }
 
 // natGatewayShowFields returns the fields for the NAT Gateway detail table.
-func natGatewayShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "NAT Gateway ID", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Subnet ID", Display: true},
-		{ID: "Connectivity", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Primary Public IP", Display: true},
-		{ID: "Primary Private IP", Display: true},
-		{ID: "Created", Display: true},
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "NAT Gateway ID", Category: "VPC", Visible: true},
+		{Name: "VPC ID", Category: "VPC", Visible: true},
+		{Name: "Subnet ID", Category: "VPC", Visible: true},
+		{Name: "Connectivity", Category: "VPC", Visible: true},
+		{Name: "State", Category: "VPC", Visible: true},
+		{Name: "Primary Public IP", Category: "VPC", Visible: true},
+		{Name: "Primary Private IP", Category: "VPC", Visible: true},
+		{Name: "Created", Category: "VPC", Visible: true},
 	}
 }
 
@@ -52,11 +53,9 @@ func NewShowFlags(cobraCmd *cobra.Command) {
 
 // ShowNatGateway displays detailed information for a specified NAT Gateway.
 func ShowNatGateway(cmd *cobra.Command, id string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create service: %w", err)
 	}
 
 	if cmd.Flags().Changed("output") {
@@ -65,7 +64,7 @@ func ShowNatGateway(cmd *cobra.Command, id string) error {
 		}
 	}
 
-	nats, err := svc.GetNatGateways(ctx, &ascTypes.GetNatGatewaysInput{NatGatewayIds: []string{id}})
+	nats, err := svc.GetNatGateways(context.TODO(), &ascTypes.GetNatGatewaysInput{NatGatewayIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get nat gateways: %w", err)
 	}
@@ -74,20 +73,29 @@ func ShowNatGateway(cmd *cobra.Command, id string) error {
 	}
 	nat := nats[0]
 
-	fields := natGatewayShowFields()
-	opts := tableformat.RenderOptions{
-		Title: fmt.Sprintf("NAT Gateway Details\n(%s)", id),
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type: cmdutil.GetLayout(cmd),
-		},
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          fmt.Sprintf("NAT Gateway Details (%s)", id),
+		Columns:        3,
+		MaxColumnWidth: 70,
+	})
+
+	fields, err := cmdutil.PopulateFieldValues(nat, getShowFields(), vpc.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	return tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: nat,
-		Fields:   fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetNatGatewayAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+	}
+
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+	tags, err := awsutil.PopulateTagFields(nat.Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
+
+	table.Render()
+	return nil
 }

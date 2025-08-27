@@ -58,7 +58,7 @@ func availableAttributes() map[string]Attribute {
 	return map[string]Attribute{
 		"Name": {
 			GetValue: func(i *types.Instance) string {
-				return getInstanceName(*i)
+				return getInstanceNameTag(*i)
 			},
 		},
 		"Instance ID": {
@@ -152,20 +152,6 @@ func availableAttributes() map[string]Attribute {
 			},
 		},
 	}
-}
-
-// GetTagValue returns the value of a tag for an instance.
-func GetTagValue(tagKey string, instance any) (string, error) {
-	inst, ok := instance.(types.Instance)
-	if !ok {
-		return "", fmt.Errorf("instance is not a types.Instance")
-	}
-	for _, tag := range inst.Tags {
-		if aws.ToString(tag.Key) == tagKey {
-			return aws.ToString(tag.Value), nil
-		}
-	}
-	return "", nil
 }
 
 // GetImageAttributeValue is a function that returns the value of a field in a detailed table.
@@ -431,7 +417,7 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 		},
 		"Type": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				return getSecurityGroupRuleType(*r)
+				return getSecurityGroupRuleTypeOld(*r)
 			},
 		},
 		"Protocol": {
@@ -875,7 +861,7 @@ func getProductCodes(productCodes []types.ProductCode) string {
 
 // getSecurityGroupRuleType is a function that returns the type of a security group rule.
 // (eg,. if port range is 443-443, return "HTTPS", if port range is 22-22, return "SSH", if port range is 80-80, return "HTTP")
-func getSecurityGroupRuleType(rule types.SecurityGroupRule) string {
+func getSecurityGroupRuleTypeOld(rule types.SecurityGroupRule) string {
 	if rule.FromPort != nil && rule.ToPort != nil {
 		if *rule.FromPort == *rule.ToPort {
 			switch *rule.FromPort {

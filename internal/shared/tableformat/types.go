@@ -25,7 +25,7 @@ type TagValueGetter func(tag string, instance any) (string, error)
 type TagsGetter func(instance any) (map[string]string, error)
 
 type DetailTableLayout struct {
-	Type           string // "horizontal" or "vertical"
+	Type           string // "horizontal"/"grid" or "vertical"
 	ColumnsPerRow  int
 	ColumnMinWidth int
 	ColumnMaxWidth int

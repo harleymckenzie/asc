@@ -3,12 +3,11 @@
 package elasticache
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/elasticache"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -31,13 +30,13 @@ func init() {
 }
 
 // Column functions
-func elasticacheFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Cache Name", Display: true, DefaultSort: true},
-		{ID: "Status", Display: true, Sort: sortStatus},
-		{ID: "Engine Version", Display: true, Sort: sortEngine, SortDirection: "desc"},
-		{ID: "Configuration", Display: true, Sort: sortType},
-		{ID: "Endpoint", Display: showEndpoint},
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Cache Name", Category: "Cluster Details", Visible: true},
+		{Name: "Status", Category: "Cluster Details", Visible: true, SortBy: sortStatus, SortDirection: tablewriter.Asc},
+		{Name: "Engine Version", Category: "Cluster Details", Visible: true, SortBy: sortEngine, SortDirection: tablewriter.Desc},
+		{Name: "Configuration", Category: "Cluster Details", Visible: true, SortBy: sortType, SortDirection: tablewriter.Asc},
+		{Name: "Endpoint", Category: "Network", Visible: showEndpoint},
 	}
 }
 
@@ -52,42 +51,31 @@ var lsCmd = &cobra.Command{
 }
 
 // ListElasticacheClusters is the function for listing Elasticache clusters
-func ListElasticacheClusters(cobraCmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cobraCmd)
-
-	svc, err := elasticache.NewElasticacheService(ctx, profile, region)
+func ListElasticacheClusters(cmd *cobra.Command, args []string) error {
+	svc, err := cmdutil.CreateService(cmd, elasticache.NewElasticacheService)
 	if err != nil {
-		return fmt.Errorf("create new Elasticache service: %w", err)
+		return fmt.Errorf("create elasticache service: %w", err)
 	}
 
-	instances, err := svc.GetInstances(ctx)
+	instances, err := svc.GetInstances(cmd.Context())
 	if err != nil {
-		return fmt.Errorf("list Elasticache instances: %w", err)
+		return fmt.Errorf("get instances: %w", err)
 	}
 
-	fields := elasticacheFields()
-
-	opts := tableformat.RenderOptions{
-		Title:  "Elasticache Clusters",
-		Style:  "rounded-separated",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Elasticache Clusters",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetStyle("plain")
 	}
+	fields := getListFields()
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(instances),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return elasticache.GetAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(instances), fields, elasticache.GetFieldValue, elasticache.GetTagValue))
+	table.SortBy(fields, reverseSort)
+
+	table.Render()
 	return nil
 }
 

@@ -8,7 +8,8 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -20,17 +21,16 @@ func init() {
 	NewShowFlags(showCmd)
 }
 
-// ec2SecurityGroupShowFields returns the fields for the security group detail table.
-func ec2SecurityGroupShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Group Name", Display: true},
-		{ID: "Group ID", Display: true},
-		{ID: "Description", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Owner ID", Display: true},
-		{ID: "Ingress Count", Display: false},
-		{ID: "Egress Count", Display: false},
-		{ID: "Tag Count", Display: false},
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Group Name", Category: "Security Group Details", Visible: true},
+		{Name: "Group ID", Category: "Security Group Details", Visible: true},
+		{Name: "Description", Category: "Security Group Details", Visible: true},
+		{Name: "VPC ID", Category: "Security Group Details", Visible: true},
+		{Name: "Owner ID", Category: "Security Group Details", Visible: true},
+		{Name: "Ingress Count", Category: "Security Group Details", Visible: false},
+		{Name: "Egress Count", Category: "Security Group Details", Visible: false},
+		{Name: "Tag Count", Category: "Security Group Details", Visible: false},
 	}
 }
 
@@ -53,44 +53,43 @@ func NewShowFlags(cobraCmd *cobra.Command) {
 
 // ShowSecurityGroup displays detailed information for a specified security group.
 func ShowSecurityGroup(cmd *cobra.Command, arg string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
-	groups, err := svc.GetSecurityGroups(
-		ctx,
-		&ascTypes.GetSecurityGroupsInput{GroupIDs: []string{arg}},
-	)
+	groups, err := svc.GetSecurityGroups(context.TODO(), &ascTypes.GetSecurityGroupsInput{
+		GroupIDs: []string{arg},
+	})
 	if err != nil {
 		return fmt.Errorf("get security groups: %w", err)
 	}
 	if len(groups) == 0 {
-		return fmt.Errorf("Security group not found: %s", arg)
+		return fmt.Errorf("security group not found: %s", arg)
 	}
 
-	fields := ec2SecurityGroupShowFields()
-	opts := tableformat.RenderOptions{
-		Title: "Security Group Details",
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type: cmdutil.GetLayout(cmd),
-		},
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          "Security Group details for " + *groups[0].GroupName,
+		Columns:        3,
+		MaxColumnWidth: 70,
+	})
+	fields, err := cmdutil.PopulateFieldValues(groups[0], getShowFields(), ec2.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	return tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: groups[0],
-		Fields:   fields,
-		GetAttribute: func(fieldID string, group any) (string, error) {
-			return ec2.GetSecurityGroupAttributeValue(fieldID, group)
-		},
-	}, opts)
+	// Layout = Horizontal or Grid
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+	tags, err := awsutil.PopulateTagFields(groups[0].Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
+
+	table.Render()
+	return nil
 }

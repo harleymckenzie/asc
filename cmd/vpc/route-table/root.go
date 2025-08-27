@@ -17,7 +17,7 @@ func NewRouteTableRootCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(lsCmd)
-	cmd.AddCommand(showCmd)
+	// cmd.AddCommand(showCmd) // Disabled - show.go.disabled
 
 	cmd.AddGroup(cmdutil.ActionGroups()...)
 	cmd.AddGroup(cmdutil.SubcommandGroups()...)

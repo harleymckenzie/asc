@@ -17,10 +17,14 @@ type GetVolumesInput struct {
 type GetImagesInput struct {
 
 	// The IDs of the images to get
-	ImageIDs []string
+	ImageIds []string
 
 	// Filters to apply to the images
-	Filters []string
+	Filters []types.Filter
+
+	// Filters for images belonging to the specified owner
+	// Valid options are 'self', 'amazon' and a 12 digit AWS account id
+	Owners []string
 }
 
 type GetSecurityGroupRulesInput struct {

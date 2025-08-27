@@ -3,11 +3,11 @@
 package rds
 
 import (
-	"context"
 	"fmt"
+
 	"github.com/harleymckenzie/asc/internal/service/rds"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -34,16 +34,16 @@ func init() {
 }
 
 // Column functions
-func rdsFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Cluster Identifier", Display: true, Sort: sortCluster, Merge: true},
-		{ID: "Identifier", Display: true, Sort: sortName},
-		{ID: "Status", Display: true, Sort: sortStatus},
-		{ID: "Role", Display: true, Sort: sortRole},
-		{ID: "Engine", Display: true, Sort: sortEngine},
-		{ID: "Engine Version", Display: showEngineVersion, Sort: false, SortDirection: "desc"},
-		{ID: "Size", Display: true, Sort: false},
-		{ID: "Endpoint", Display: showEndpoint, Sort: false},
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Cluster Identifier", Category: "RDS", Visible: true, SortBy: sortCluster, SortDirection: tablewriter.Asc},
+		{Name: "Identifier", Category: "RDS", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
+		{Name: "Status", Category: "RDS", Visible: true, SortBy: sortStatus, SortDirection: tablewriter.Asc},
+		{Name: "Role", Category: "RDS", Visible: true, SortBy: sortRole, SortDirection: tablewriter.Asc},
+		{Name: "Engine", Category: "RDS", Visible: true, SortBy: sortEngine, SortDirection: tablewriter.Asc},
+		{Name: "Engine Version", Category: "RDS", Visible: showEngineVersion},
+		{Name: "Size", Category: "RDS", Visible: true},
+		{Name: "Endpoint", Category: "RDS", Visible: showEndpoint},
 	}
 }
 
@@ -82,51 +82,38 @@ func addLsFlags(cobraCmd *cobra.Command) {
 
 // ListRDSClusters is the function for listing RDS clusters and instances
 func ListRDSClusters(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-
-	svc, err := rds.NewRDSService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, rds.NewRDSService)
 	if err != nil {
 		return fmt.Errorf("create new RDS service: %w", err)
 	}
 
-	instances, err := svc.GetInstances(ctx)
+	instances, err := svc.GetInstances(cmd.Context())
 	if err != nil {
 		return fmt.Errorf("list RDS instances: %w", err)
 	}
 
-	clusters, err := svc.GetClusters(ctx)
+	clusters, err := svc.GetClusters(cmd.Context())
 	if err != nil {
 		return fmt.Errorf("list RDS clusters: %w", err)
 	}
 
-	fields := rdsFields()
+	// Set clusters context for role calculation
+	rds.SetClustersContext(clusters)
 
-	opts := tableformat.RenderOptions{
-		Title:  "Databases",
-		Style:  "rounded-separated",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Databases",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(instances),
-		Fields:    fields,
-		Tags:      cmdutil.Tags,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return rds.GetAttributeValue(fieldID, instance, clusters)
-		},
-		GetTagValue: func(tag string, instance any) (string, error) {
-			return rds.GetTagValue(tag, instance)
-		},
-	}, opts)
+	fields := getListFields()
+	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
 
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
-
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(instances), fields, rds.GetFieldValue, rds.GetTagValue))
+	table.SortBy(fields, reverseSort)
+	table.Render()
 	return nil
 }

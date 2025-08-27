@@ -48,7 +48,6 @@ func RenderTableDetail(td DetailTableRenderable, opts RenderOptions) error {
 	t.SetTitle(opts.Title)
 	t.SetStyle(TableStyles[opts.Style])
 
-	
 	// Ensure ColumnsPerRow is set to a sensible default
 	if opts.Layout.ColumnsPerRow <= 0 {
 		opts.Layout.ColumnsPerRow = 3

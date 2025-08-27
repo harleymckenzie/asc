@@ -7,7 +7,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -21,24 +21,24 @@ func init() {
 	NewLsFlags(lsCmd)
 }
 
-// prefixListListFields returns the fields for the Prefix List list table.
-func prefixListListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Prefix List ID", Display: true, DefaultSort: true},
-		{ID: "Prefix List Name", Display: true},
-		{ID: "Max Entries", Display: false},
-		{ID: "Address Family", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Version", Display: false},
-		{ID: "ARN", Display: false},
-		{ID: "Owner", Display: true},
+// getListFields returns the fields for the Prefix List list table.
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Prefix List ID", Category: "Details", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "Prefix List Name", Category: "Details", Visible: true},
+		{Name: "Max Entries", Category: "Details", Visible: false},
+		{Name: "Address Family", Category: "Details", Visible: true},
+		{Name: "State", Category: "Details", Visible: true},
+		{Name: "Version", Category: "Details", Visible: false},
+		{Name: "Prefix List ARN", Category: "Details", Visible: false},
+		{Name: "Owner", Category: "Details", Visible: true},
 	}
 }
 
-func prefixListEntriesFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "CIDR", Display: true},
-		{ID: "Description", Display: true},
+func prefixListEntriesFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "CIDR", Category: "VPC", Visible: true},
+		{Name: "Description", Category: "VPC", Visible: true},
 	}
 }
 
@@ -60,67 +60,61 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 
 // ListPrefixLists is the handler for the ls subcommand.
 func ListPrefixLists(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create vpc service: %w", err)
 	}
 
 	if len(args) > 0 {
 		return ListPrefixListEntries(cmd, args)
-	} else {
-		pls, err := svc.GetManagedPrefixLists(ctx, &ascTypes.GetManagedPrefixListsInput{})
-		if err != nil {
-			return fmt.Errorf("get prefix lists: %w", err)
-		}
-
-		fields := prefixListListFields()
-		opts := tableformat.RenderOptions{
-			Title:  "Prefix Lists",
-			Style:  "rounded",
-			SortBy: tableformat.GetSortByField(fields, reverseSort),
-		}
-
-		if list {
-			opts.Style = "list"
-		}
-
-		tableformat.RenderTableList(&tableformat.ListTable{
-			Instances: utils.SlicesToAny(pls),
-			Fields:    fields,
-			GetAttribute: func(fieldID string, instance any) (string, error) {
-				return vpc.GetPrefixListAttributeValue(fieldID, instance)
-			},
-		}, opts)
-		return nil
 	}
+
+	pls, err := svc.GetManagedPrefixLists(context.TODO(), &ascTypes.GetManagedPrefixListsInput{})
+	if err != nil {
+		return fmt.Errorf("get prefix lists: %w", err)
+	}
+
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Prefix Lists",
+	})
+	if list {
+		table.SetRenderStyle("plain")
+	}
+
+	fields := getListFields()
+	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(pls))
+
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(pls), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.SortBy(fields, reverseSort)
+
+	table.Render()
+	return nil
 }
 
 func ListPrefixListEntries(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create vpc service: %w", err)
 	}
-	
-	pl, err := svc.GetPrefixLists(ctx, &ascTypes.GetPrefixListsInput{
+
+	pl, err := svc.GetPrefixLists(context.TODO(), &ascTypes.GetPrefixListsInput{
 		PrefixListIds: []string{args[0]},
 	})
 	if err != nil {
 		return fmt.Errorf("get prefix list: %w", err)
 	}
 
-	fields := prefixListEntriesFields()
-	opts := tableformat.RenderOptions{
-		Title:  fmt.Sprintf("%s - Entries", args[0]),
-		Style:  "rounded",
-	}
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: fmt.Sprintf("%s - Entries", args[0]),
+	})
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(pl),
-		Fields:    fields,
-	}, opts)
+	fields := prefixListEntriesFields()
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(pl), fields, vpc.GetFieldValue, vpc.GetTagValue))
+
+	table.Render()
 	return nil
 }
