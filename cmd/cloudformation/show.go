@@ -3,13 +3,12 @@
 package cloudformation
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/cloudformation"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/cloudformation/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -22,23 +21,22 @@ func init() {
 }
 
 // Column functions
-func cloudformationShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Overview", Display: true, Header: true},
-		{ID: "Stack ID", Display: true},
-		{ID: "Description", Display: true},
-		{ID: "Status", Display: true},
-		{ID: "Detailed Status", Display: true},
-		{ID: "Status Reason", Display: true},
-		{ID: "Creation Time", Display: true},
-		{ID: "Last Updated", Display: true},
-		{ID: "Deletion Time", Display: true},
-		{ID: "Deletion Mode", Display: true},
-		{ID: "Drift Status", Display: true},
-		{ID: "Root Stack", Display: true},
-		{ID: "Parent Stack", Display: true},
-		{ID: "Termination Protection", Display: true},
-		{ID: "IAM Role", Display: true},
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Stack ID", Category: "Overview", Visible: true},
+		{Name: "Description", Category: "Overview", Visible: true},
+		{Name: "Status", Category: "Overview", Visible: true},
+		{Name: "Detailed Status", Category: "Overview", Visible: true},
+		{Name: "Status Reason", Category: "Overview", Visible: true},
+		{Name: "Creation Time", Category: "Timeline", Visible: true},
+		{Name: "Last Updated", Category: "Timeline", Visible: true},
+		{Name: "Deletion Time", Category: "Timeline", Visible: true},
+		{Name: "Deletion Mode", Category: "Timeline", Visible: true},
+		{Name: "Drift Status", Category: "Management", Visible: true},
+		{Name: "Root Stack", Category: "Hierarchy", Visible: true},
+		{Name: "Parent Stack", Category: "Hierarchy", Visible: true},
+		{Name: "Termination Protection", Category: "Security", Visible: true},
+		{Name: "IAM Role", Category: "Security", Visible: true},
 	}
 }
 
@@ -59,45 +57,34 @@ func NewShowFlags(showCmd *cobra.Command) {
 
 // Show function
 func ShowCloudFormationStack(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	fields := cloudformationShowFields()
-
-	svc, err := cloudformation.NewCloudFormationService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, cloudformation.NewCloudFormationService)
 	if err != nil {
 		return fmt.Errorf("create new CloudFormation service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
-	stack, err := svc.GetStacks(ctx, &ascTypes.GetStacksInput{
+	stack, err := svc.GetStacks(cmd.Context(), &ascTypes.GetStacksInput{
 		StackName: &args[0],
 	})
 	if err != nil {
 		return fmt.Errorf("get stack: %w", err)
 	}
 
-	opts := tableformat.RenderOptions{
-		Title: fmt.Sprintf("Stack Details\n(%s)", args[0]),
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type: cmdutil.GetLayout(cmd),
-		},
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:   fmt.Sprintf("Stack Details\n(%s)", args[0]),
+		Columns: 3,
+	})
+
+	fields, err := cmdutil.PopulateFieldValues(stack[0], getShowFields(), cloudformation.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	err = tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: stack[0],
-		Fields:   fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return cloudformation.GetAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
 	}
+
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+	table.Render()
 	return nil
 }

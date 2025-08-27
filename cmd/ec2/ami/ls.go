@@ -2,7 +2,6 @@
 package ami
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -10,7 +9,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -33,20 +32,19 @@ func init() {
 	NewLsFlags(lsCmd)
 }
 
-// ec2AMIListFields returns the fields for the AMI list table.
-func ec2AMIListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "AMI Name", Display: true, Sort: sortName},
-		{ID: "AMI ID", Display: true, Sort: sortID},
-		{ID: "Source", Display: false},
-		{ID: "Owner", Display: true},
-		{ID: "Visibility", Display: false},
-		{ID: "Status", Display: true, Sort: sortState},
-		{ID: "Creation Date", Display: true, DefaultSort: true, SortDirection: "desc"},
-		{ID: "Platform", Display: false},
-		{ID: "Root Device Type", Display: false},
-		{ID: "Block Devices", Display: false},
-		{ID: "Virtualization", Display: false},
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "AMI Name", Category: "AMI Details", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
+		{Name: "AMI ID", Category: "AMI Details", Visible: true, SortBy: sortID, SortDirection: tablewriter.Asc},
+		{Name: "Source", Category: "AMI Details", Visible: false},
+		{Name: "Owner", Category: "AMI Details", Visible: true},
+		{Name: "Visibility", Category: "AMI Details", Visible: false},
+		{Name: "Status", Category: "AMI Details", Visible: true, SortBy: sortState, SortDirection: tablewriter.Desc},
+		{Name: "Creation Date", Category: "AMI Details", Visible: true, SortBy: true, SortDirection: tablewriter.Desc},
+		{Name: "Platform", Category: "AMI Details", Visible: false},
+		{Name: "Root Device Type", Category: "AMI Details", Visible: false},
+		{Name: "Block Devices", Category: "AMI Details", Visible: false},
+		{Name: "Virtualization", Category: "AMI Details", Visible: false},
 	}
 }
 
@@ -73,15 +71,43 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().IntVar(&limit, "limit", 0, "Limit the number of AMIs displayed.")
 }
 
-// ListAMIs is the handler for the ls subcommand.
 func ListAMIs(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
+	filters, owners, err := parseScope(scope)
+	if err != nil {
+		return fmt.Errorf("parse scope: %w", err)
+	}
+	amis, err := getImages(svc, &ascTypes.GetImagesInput{
+		Filters: filters,
+		Owners:  owners,
+	})
+	if err != nil {
+		return fmt.Errorf("get images: %w", err)
+	}
+
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "AMIs",
+	})
+	if list {
+		table.SetRenderStyle("plain")
+	}
+	fields := getListFields()
+	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(amis))
+
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(amis), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.SortBy(fields, reverseSort)
+
+	table.Render()
+	return nil
+}
+
+func parseScope(scope string) ([]types.Filter, []string, error) {
 	filters := []types.Filter{}
 	owners := []string{}
 
@@ -111,7 +137,7 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 		if len(scope) == 12 {
 			owners = append(owners, scope)
 		} else {
-			return fmt.Errorf("invalid scope: %s", scope)
+			return nil, nil, fmt.Errorf("invalid scope: %s", scope)
 		}
 	}
 
@@ -122,33 +148,5 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	input := &ascTypes.GetImagesInput{}
-	images, err := svc.GetImagesWithFilters(ctx, input, filters, owners)
-	if err != nil {
-		return fmt.Errorf("get images: %w", err)
-	}
-
-	if limit > 0 && len(images) > limit {
-		images = images[:limit]
-	}
-
-	fields := ec2AMIListFields()
-	opts := tableformat.RenderOptions{
-		Title:  "Amazon Machine Images (AMIs)",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
-	if list {
-		opts.Style = "list"
-	}
-
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(images),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetImageAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	return nil
+	return filters, owners, nil
 }

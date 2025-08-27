@@ -1,0 +1,15 @@
+package ami
+
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+
+	"github.com/harleymckenzie/asc/internal/service/ec2"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+)
+
+func getImages(svc *ec2.EC2Service, input *ascTypes.GetImagesInput) ([]types.Image, error) {
+	ctx := context.TODO()
+	return svc.GetImages(ctx, input)
+}

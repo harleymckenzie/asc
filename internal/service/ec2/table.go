@@ -417,7 +417,7 @@ func securityGroupRuleAttributes() map[string]SecurityGroupRuleAttribute {
 		},
 		"Type": {
 			GetValue: func(r *types.SecurityGroupRule) string {
-				return getSecurityGroupRuleType(*r)
+				return getSecurityGroupRuleTypeOld(*r)
 			},
 		},
 		"Protocol": {
@@ -861,7 +861,7 @@ func getProductCodes(productCodes []types.ProductCode) string {
 
 // getSecurityGroupRuleType is a function that returns the type of a security group rule.
 // (eg,. if port range is 443-443, return "HTTPS", if port range is 22-22, return "SSH", if port range is 80-80, return "HTTP")
-func getSecurityGroupRuleType(rule types.SecurityGroupRule) string {
+func getSecurityGroupRuleTypeOld(rule types.SecurityGroupRule) string {
 	if rule.FromPort != nil && rule.ToPort != nil {
 		if *rule.FromPort == *rule.ToPort {
 			switch *rule.FromPort {

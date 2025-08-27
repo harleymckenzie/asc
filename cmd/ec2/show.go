@@ -72,7 +72,7 @@ func ShowEC2Resource(cmd *cobra.Command, arg string) error {
 }
 
 func ShowEC2Instance(cmd *cobra.Command, args []string) error {
-	svc, err := createEC2Service(cmd)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
 		return fmt.Errorf("create ec2 service: %w", err)
 	}
@@ -84,9 +84,7 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 
 	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
 		Title:          "Instance summary for " + *instance[0].InstanceId,
-		Style:          "rounded",
 		Columns:        3,
-		MinColumnWidth: 0,
 		MaxColumnWidth: 70,
 	})
 	fields, err := cmdutil.PopulateFieldValues(instance[0], getShowFields(), ec2.GetFieldValue)

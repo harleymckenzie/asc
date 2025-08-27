@@ -6,8 +6,9 @@ import (
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -20,14 +21,14 @@ func init() {
 }
 
 // routeTableShowFields returns the fields for the Route Table detail table.
-func routeTableShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Route Table ID", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Main", Display: true},
-		{ID: "Owner", Display: true},
-		{ID: "Association Count", Display: true},
-		{ID: "Route Count", Display: true},
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Route Table ID", Category: "VPC", Visible: true},
+		{Name: "VPC ID", Category: "VPC", Visible: true},
+		{Name: "Main", Category: "VPC", Visible: true},
+		{Name: "Owner", Category: "VPC", Visible: true},
+		{Name: "Association Count", Category: "VPC", Visible: true},
+		{Name: "Route Count", Category: "VPC", Visible: true},
 	}
 }
 
@@ -50,19 +51,12 @@ func NewShowFlags(cobraCmd *cobra.Command) {
 
 // ShowRouteTable displays detailed information for a specified Route Table.
 func ShowRouteTable(cmd *cobra.Command, id string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
+	ctx := context.TODO()
 	rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{RouteTableIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get route tables: %w", err)
@@ -72,22 +66,30 @@ func ShowRouteTable(cmd *cobra.Command, id string) error {
 	}
 	rt := rts[0]
 
-	fields := routeTableShowFields()
-	opts := tableformat.RenderOptions{
-		Title: fmt.Sprintf("Route Table Details\n(%s)", id),
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type: cmdutil.GetLayout(cmd),
-			ColumnsPerRow: 3,
-			ColumnMinWidth: 20,
-		},
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          "Route Table summary for " + id,
+		Columns:        3,
+		MaxColumnWidth: 70,
+	})
+
+	fields, err := cmdutil.PopulateFieldValues(rt, getShowFields(), vpc.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	return tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: rt,
-		Fields:   fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetRouteTableAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	// Layout = Horizontal or Grid
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+
+	tags, err := awsutil.PopulateTagFields(rt.Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from route table: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
+
+	table.Render()
+	return nil
 }

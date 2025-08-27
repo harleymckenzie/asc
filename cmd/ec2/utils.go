@@ -11,7 +11,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 )
 
-func createEC2Service(cmd *cobra.Command) (*ec2.EC2Service, error) {
+func CreateEC2Service(cmd *cobra.Command) (*ec2.EC2Service, error) {
 	ctx := context.TODO()
 	profile, region := cmdutil.GetPersistentFlags(cmd)
 	return ec2.NewEC2Service(ctx, profile, region)

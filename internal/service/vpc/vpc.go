@@ -60,9 +60,14 @@ func (svc *VPCService) GetNACLs(ctx context.Context, input *ascTypes.GetNACLsInp
 
 // GetNatGateways fetches NAT Gateways from AWS.
 func (svc *VPCService) GetNatGateways(ctx context.Context, input *ascTypes.GetNatGatewaysInput) ([]types.NatGateway, error) {
-	output, err := svc.Client.DescribeNatGateways(ctx, &ec2.DescribeNatGatewaysInput{
-		NatGatewayIds: input.NatGatewayIds,
-	})
+	describeInput := &ec2.DescribeNatGatewaysInput{}
+
+	// If specific NAT gateway IDs are provided, use them
+	if len(input.NatGatewayIds) > 0 {
+		describeInput.NatGatewayIds = input.NatGatewayIds
+	}
+
+	output, err := svc.Client.DescribeNatGateways(ctx, describeInput)
 	if err != nil {
 		return nil, err
 	}
@@ -82,9 +87,14 @@ func (svc *VPCService) GetPrefixLists(ctx context.Context, input *ascTypes.GetPr
 
 // GetManagedPrefixLists fetches Managed Prefix Lists from AWS.
 func (svc *VPCService) GetManagedPrefixLists(ctx context.Context, input *ascTypes.GetManagedPrefixListsInput) ([]types.ManagedPrefixList, error) {
-	output, err := svc.Client.DescribeManagedPrefixLists(ctx, &ec2.DescribeManagedPrefixListsInput{
-		PrefixListIds: input.PrefixListIds,
-	})
+	describeInput := &ec2.DescribeManagedPrefixListsInput{}
+
+	// If specific prefix list IDs are provided, use them
+	if len(input.PrefixListIds) > 0 {
+		describeInput.PrefixListIds = input.PrefixListIds
+	}
+
+	output, err := svc.Client.DescribeManagedPrefixLists(ctx, describeInput)
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +103,14 @@ func (svc *VPCService) GetManagedPrefixLists(ctx context.Context, input *ascType
 
 // GetRouteTables fetches Route Tables from AWS.
 func (svc *VPCService) GetRouteTables(ctx context.Context, input *ascTypes.GetRouteTablesInput) ([]types.RouteTable, error) {
-	output, err := svc.Client.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{
-		RouteTableIds: input.RouteTableIds,
-	})
+	describeInput := &ec2.DescribeRouteTablesInput{}
+
+	// If specific route table IDs are provided, use them
+	if len(input.RouteTableIds) > 0 {
+		describeInput.RouteTableIds = input.RouteTableIds
+	}
+
+	output, err := svc.Client.DescribeRouteTables(ctx, describeInput)
 	if err != nil {
 		return nil, err
 	}
@@ -111,9 +126,18 @@ func (svc *VPCService) GetSubnets(ctx context.Context, input *ascTypes.GetSubnet
 			Values: []string{vpcId},
 		})
 	}
-	output, err := svc.Client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
+
+	describeInput := &ec2.DescribeSubnetsInput{
 		Filters: filters,
-	})
+	}
+
+	// If specific subnet IDs are provided, use them instead of filters
+	if len(input.SubnetIds) > 0 {
+		describeInput.SubnetIds = input.SubnetIds
+		describeInput.Filters = nil // Clear filters when using specific IDs
+	}
+
+	output, err := svc.Client.DescribeSubnets(ctx, describeInput)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +146,14 @@ func (svc *VPCService) GetSubnets(ctx context.Context, input *ascTypes.GetSubnet
 
 // GetIGWs fetches Internet Gateways from AWS.
 func (svc *VPCService) GetIGWs(ctx context.Context, input *ascTypes.GetIGWsInput) ([]types.InternetGateway, error) {
-	output, err := svc.Client.DescribeInternetGateways(ctx, &ec2.DescribeInternetGatewaysInput{
-		InternetGatewayIds: input.IGWIds,
-	})
+	describeInput := &ec2.DescribeInternetGatewaysInput{}
+
+	// If specific internet gateway IDs are provided, use them
+	if len(input.IGWIds) > 0 {
+		describeInput.InternetGatewayIds = input.IGWIds
+	}
+
+	output, err := svc.Client.DescribeInternetGateways(ctx, describeInput)
 	if err != nil {
 		return nil, err
 	}

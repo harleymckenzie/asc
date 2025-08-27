@@ -6,8 +6,9 @@ import (
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -19,29 +20,18 @@ func init() {
 	NewShowFlags(showCmd)
 }
 
-// subnetShowFields returns the fields for the Subnet detail table.
-func subnetShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Subnet ID", Display: true},
-		{ID: "Subnet ARN", Display: true},
-		{ID: "VPC ID", Display: true},
-		// {ID: "IPv4 CIDR", Display: false}, // TODO: Implement in attributes table
-		// {ID: "IPv6 CIDR", Display: false}, // TODO: Implement in attributes table
-		{ID: "Availability Zone", Display: true},
-		// {ID: "Availability Zone ID", Display: true}, // TODO: Implement in attributes table
-		{ID: "Network ACL", Display: true},
-		{ID: "Route Table", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Owner", Display: true},
-		{ID: "Default subnet", Display: true},
-		{ID: "Auto-assign public IPv4 address", Display: true},
-		{ID: "Auto-assign customer-owned IPv4 address", Display: true},
-		{ID: "Customer-owned IPv4 pool", Display: true},
-		{ID: "Outpost ID", Display: true},
-		{ID: "Hostname type", Display: true},
-		{ID: "DNS64", Display: true},
-		{ID: "IPv6-only", Display: true},
-		{ID: "Available IPs", Display: true},
+// getShowFields returns the fields for the Subnet detail table.
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Subnet ID", Category: "Subnet", Visible: true},
+		{Name: "VPC ID", Category: "Subnet", Visible: true},
+		{Name: "IPv4 CIDR", Category: "Subnet", Visible: true},
+		{Name: "Availability Zone", Category: "Subnet", Visible: true},
+		{Name: "State", Category: "Subnet", Visible: true},
+		{Name: "Available IPs", Category: "Subnet", Visible: true},
+		{Name: "Default subnet", Category: "Subnet", Visible: true},
+		{Name: "Auto-assign public IPv4 address", Category: "Subnet", Visible: true},
+		{Name: "Owner", Category: "Subnet", Visible: true},
 	}
 }
 
@@ -64,71 +54,45 @@ func NewShowFlags(cobraCmd *cobra.Command) {
 
 // ShowSubnet displays detailed information for a specified Subnet.
 func ShowSubnet(cmd *cobra.Command, id string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
+	ctx := context.TODO()
 	subnets, err := svc.GetSubnets(ctx, &ascTypes.GetSubnetsInput{SubnetIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get subnets: %w", err)
 	}
 	if len(subnets) == 0 {
-		return fmt.Errorf("Subnet not found: %s", id)
+		return fmt.Errorf("subnet not found: %s", id)
 	}
-	sub := subnets[0]
+	subnet := subnets[0]
 
-	fields := subnetShowFields()
-	opts := tableformat.RenderOptions{
-		Title: fmt.Sprintf("Subnet Details\n(%s)", id),
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type: cmdutil.GetLayout(cmd),
-		},
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          "Subnet summary for " + id,
+		Columns:        3,
+		MaxColumnWidth: 70,
+	})
+
+	fields, err := cmdutil.PopulateFieldValues(subnet, getShowFields(), vpc.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	return tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: sub,
-		Fields:   fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			// Placeholder logic for extra fields
-			switch fieldID {
-			case "Subnet ARN":
-				return "-", nil // TODO: Compute ARN
-			case "Network ACL":
-				return "-", nil // TODO: Lookup NACL
-			case "Route Table":
-				return "-", nil // TODO: Lookup Route Table
-			case "Owner":
-				return "-", nil // TODO: Lookup Owner
-			case "Default subnet":
-				return "No", nil // TODO: Compute
-			case "Auto-assign public IPv4 address":
-				return "-", nil // TODO: Lookup
-			case "Auto-assign customer-owned IPv4 address":
-				return "-", nil // TODO: Lookup
-			case "Customer-owned IPv4 pool":
-				return "-", nil // TODO: Lookup
-			case "Outpost ID":
-				return "-", nil // TODO: Lookup
-			case "Hostname type":
-				return "-", nil // TODO: Lookup
-			case "DNS64":
-				return "-", nil // TODO: Lookup
-			case "IPv6-only":
-				return "No", nil // TODO: Compute
-			case "Available IPs":
-				return fmt.Sprintf("%d", sub.AvailableIpAddressCount), nil
-			}
-			return vpc.GetSubnetAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	// Layout = Horizontal or Grid
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+
+	tags, err := awsutil.PopulateTagFields(subnet.Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from subnet: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
+
+	table.Render()
+	return nil
 }

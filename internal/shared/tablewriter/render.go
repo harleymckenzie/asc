@@ -20,6 +20,8 @@ type AscWriter interface {
 	Render()
 	SetColumnWidth(minWidth int, maxWidth int)
 	GetColumns() int
+	SetStyle(style string)
+	SetRenderStyle(style string)
 	SortBy(fields []Field, reverse bool)
 }
 
@@ -28,6 +30,7 @@ type AscTable struct {
 	table         table.Writer
 	renderOptions AscTableRenderOptions
 	sortByFields  []Field
+	style         *string // Lazy style initialization
 }
 
 // AscTableRenderOptions is the options for the AscTable.
@@ -62,15 +65,36 @@ func NewAscWriter(renderOptions AscTableRenderOptions) AscWriter {
 	return &AscTable{
 		table:         table.NewWriter(),
 		renderOptions: renderOptions,
+		style:         nil,
 	}
+}
+
+// getStyle returns the style, initializing it with default if needed
+func (at *AscTable) getStyle() string {
+	if at.style == nil {
+		// Lazy initialization - set default if none specified
+		if at.renderOptions.Style == "" {
+			defaultStyle := "rounded"
+			at.style = &defaultStyle
+		} else {
+			at.style = &at.renderOptions.Style
+		}
+	}
+	return *at.style
+}
+
+// SetRenderStyle sets the style for rendering
+func (at *AscTable) SetRenderStyle(style string) {
+	at.renderOptions.Style = style
+	// Reset the cached style so it gets re-initialized
+	at.style = nil
 }
 
 // Render writes the table to the console.
 func (at *AscTable) Render() {
 	at.table.SetOutputMirror(os.Stdout)
 	at.table.SetTitle(text.Colors{text.Bold}.Sprint(at.renderOptions.Title))
-	at.table.SetStyle(table.StyleRounded)
-	at.table.Style().Format.Header = text.FormatUpper
+	at.table.SetStyle(TableStyles[at.getStyle()])
 	at.SetColumnWidth(at.renderOptions.MinColumnWidth, at.renderOptions.MaxColumnWidth)
 
 	if len(at.sortByFields) > 0 {

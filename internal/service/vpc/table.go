@@ -226,7 +226,7 @@ func naclRuleAttributes() map[string]NACLRuleAttribute {
 		},
 		"Allow/Deny": {
 			GetValue: func(r *types.NetworkAclEntry) string {
-				return format.Status(getNACLRuleAction(r))
+				return format.Status(getNACLRuleActionOld(*r))
 			},
 		},
 	}
@@ -539,12 +539,12 @@ func FindMainNetworkACL(vpcID string, acls []types.NetworkAcl) string {
 }
 
 // Helper: Determine whether an ACL entry is an inbound or outbound rule
-func isInboundRule(entry *types.NetworkAclEntry) bool {
+func isInboundRuleOld(entry *types.NetworkAclEntry) bool {
 	return entry.Egress == nil || !*entry.Egress
 }
 
 // Helper: Count the number of inbound or outbound rules in an ACL
-func countNACLRules(acl *types.NetworkAcl, inbound bool) int {
+func countNACLRulesOld(acl *types.NetworkAcl, inbound bool) int {
 	count := 0
 	for _, entry := range acl.Entries {
 		if isInboundRule(&entry) == inbound {
@@ -554,8 +554,8 @@ func countNACLRules(acl *types.NetworkAcl, inbound bool) int {
 	return count
 }
 
-func getNACLRuleAction(entry *types.NetworkAclEntry) string {
-	if entry.RuleAction == "allow" {
+func getNACLRuleActionOld(entry types.NetworkAclEntry) string {
+	if entry.RuleAction == types.RuleActionAllow {
 		return "Allow"
 	}
 	return "Deny"

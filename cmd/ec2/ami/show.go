@@ -2,14 +2,13 @@
 package ami
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -21,34 +20,33 @@ func init() {
 	NewShowFlags(showCmd)
 }
 
-// ec2AMIShowFields returns the fields for the AMI detail table.
-func ec2AMIShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "AMI Name", Display: true},
-		{ID: "Image Type", Display: true},
-		{ID: "Platform", Display: false},
-		{ID: "Root Device Type", Display: false},
-		{ID: "Owner", Display: true},
-		{ID: "Architecture", Display: true},
-		{ID: "Usage Operation", Display: true},
-		{ID: "Root Device Name", Display: true},
-		{ID: "Status", Display: true},
-		{ID: "Source", Display: false},
-		{ID: "Virtualization", Display: true},
-		{ID: "Boot Mode", Display: true},
-		{ID: "State Reason", Display: true},
-		{ID: "Creation Date", Display: true},
-		{ID: "Kernel ID", Display: true},
-		{ID: "Description", Display: true},
-		{ID: "Product Codes", Display: true},
-		{ID: "RAM Disk ID", Display: true},
-		{ID: "Deprecation Time", Display: true},
-		{ID: "Block Devices", Display: false},
-		{ID: "Deregistration Protection", Display: true},
-		{ID: "Allowed Image", Display: true},
-		{ID: "Source AMI ID", Display: true},
-		{ID: "Source AMI Region", Display: true},
-		{ID: "Visibility", Display: false},
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "AMI Name", Category: "Image Details", Visible: true},
+		{Name: "Image Type", Category: "Image Details", Visible: true},
+		{Name: "Platform", Category: "Image Details", Visible: false},
+		{Name: "Root Device Type", Category: "Image Details", Visible: false},
+		{Name: "Owner", Category: "Image Details", Visible: true},
+		{Name: "Architecture", Category: "Image Details", Visible: true},
+		{Name: "Usage Operation", Category: "Image Details", Visible: true},
+		{Name: "Root Device Name", Category: "Image Details", Visible: true},
+		{Name: "Status", Category: "Image Details", Visible: true},
+		{Name: "Source", Category: "Image Details", Visible: false},
+		{Name: "Virtualization", Category: "Image Details", Visible: true},
+		{Name: "Boot Mode", Category: "Image Details", Visible: true},
+		{Name: "State Reason", Category: "Image Details", Visible: true},
+		{Name: "Creation Date", Category: "Image Details", Visible: true},
+		{Name: "Kernel ID", Category: "Image Details", Visible: true},
+		{Name: "Description", Category: "Image Details", Visible: true},
+		{Name: "Product Codes", Category: "Image Details", Visible: true},
+		{Name: "RAM Disk ID", Category: "Image Details", Visible: true},
+		{Name: "Deprecation Time", Category: "Image Details", Visible: true},
+		{Name: "Block Devices", Category: "Image Details", Visible: false},
+		{Name: "Deregistration Protection", Category: "Image Details", Visible: true},
+		{Name: "Allowed Image", Category: "Image Details", Visible: true},
+		{Name: "Source AMI ID", Category: "Image Details", Visible: true},
+		{Name: "Source AMI Region", Category: "Image Details", Visible: true},
+		{Name: "Visibility", Category: "Image Details", Visible: false},
 	}
 }
 
@@ -69,45 +67,42 @@ func NewShowFlags(cobraCmd *cobra.Command) {
 	cmdutil.AddShowFlags(cobraCmd, "horizontal")
 }
 
-// ShowEC2AMI displays detailed information for a specified AMI.
 func ShowEC2AMI(cmd *cobra.Command, arg string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
-	images, err := svc.GetImages(ctx, &ascTypes.GetImagesInput{ImageIDs: []string{arg}})
+	image, err := getImages(svc, &ascTypes.GetImagesInput{
+		ImageIds: []string{arg},
+	})
 	if err != nil {
-		return fmt.Errorf("get images: %w", err)
-	}
-	if len(images) == 0 {
-		return fmt.Errorf("AMI not found: %s", arg)
+		return fmt.Errorf("get instances: %w", err)
 	}
 
-	fields := ec2AMIShowFields()
-	opts := tableformat.RenderOptions{
-		Title: fmt.Sprintf("AMI Details\n(%s)", aws.ToString(images[0].ImageId)),
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type:           cmdutil.GetLayout(cmd),
-			ColumnsPerRow:  3,
-		},
-		SortBy: tableformat.GetSortByField(fields, false),
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          "AMI Details\n(" + *image[0].ImageId + ")",
+		Columns:        3,
+		MaxColumnWidth: 90,
+	})
+	fields, err := cmdutil.PopulateFieldValues(image[0], getShowFields(), ec2.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	return tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: images[0],
-		Fields:   fields,
-		GetAttribute: func(fieldID string, image any) (string, error) {
-			return ec2.GetImageAttributeValue(fieldID, image)
-		},
-	}, opts)
+	// Layout = Horizontal or Grid
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+		table.Options.MaxColumnWidth = 50
+	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+	tags, err := awsutil.PopulateTagFields(image[0].Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
+
+	table.Render()
+	return nil
 }

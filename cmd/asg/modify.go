@@ -10,7 +10,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -28,15 +28,15 @@ func init() {
 	addModifyFlags(modifyCmd)
 }
 
-func asgScheduleFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Name", Display: true, Sort: false},
-		{ID: "Recurrence", Display: true, Sort: false},
-		{ID: "Start Time", Display: true, Sort: true, DefaultSort: true},
-		{ID: "End Time", Display: true, Sort: false},
-		{ID: "Desired Capacity", Display: true, Sort: false},
-		{ID: "Min", Display: true, Sort: false},
-		{ID: "Max", Display: true, Sort: false},
+func asgScheduleFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Name", Category: "Schedule", Visible: true},
+		{Name: "Recurrence", Category: "Schedule", Visible: true},
+		{Name: "Start Time", Category: "Schedule", Visible: true},
+		{Name: "End Time", Category: "Schedule", Visible: true},
+		{Name: "Desired Capacity", Category: "Schedule", Visible: true},
+		{Name: "Min", Category: "Schedule", Visible: true},
+		{Name: "Max", Category: "Schedule", Visible: true},
 	}
 }
 
@@ -178,18 +178,15 @@ func addRevertSchedule(ctx context.Context, svc *asg.AutoScalingService, input *
 		return fmt.Errorf("get scheduled revert action: %w", err)
 	}
 
-	opts := tableformat.RenderOptions{
-		Title:  "Scheduled Revert Action",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(asgScheduleFields(), false),
-	}
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Scheduled Revert Action",
+	})
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(schedules),
-		Fields:    asgScheduleFields(),
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return asg.GetScheduleAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	fields := asgScheduleFields()
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
+
+	table.Render()
 	return nil
 }

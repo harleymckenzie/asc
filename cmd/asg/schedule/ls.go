@@ -8,7 +8,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -30,16 +30,16 @@ func init() {
 }
 
 // Define columns for schedules
-func asgScheduleFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Auto Scaling Group", Display: true, Sort: false, Merge: true},
-		{ID: "Name", Display: true, Sort: sortName},
-		{ID: "Recurrence", Display: true, Sort: false},
-		{ID: "Start Time", Display: true, Sort: sortStartTime, DefaultSort: true},
-		{ID: "End Time", Display: true, Sort: sortEndTime},
-		{ID: "Desired Capacity", Display: true, Sort: sortDesiredCapacity},
-		{ID: "Min", Display: true, Sort: sortMinSize, SortDirection: "desc"},
-		{ID: "Max", Display: true, Sort: sortMaxSize, SortDirection: "desc"},
+func getScheduleFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Auto Scaling Group", Category: "Schedule", Visible: true},
+		{Name: "Name", Category: "Schedule", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
+		{Name: "Recurrence", Category: "Schedule", Visible: true},
+		{Name: "Start Time", Category: "Schedule", Visible: true, SortBy: sortStartTime, SortDirection: tablewriter.Desc},
+		{Name: "End Time", Category: "Schedule", Visible: true, SortBy: sortEndTime, SortDirection: tablewriter.Desc},
+		{Name: "Desired Capacity", Category: "Schedule", Visible: true, SortBy: sortDesiredCapacity, SortDirection: tablewriter.Desc},
+		{Name: "Min", Category: "Schedule", Visible: true, SortBy: sortMinSize, SortDirection: tablewriter.Desc},
+		{Name: "Max", Category: "Schedule", Visible: true, SortBy: sortMaxSize, SortDirection: tablewriter.Desc},
 	}
 }
 
@@ -85,10 +85,7 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 
 // ListSchedules is the handler for the ls subcommand.
 func ListSchedules(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-
-	svc, err := asg.NewAutoScalingService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, asg.NewAutoScalingService)
 	if err != nil {
 		return fmt.Errorf("create new Auto Scaling Group service: %w", err)
 	}
@@ -113,31 +110,22 @@ func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) error {
 		return fmt.Errorf("get schedules for Auto Scaling Group %s: %w", asgName, err)
 	}
 
-	fields := asgScheduleFields()
-
-	// Set "Auto Scaling Group" field Visible to false when listing for a single group
-	fields[0].Display = false
-
-	opts := tableformat.RenderOptions{
-		Title:  fmt.Sprintf("Scheduled Actions\n(%s)", asgName),
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: fmt.Sprintf("Scheduled Actions\n(%s)", asgName),
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(schedules),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return asg.GetScheduleAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
+	fields := getScheduleFields()
+	// Set "Auto Scaling Group" field Visible to false when listing for a single group
+	fields[0].Visible = false
+
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
+	table.SortBy(fields, reverseSort)
+	table.Render()
 	return nil
 }
 
@@ -152,27 +140,19 @@ func ListSchedulesForAllGroups(svc *asg.AutoScalingService) error {
 		return fmt.Errorf("get schedules for all Auto Scaling Groups: %w", err)
 	}
 
-	fields := asgScheduleFields()
-
-	opts := tableformat.RenderOptions{
-		Title:  "Scheduled Actions",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Scheduled Actions",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(schedules),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return asg.GetScheduleAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
+	fields := getScheduleFields()
+
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
+	table.SortBy(fields, reverseSort)
+	table.Render()
 	return nil
 }

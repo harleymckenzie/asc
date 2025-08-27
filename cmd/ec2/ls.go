@@ -6,13 +6,12 @@ import (
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 )
 
 // Variables
@@ -32,7 +31,7 @@ var (
 type ListInstancesInput struct {
 	GetInstancesInput *ascTypes.GetInstancesInput
 	SelectedColumns   []string
-	TableOpts         tableformat.RenderOptions
+	TableOpts         tablewriter.AscTableRenderOptions
 }
 
 // Init function
@@ -102,7 +101,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 // Command functions
 
 func ListEC2Instances(cmd *cobra.Command, args []string) error {
-	svc, err := createEC2Service(cmd)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
 		return fmt.Errorf("create ec2 service: %w", err)
 	}
@@ -114,8 +113,10 @@ func ListEC2Instances(cmd *cobra.Command, args []string) error {
 
 	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
 		Title: "Instances",
-		Style: "rounded",
 	})
+	if list {
+		table.SetStyle("plain")
+	}
 	fields := getListFields()
 	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
 

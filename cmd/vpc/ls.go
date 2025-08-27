@@ -3,13 +3,12 @@
 package vpc
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -35,30 +34,30 @@ func init() {
 }
 
 // Column functions
-func vpcListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "VPC ID", Display: true, DefaultSort: true},
-		{ID: "State", Display: true, Sort: sortState},
-		{ID: "Tenancy", Display: showTenancy},
-		{ID: "DHCP Option Set", Display: showDHCP},
-		{ID: "Main Route Table", Display: showMainRouteTable},
-		{ID: "Main Network ACL", Display: showMainNetworkACL},
-		{ID: "IPv4 CIDR", Display: true, Sort: sortIPv4CIDR},
-		{ID: "IPv6 CIDR", Display: true, Sort: sortIPv6CIDR},
-		{ID: "Default VPC", Display: true},
-		{ID: "Owner ID", Display: true},
+func getVPCListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "VPC ID", Category: "VPC", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "State", Category: "VPC", Visible: true, SortBy: sortState, SortDirection: tablewriter.Asc},
+		{Name: "Tenancy", Category: "VPC", Visible: showTenancy},
+		{Name: "DHCP Option Set", Category: "VPC", Visible: showDHCP},
+		{Name: "Main Route Table", Category: "VPC", Visible: showMainRouteTable},
+		{Name: "Main Network ACL", Category: "VPC", Visible: showMainNetworkACL},
+		{Name: "IPv4 CIDR", Category: "VPC", Visible: true, SortBy: sortIPv4CIDR, SortDirection: tablewriter.Asc},
+		{Name: "IPv6 CIDR", Category: "VPC", Visible: true, SortBy: sortIPv6CIDR, SortDirection: tablewriter.Asc},
+		{Name: "Default VPC", Category: "VPC", Visible: true},
+		{Name: "Owner ID", Category: "VPC", Visible: true},
 	}
 }
 
-func subnetListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Subnet ID", Display: true, DefaultSort: true},
-		{ID: "VPC ID", Display: false},
-		{ID: "CIDR Block", Display: true},
-		{ID: "Availability Zone", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Available IPs", Display: true},
-		{ID: "Default For AZ", Display: true},
+func getSubnetListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Subnet ID", Category: "Subnet", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "VPC ID", Category: "Subnet", Visible: false},
+		{Name: "CIDR Block", Category: "Subnet", Visible: true},
+		{Name: "Availability Zone", Category: "Subnet", Visible: true},
+		{Name: "State", Category: "Subnet", Visible: true},
+		{Name: "Available IPs", Category: "Subnet", Visible: true},
+		{Name: "Default For AZ", Category: "Subnet", Visible: true},
 	}
 }
 
@@ -90,9 +89,7 @@ func addLsFlags(lsCmd *cobra.Command) {
 
 // List function
 func ListVPCs(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
@@ -100,61 +97,55 @@ func ListVPCs(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		return ListVPCSubnets(cmd, args)
 	} else {
-		vpcList, err := svc.GetVPCs(ctx, &ascTypes.GetVPCsInput{})
+		vpcList, err := svc.GetVPCs(cmd.Context(), &ascTypes.GetVPCsInput{})
 		if err != nil {
 			return fmt.Errorf("list VPCs: %w", err)
 		}
 
-		fields := vpcListFields()
-		opts := tableformat.RenderOptions{
-			Title:  "VPCs",
-			Style:  "rounded",
-			SortBy: tableformat.GetSortByField(fields, reverseSort),
-		}
-
+		table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+			Title: "VPCs",
+		})
 		if list {
-			opts.Style = "list"
+			table.SetRenderStyle("plain")
 		}
 
-		tableformat.RenderTableList(&tableformat.ListTable{
-			Instances: utils.SlicesToAny(vpcList),
-			Fields:    fields,
-			GetAttribute: func(fieldID string, instance any) (string, error) {
-				return vpc.GetVPCAttributeValue(fieldID, instance)
-			},
-		}, opts)
+		fields := getVPCListFields()
+		fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(vpcList))
 
+		headerRow := cmdutil.BuildHeaderRow(fields)
+		table.AppendHeader(headerRow)
+		table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(vpcList), fields, vpc.GetFieldValue, vpc.GetTagValue))
+		table.SortBy(fields, reverseSort)
+		table.Render()
 		return nil
 	}
 }
 
 func ListVPCSubnets(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	subnets, err := svc.GetSubnets(ctx, &ascTypes.GetSubnetsInput{VPCIds: args})
+	subnets, err := svc.GetSubnets(cmd.Context(), &ascTypes.GetSubnetsInput{VPCIds: args})
 	if err != nil {
 		return fmt.Errorf("list subnets: %w", err)
 	}
 
-	fields := subnetListFields()
-	opts := tableformat.RenderOptions{
-		Title:  fmt.Sprintf("%s - Subnets", args[0]),
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: fmt.Sprintf("%s - Subnets", args[0]),
+	})
+	if list {
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(subnets),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetSubnetAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	fields := getSubnetListFields()
+	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(subnets))
 
+	headerRow := cmdutil.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetSubnetFieldValue, vpc.GetSubnetTagValue))
+	table.SortBy(fields, reverseSort)
+	table.Render()
 	return nil
 }
