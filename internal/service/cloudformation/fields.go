@@ -68,38 +68,47 @@ func GetTagValue(tagKey string, instance any) (string, error) {
 // CloudFormation Stack field getters
 // -----------------------------------------------------------------------------
 
+// getStackName returns the name of the CloudFormation stack
 func getStackName(instance any) (string, error) {
 	return aws.ToString(instance.(types.Stack).StackName), nil
 }
 
+// getStackID returns the unique identifier of the CloudFormation stack
 func getStackID(instance any) (string, error) {
 	return aws.ToString(instance.(types.Stack).StackId), nil
 }
 
+// getStackDescription returns the description of the CloudFormation stack
 func getStackDescription(instance any) (string, error) {
 	return aws.ToString(instance.(types.Stack).Description), nil
 }
 
+// getStackStatus returns the current status of the CloudFormation stack
 func getStackStatus(instance any) (string, error) {
 	return format.Status(string(instance.(types.Stack).StackStatus)), nil
 }
 
+// getStackDetailedStatus returns the detailed status of the CloudFormation stack
 func getStackDetailedStatus(instance any) (string, error) {
 	return format.Status(string(instance.(types.Stack).DetailedStatus)), nil
 }
 
+// getStackStatusReason returns the reason for the current stack status
 func getStackStatusReason(instance any) (string, error) {
 	return aws.ToString(instance.(types.Stack).StackStatusReason), nil
 }
 
+// getStackRootStack returns the root stack ID if this is a nested stack
 func getStackRootStack(instance any) (string, error) {
 	return aws.ToString(instance.(types.Stack).RootId), nil
 }
 
+// getStackParentStack returns the parent stack ID if this is a nested stack
 func getStackParentStack(instance any) (string, error) {
 	return aws.ToString(instance.(types.Stack).ParentId), nil
 }
 
+// getStackCreationTime returns the timestamp when the stack was created
 func getStackCreationTime(instance any) (string, error) {
 	stack := instance.(types.Stack)
 	if stack.CreationTime == nil {
@@ -108,6 +117,7 @@ func getStackCreationTime(instance any) (string, error) {
 	return stack.CreationTime.Local().Format("2006-01-02 15:04:05 MST"), nil
 }
 
+// getStackLastUpdated returns the timestamp when the stack was last updated
 func getStackLastUpdated(instance any) (string, error) {
 	stack := instance.(types.Stack)
 	if stack.LastUpdatedTime == nil {
@@ -116,6 +126,7 @@ func getStackLastUpdated(instance any) (string, error) {
 	return stack.LastUpdatedTime.Local().Format("2006-01-02 15:04:05 MST"), nil
 }
 
+// getStackDeletionTime returns the timestamp when the stack deletion was initiated
 func getStackDeletionTime(instance any) (string, error) {
 	stack := instance.(types.Stack)
 	if stack.DeletionTime == nil {
@@ -124,6 +135,7 @@ func getStackDeletionTime(instance any) (string, error) {
 	return stack.DeletionTime.Local().Format("2006-01-02 15:04:05 MST"), nil
 }
 
+// getStackDriftStatus returns the current drift status of the stack
 func getStackDriftStatus(instance any) (string, error) {
 	stack := instance.(types.Stack)
 	if stack.DriftInformation == nil {
@@ -132,10 +144,12 @@ func getStackDriftStatus(instance any) (string, error) {
 	return string(stack.DriftInformation.StackDriftStatus), nil
 }
 
+// getStackDeletionMode returns the deletion mode of the stack
 func getStackDeletionMode(instance any) (string, error) {
 	return string(instance.(types.Stack).DeletionMode), nil
 }
 
+// getStackLastDriftCheck returns the timestamp of the last drift check
 func getStackLastDriftCheck(instance any) (string, error) {
 	stack := instance.(types.Stack)
 	if stack.DriftInformation == nil || stack.DriftInformation.LastCheckTimestamp == nil {
@@ -144,6 +158,7 @@ func getStackLastDriftCheck(instance any) (string, error) {
 	return stack.DriftInformation.LastCheckTimestamp.Local().Format("2006-01-02 15:04:05 MST"), nil
 }
 
+// getStackTerminationProtection returns whether termination protection is enabled
 func getStackTerminationProtection(instance any) (string, error) {
 	stack := instance.(types.Stack)
 	if stack.EnableTerminationProtection == nil {
@@ -152,6 +167,7 @@ func getStackTerminationProtection(instance any) (string, error) {
 	return fmt.Sprintf("%t", *stack.EnableTerminationProtection), nil
 }
 
+// getStackIAMRole returns the IAM role ARN used by the stack
 func getStackIAMRole(instance any) (string, error) {
 	return aws.ToString(instance.(types.Stack).RoleARN), nil
 }

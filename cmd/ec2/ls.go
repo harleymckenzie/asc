@@ -40,7 +40,7 @@ func init() {
 }
 
 // Column functions
-// getListFields returns a list of Field objects for the given instance.
+// getListFields returns a list of Field objects for displaying EC2 instance information
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
 		{Name: "Name", Category: "Instance Details", Visible: true},
@@ -65,7 +65,7 @@ func getListFields() []tablewriter.Field {
 	}
 }
 
-// Command variable
+// lsCmd is the main command for listing EC2 instances and related resources
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List EC2 instances, AMIs, snapshots, and volumes",
@@ -81,16 +81,16 @@ var lsCmd = &cobra.Command{
 	},
 }
 
-// Flag function
+// newLsFlags configures the flags for the ls command
 func newLsFlags(cobraCmd *cobra.Command) {
-	// Add flags - Output
+	// Output format flags
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
 	cobraCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
 	cobraCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
 	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
 	cmdutil.AddTagFlag(cobraCmd)
 
-	// Add flags - Sorting
+	// Sorting flags
 	cobraCmd.Flags().BoolVarP(&sortByID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
 	cobraCmd.Flags().BoolVarP(&sortByType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
 	cobraCmd.Flags().BoolVarP(&sortByLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
@@ -98,8 +98,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.MarkFlagsMutuallyExclusive("sort-id", "sort-type", "sort-launch-time")
 }
 
-// Command functions
-
+// ListEC2Instances handles the listing of EC2 instances and related resources
 func ListEC2Instances(cmd *cobra.Command, args []string) error {
 	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {

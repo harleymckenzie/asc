@@ -9,6 +9,7 @@ import (
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 )
 
+// getImages retrieves EC2 images (AMIs) based on the provided input parameters
 func getImages(svc *ec2.EC2Service, input *ascTypes.GetImagesInput) ([]types.Image, error) {
 	ctx := context.TODO()
 	return svc.GetImages(ctx, input)

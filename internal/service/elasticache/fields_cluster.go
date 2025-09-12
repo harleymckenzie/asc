@@ -8,7 +8,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/shared/format"
 )
 
-// cacheClusterFieldValueGetters provides quick lookup for common cache cluster fields.
+// Cache Cluster field getters
 var cacheClusterFieldValueGetters = map[string]FieldValueGetter{
 	"Cache Name":     getCacheName,
 	"Status":         getCacheStatus,
@@ -25,12 +25,16 @@ func getCacheClusterFieldValue(fieldName string, cluster types.CacheCluster) (st
 	return "", fmt.Errorf("field %s not found in cacheClusterFieldValueGetters", fieldName)
 }
 
-// Individual field value getters
+// -----------------------------------------------------------------------------
+// Cache Cluster field getters
+// -----------------------------------------------------------------------------
 
+// getCacheName returns the cache cluster identifier
 func getCacheName(cluster any) (string, error) {
 	return aws.ToString(cluster.(types.CacheCluster).CacheClusterId), nil
 }
 
+// getCacheStatus returns the current status of the cache cluster
 func getCacheStatus(cluster any) (string, error) {
 	status := cluster.(types.CacheCluster).CacheClusterStatus
 	if status == nil {
@@ -39,6 +43,7 @@ func getCacheStatus(cluster any) (string, error) {
 	return format.Status(string(*status)), nil
 }
 
+// getCacheEngineVersion returns the engine version and type in a formatted string
 func getCacheEngineVersion(cluster any) (string, error) {
 	c := cluster.(types.CacheCluster)
 	engine := aws.ToString(c.Engine)
@@ -49,6 +54,7 @@ func getCacheEngineVersion(cluster any) (string, error) {
 	return fmt.Sprintf("%s (%s)", version, engine), nil
 }
 
+// getCacheConfiguration returns the node type configuration of the cache cluster
 func getCacheConfiguration(cluster any) (string, error) {
 	nodeType := cluster.(types.CacheCluster).CacheNodeType
 	if nodeType == nil {
@@ -57,6 +63,7 @@ func getCacheConfiguration(cluster any) (string, error) {
 	return string(*nodeType), nil
 }
 
+// getCacheEndpoint returns the endpoint address of the cache cluster
 func getCacheEndpoint(cluster any) (string, error) {
 	c := cluster.(types.CacheCluster)
 	if len(c.CacheNodes) == 0 || c.CacheNodes[0].Endpoint == nil {

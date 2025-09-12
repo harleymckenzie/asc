@@ -12,23 +12,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Global variable to store the profile value
+// Global configuration variables
 var (
-	Profile string
-	Region  string
-	Version = "0.0.37"
+	Profile string     // AWS profile to use for authentication
+	Region  string     // AWS region to operate in
+	Version = "0.0.37" // Current version of the application
 )
 
+// NewRootCmd creates and configures the root command for the AWS Simple CLI
 func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "asc",
 		Short: "AWS Simple CLI (asc) - A simplified interface for AWS operations",
 	}
-	cmd.PersistentFlags().StringVarP(&Profile, "profile", "p", "", "AWS profile to use")
-	cmd.PersistentFlags().StringVar(&Region, "region", "", "AWS region to use")
+
+	// Add persistent flags for AWS configuration
+	cmd.PersistentFlags().StringVarP(&Profile, "profile", "p", "", "AWS profile to use for authentication")
+	cmd.PersistentFlags().StringVar(&Region, "region", "", "AWS region to operate in")
 	cmd.Version = Version
 
-	// Add commands
+	// Add service commands
 	cmd.AddCommand(asg.NewASGRootCmd())
 	cmd.AddCommand(cloudformation.NewCloudFormationRootCmd())
 	cmd.AddCommand(ec2.NewEC2RootCmd())
@@ -36,7 +39,8 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(elb.NewELBRootCmd())
 	cmd.AddCommand(rds.NewRDSRootCmd())
 	cmd.AddCommand(vpc.NewVPCRootCmd())
-	// Add groups
+
+	// Add command groups for better organization
 	cmd.AddGroup(
 		&cobra.Group{
 			ID:    "service",
@@ -47,8 +51,8 @@ func NewRootCmd() *cobra.Command {
 	return cmd
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Execute runs the root command and handles any errors
+// This is called by main.main() and only needs to happen once
 func Execute() error {
 	return NewRootCmd().Execute()
 }

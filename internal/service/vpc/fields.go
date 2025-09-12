@@ -11,6 +11,7 @@ import (
 type FieldValueGetter func(instance any) (string, error)
 
 // GetFieldValue returns the value of a field for the given instance.
+// This function routes field requests to the appropriate type-specific handler.
 func GetFieldValue(fieldName string, instance any) (string, error) {
 	switch v := instance.(type) {
 	case types.Vpc:
@@ -35,6 +36,7 @@ func GetFieldValue(fieldName string, instance any) (string, error) {
 }
 
 // GetTagValue returns the value of a tag for the given instance.
+// This function handles tag retrieval for all supported VPC resource types.
 func GetTagValue(tagKey string, instance any) (string, error) {
 	switch v := instance.(type) {
 	case types.Vpc:

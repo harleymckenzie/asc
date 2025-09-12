@@ -49,26 +49,11 @@ func getDBInstanceFieldValue(fieldName string, instance types.DBInstance) (strin
 	return "", fmt.Errorf("field %s not found in dbInstanceFieldValueGetters", fieldName)
 }
 
-// GetTagValue returns the value of a tag for the given instance.
-// Note: This duplicates the function in table.go but will replace it when table.go is removed
-func GetTagValueNew(tagKey string, instance any) (string, error) {
-	switch v := instance.(type) {
-	case types.DBInstance:
-		for _, tag := range v.TagList {
-			if aws.ToString(tag.Key) == tagKey {
-				return aws.ToString(tag.Value), nil
-			}
-		}
-	default:
-		return "", fmt.Errorf("unsupported instance type for tags: %T", instance)
-	}
-	return "", nil
-}
-
 // -----------------------------------------------------------------------------
 // DB Instance field getters
 // -----------------------------------------------------------------------------
 
+// getDBInstanceClusterID returns the cluster identifier if this instance is part of a cluster
 func getDBInstanceClusterID(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
 	if dbInstance.DBClusterIdentifier != nil {
@@ -77,14 +62,17 @@ func getDBInstanceClusterID(instance any) (string, error) {
 	return "-", nil
 }
 
+// getDBInstanceID returns the database instance identifier
 func getDBInstanceID(instance any) (string, error) {
 	return aws.ToString(instance.(types.DBInstance).DBInstanceIdentifier), nil
 }
 
+// getDBInstanceStatus returns the current status of the database instance
 func getDBInstanceStatus(instance any) (string, error) {
 	return format.Status(aws.ToString(instance.(types.DBInstance).DBInstanceStatus)), nil
 }
 
+// getDBInstanceEngine returns the database engine (e.g., mysql, postgres, aurora)
 func getDBInstanceEngine(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
 	if dbInstance.Engine == nil {
@@ -93,6 +81,7 @@ func getDBInstanceEngine(instance any) (string, error) {
 	return string(*dbInstance.Engine), nil
 }
 
+// getDBInstanceEngineVersion returns the version of the database engine
 func getDBInstanceEngineVersion(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
 	if dbInstance.EngineVersion == nil {
@@ -101,6 +90,7 @@ func getDBInstanceEngineVersion(instance any) (string, error) {
 	return string(*dbInstance.EngineVersion), nil
 }
 
+// getDBInstanceSize returns the instance class/size of the database
 func getDBInstanceSize(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
 	if dbInstance.DBInstanceClass == nil {
@@ -109,11 +99,13 @@ func getDBInstanceSize(instance any) (string, error) {
 	return string(*dbInstance.DBInstanceClass), nil
 }
 
+// getDBInstanceRoleField returns the role of the instance within a cluster (Primary, Replica, etc.)
 func getDBInstanceRoleField(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
 	return calculateDBInstanceRole(dbInstance, clustersContext), nil
 }
 
+// getDBInstanceEndpoint returns the endpoint address of the database instance
 func getDBInstanceEndpoint(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
 	if dbInstance.Endpoint == nil || dbInstance.Endpoint.Address == nil {
@@ -126,22 +118,24 @@ func getDBInstanceEndpoint(instance any) (string, error) {
 // Helper functions
 // -----------------------------------------------------------------------------
 
-// calculateDBInstanceRole calculates the role of the RDS instance (same logic as original)
+// calculateDBInstanceRole calculates the role of the RDS instance within a cluster
 func calculateDBInstanceRole(instance types.DBInstance, clusters []types.DBCluster) string {
-	// If ReadReplicaSourceDBInstanceIdentifier is set, then this is a replica. If
-	// if ReadReplicaDBInstanceIdentifiers is set, then this is a primary.
+	// If ReadReplicaSourceDBInstanceIdentifier is set, then this is a replica
 	if instance.ReadReplicaSourceDBInstanceIdentifier != nil {
 		return "Replica"
 	}
 
+	// If ReadReplicaDBInstanceIdentifiers is set, then this is a primary
 	if len(instance.ReadReplicaDBInstanceIdentifiers) > 0 {
 		return "Primary"
 	}
 
+	// If not part of a cluster, return None
 	if instance.DBClusterIdentifier == nil {
 		return "None"
 	}
 
+	// Check cluster membership to determine if this is a writer or reader
 	for _, cluster := range clusters {
 		for _, member := range cluster.DBClusterMembers {
 			if aws.ToString(member.DBInstanceIdentifier) == aws.ToString(instance.DBInstanceIdentifier) {
