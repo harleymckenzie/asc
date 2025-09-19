@@ -44,7 +44,7 @@ func getListFields() []tablewriter.Field {
 		{Name: "Attach Time", Category: "Volume Details", Visible: showAttachTime, SortBy: sortAttachTime, SortDirection: tablewriter.Desc},
 		{Name: "Availability Zone", Category: "Volume Details", Visible: false},
 		{Name: "Encryption", Category: "Volume Details", Visible: true},
-		{Name: "Fast Snapshot Restored", Category: "Volume Details", Visible: true},
+		{Name: "Fast Snapshot Restored", Category: "Volume Details", Visible: false},
 		{Name: "Multi-Attach Enabled", Category: "Volume Details", Visible: false},
 		{Name: "KMS Key ID", Category: "Volume Details", Visible: showKMS},
 	}
