@@ -1,0 +1,111 @@
+name: Bump Beta Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_version:
+        description: 'Base version for beta (e.g., 0.0.37)'
+        required: true
+        type: string
+      beta_number:
+        description: 'Beta number (e.g., 2 for 0.0.37-beta.2)'
+        required: true
+        type: string
+        default: '1'
+
+permissions:
+  contents: write
+
+jobs:
+  betabump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTH_TOKEN }}
+          fetch-depth: 0
+
+      - name: Validate and create beta version
+        id: create_beta_version
+        run: |
+          BASE_VERSION="${{ github.event.inputs.base_version }}"
+          BETA_NUMBER="${{ github.event.inputs.beta_number }}"
+          
+          # Validate base version format (basic semver check)
+          if ! echo "$BASE_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: Base version must be in format X.Y.Z (e.g., 0.0.37)"
+            exit 1
+          fi
+          
+          # Validate beta number
+          if ! echo "$BETA_NUMBER" | grep -qE '^[0-9]+$'; then
+            echo "Error: Beta number must be a positive integer"
+            exit 1
+          fi
+          
+          BETA_VERSION="${BASE_VERSION}-beta.${BETA_NUMBER}"
+          
+          echo "Base version: $BASE_VERSION"
+          echo "Beta number: $BETA_NUMBER"
+          echo "Beta version: $BETA_VERSION"
+          
+          # Check if this exact beta tag already exists
+          if git rev-parse -q --verify "refs/tags/v${BETA_VERSION}" >/dev/null; then
+            echo "Tag v${BETA_VERSION} already exists. Nothing to do."
+            exit 0
+          fi
+          
+          # Check for existing beta tags for this base version
+          EXISTING_BETA_TAGS=$(git tag -l "v${BASE_VERSION}-beta.*" --sort=-version:refname)
+          if [ -n "$EXISTING_BETA_TAGS" ]; then
+            echo "Existing beta tags for ${BASE_VERSION}:"
+            echo "$EXISTING_BETA_TAGS"
+            
+            # Get the highest beta number for this base version
+            HIGHEST_BETA=$(echo "$EXISTING_BETA_TAGS" | head -n 1 | sed "s/v${BASE_VERSION}-beta\.//")
+            echo "Highest existing beta number: $HIGHEST_BETA"
+            
+            # Check if requested beta number is higher than existing
+            if [ "$BETA_NUMBER" -le "$HIGHEST_BETA" ]; then
+              echo "Error: Beta number $BETA_NUMBER is not higher than existing beta $HIGHEST_BETA"
+              echo "Please use a beta number greater than $HIGHEST_BETA"
+              exit 1
+            fi
+          fi
+          
+          # Update the version in cmd/root.go
+          echo "Updating cmd/root.go to version $BETA_VERSION"
+          sed -i "s/Version = \"[^\"]*\"/Version = \"$BETA_VERSION\"/" cmd/root.go
+          
+          # Verify the change
+          UPDATED_VERSION=$(grep -oP 'Version = "\K[^"]+' cmd/root.go)
+          if [ "$UPDATED_VERSION" != "$BETA_VERSION" ]; then
+            echo "Error: Failed to update version in cmd/root.go"
+            exit 1
+          fi
+          
+          echo "Successfully updated version to $BETA_VERSION"
+          echo "NEW_BETA_VERSION=$BETA_VERSION" >> $GITHUB_ENV
+
+      - name: Commit version update
+        if: ${{ env.NEW_BETA_VERSION }}
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add cmd/root.go
+          git commit -m "chore: bump version to ${{ env.NEW_BETA_VERSION }}"
+          git push origin HEAD
+
+      - name: Create beta tag
+        if: ${{ env.NEW_BETA_VERSION }}
+        run: |
+          NEW_TAG="v${{ env.NEW_BETA_VERSION }}"
+          echo "Creating beta tag: $NEW_TAG"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git tag -a $NEW_TAG -m "Beta release $NEW_TAG"
+          git push origin $NEW_TAG
+          
+          echo "✅ Beta release $NEW_TAG created successfully!"
+          echo "This will trigger the GoReleaser workflow to build and publish the beta release."
