@@ -98,7 +98,7 @@ func showVPC(cmd *cobra.Command, id string) error {
 		return vpc.GetFieldValue(fieldName, instance)
 	}
 
-	fields, err := cmdutil.PopulateFieldValues(v, getShowFields(), getFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(v, getShowFields(), getFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

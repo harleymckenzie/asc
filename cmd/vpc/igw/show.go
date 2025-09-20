@@ -73,7 +73,7 @@ func ShowVPCIGW(cmd *cobra.Command, id string) error {
 		MaxColumnWidth: 70,
 	})
 
-	fields, err := cmdutil.PopulateFieldValues(igw, getShowFields(), vpc.GetFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(igw, getShowFields(), vpc.GetFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

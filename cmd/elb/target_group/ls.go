@@ -87,9 +87,9 @@ func ListTargetGroups(cmd *cobra.Command, args []string) error {
 	}
 	fields := getTargetGroupFields()
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(targetGroups), fields, elb.GetFieldValue, elb.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(targetGroups), fields, elb.GetFieldValue, elb.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()

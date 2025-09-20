@@ -83,11 +83,11 @@ func ListCloudFormationStacks(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(stacks))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(stacks))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(stacks), fields, cloudformation.GetFieldValue, cloudformation.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(stacks), fields, cloudformation.GetFieldValue, cloudformation.GetTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil

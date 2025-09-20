@@ -143,9 +143,9 @@ func AddSchedule(cmd *cobra.Command, args []string) error {
 	})
 
 	fields := getScheduleFields()
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetScheduleAttributeValue, asg.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetScheduleAttributeValue, asg.GetTagValue))
 	table.Render()
 	return nil
 }

@@ -83,7 +83,7 @@ func ShowEC2Volume(cmd *cobra.Command, arg string) error {
 		Columns: 3,
 	})
 
-	fields, err := cmdutil.PopulateFieldValues(volume[0], getShowFields(), ec2.GetFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(volume[0], getShowFields(), ec2.GetFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

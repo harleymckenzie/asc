@@ -1,5 +1,7 @@
 package tablewriter
 
+import "fmt"
+
 // DetailTable handles detailed tables.
 type DetailTable struct {
 	Headers  []string
@@ -23,55 +25,6 @@ func (dt *DetailTable) AddSection(s Section) {
 // AddSections adds multiple sections to the detail table
 func (dt *DetailTable) AddSections(sections []Section) {
 	dt.Sections = append(dt.Sections, sections...)
-}
-
-// BuildSections builds a list of sections from a list of fields with a grid layout.
-// The title of each section is the category of the fields.
-func BuildSections(fields []Field, layout Layout) []Section {
-	categories := make(map[string][]Field)
-	categoryOrder := make([]string, 0)
-
-	for _, f := range fields {
-		if _, exists := categories[f.Category]; !exists {
-			categoryOrder = append(categoryOrder, f.Category)
-		}
-		categories[f.Category] = append(categories[f.Category], Field{
-			Name:  f.Name,
-			Value: f.Value,
-		})
-	}
-
-	var sections []Section
-	for _, name := range categoryOrder {
-		sections = append(sections, Section{
-			Title:  name,
-			Fields: categories[name],
-			SectionConfig: SectionConfig{
-				Layout: layout,
-			},
-		})
-	}
-	return sections
-}
-
-// BuildSection builds a section with a row layout.
-func BuildSection(title string, fields []Field, layout Layout) Section {
-	var rowFields []Field
-	for _, f := range fields {
-		rowFields = append(rowFields, Field{
-			Name:  f.Name,
-			Value: f.Value,
-		})
-	}
-
-	section := Section{
-		Title:  title,
-		Fields: rowFields,
-		SectionConfig: SectionConfig{
-			Layout: layout,
-		},
-	}
-	return section
 }
 
 // AddSections adds multiple sections to a table writer
@@ -111,6 +64,57 @@ func AddSection(t AscWriter, s Section) {
 			})
 		}
 	}
+}
+
+// BuildSection builds a section with a row layout.
+func BuildSection(title string, fields []Field, layout Layout) Section {
+	var rowFields []Field
+	for _, f := range fields {
+		rowFields = append(rowFields, Field{
+			Name:  f.Name,
+			Value: f.Value,
+		})
+	}
+
+	section := Section{
+		Title:  title,
+		Fields: rowFields,
+		SectionConfig: SectionConfig{
+			Layout: layout,
+		},
+	}
+	return section
+}
+
+// BuildSections builds a list of sections from a list of fields with a grid layout.
+// The title of each section is the category of the fields.
+func BuildSections(fields []Field, layout Layout) []Section {
+	categories := make(map[string][]Field)
+	categoryOrder := make([]string, 0)
+
+	for _, f := range fields {
+		if f.Visible {
+			if _, exists := categories[f.Category]; !exists {
+				categoryOrder = append(categoryOrder, f.Category)
+			}
+			categories[f.Category] = append(categories[f.Category], Field{
+				Name:  f.Name,
+				Value: f.Value,
+			})
+		}
+	}
+
+	var sections []Section
+	for _, name := range categoryOrder {
+		sections = append(sections, Section{
+			Title:  name,
+			Fields: categories[name],
+			SectionConfig: SectionConfig{
+				Layout: layout,
+			},
+		})
+	}
+	return sections
 }
 
 func (dt *DetailTable) AddHeader(headers []string) {
@@ -168,4 +172,26 @@ func (dt *DetailTable) Render() {
 
 	// Render the table
 	table.Render()
+}
+
+func PopulateFieldValues(instance any, fields []Field, getFieldValue AttributeGetter) ([]Field, error) {
+	var populated []Field
+	for _, field := range fields {
+		if field.Category != "Tags" {
+			fieldValue, err := getFieldValue(field.Name, instance)
+			if err != nil {
+				return nil, fmt.Errorf("get field value: %w", err)
+			}
+			populated = append(populated, Field{
+				Category: field.Category,
+				Name:     field.Name,
+				Value:    fieldValue,
+				Visible:  field.Visible,
+			})
+		} else {
+			// For Tags category, keep the original field
+			populated = append(populated, field)
+		}
+	}
+	return populated, nil
 }

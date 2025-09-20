@@ -82,11 +82,11 @@ func ListRouteTables(cmd *cobra.Command, args []string) error {
 		}
 
 		fields := routeTableListFields()
-		fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(rts))
+		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(rts))
 
-		headerRow := cmdutil.BuildHeaderRow(fields)
+		headerRow := tablewriter.BuildHeaderRow(fields)
 		table.AppendHeader(headerRow)
-		table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(rts), fields, vpc.GetFieldValue, vpc.GetTagValue))
+		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(rts), fields, vpc.GetFieldValue, vpc.GetTagValue))
 		table.SortBy(fields, reverseSort)
 
 		table.Render()
@@ -117,11 +117,11 @@ func ListRouteTableRules(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := routeTableRouteFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(routes))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(routes))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(routes), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(routes), fields, vpc.GetFieldValue, vpc.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()

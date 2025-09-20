@@ -16,7 +16,7 @@ func NewPrefixListRootCmd() *cobra.Command {
 		GroupID: "subcommands",
 	}
 
-	// cmd.AddCommand(lsCmd) // Disabled - ls.go.disabled
+	cmd.AddCommand(lsCmd)
 	cmd.AddCommand(showCmd)
 
 	cmd.AddGroup(cmdutil.ActionGroups()...)

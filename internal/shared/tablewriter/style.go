@@ -40,11 +40,11 @@ var (
 	StyleRounded = table.Style{
 		Name:    "rounded",
 		Box:     table.StyleBoxRounded,
-		Color:   table.ColorOptions{Header: text.Colors{text.Bold}},
+		Color:   ColorOptionsDefault,
 		Format:  table.FormatOptions{Header: text.FormatTitle},
 		Options: table.OptionsDefault,
 		Size:    table.SizeOptionsDefault,
-		Title:   table.TitleOptions{Colors: text.Colors{text.Bold}},
+		Title:   table.TitleOptionsDefault,
 	}
 
 	// StylePlain is a table style that displays a list of items with no borders or separators.
@@ -55,7 +55,7 @@ var (
 	StylePlain = table.Style{
 		Name:    "list",
 		Box:     table.StyleBoxRounded,
-		Color:   table.ColorOptionsDefault,
+		Color:   ColorOptionsDefault,
 		Format:  table.FormatOptionsDefault,
 		Options: table.OptionsNoBordersAndSeparators,
 	}
@@ -77,11 +77,11 @@ var (
 	StyleRoundedSeparated = table.Style{
 		Name:    "rounded-separated",
 		Box:     table.StyleBoxRounded,
-		Color:   table.ColorOptions{Header: text.Colors{text.Bold}},
+		Color:   ColorOptionsDefault,
 		Format:  table.FormatOptions{Header: text.FormatTitle},
 		Options: DrawAllBordersAndSeparators,
 		Size:    table.SizeOptionsDefault,
-		Title:   table.TitleOptions{Colors: text.Colors{text.Bold}},
+		Title:   table.TitleOptionsDefault,
 	}
 )
 
@@ -93,5 +93,18 @@ var (
 		SeparateFooter:  true,
 		SeparateHeader:  true,
 		SeparateRows:    true,
+	}
+)
+
+// ColorOptions
+var (
+	ColorOptionsDefault = table.ColorOptions{
+		Border:       text.Colors{},          // borders (if nil, uses one of the below)
+		Footer:       text.Colors{},          // footer row(s) colors
+		Header:       text.Colors{text.Bold}, // header row(s) colors
+		IndexColumn:  text.Colors{},          // index-column colors (row #, etc.)
+		Row:          text.Colors{},          // regular row(s) colors
+		RowAlternate: text.Colors{},          // regular row(s) colors for the even-numbered rows
+		Separator:    text.Colors{},          // separators (if nil, uses one of the above)
 	}
 )

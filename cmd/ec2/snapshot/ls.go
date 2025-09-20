@@ -85,11 +85,11 @@ func ListSnapshots(cmd *cobra.Command, args []string) error {
 		table.SetStyle("plain")
 	}
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(snapshots))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(snapshots))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(snapshots), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(snapshots), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()

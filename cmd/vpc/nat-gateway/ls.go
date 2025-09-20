@@ -71,11 +71,11 @@ func ListNatGateways(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := natGatewayListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(nats))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(nats))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(nats), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(nats), fields, vpc.GetFieldValue, vpc.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()

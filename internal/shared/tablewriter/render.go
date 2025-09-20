@@ -95,6 +95,7 @@ func (at *AscTable) Render() {
 	at.table.SetOutputMirror(os.Stdout)
 	at.table.SetTitle(text.Colors{text.Bold}.Sprint(at.renderOptions.Title))
 	at.table.SetStyle(TableStyles[at.getStyle()])
+	// at.table.SetStyle(StyleRounded)
 	at.SetColumnWidth(at.renderOptions.MinColumnWidth, at.renderOptions.MaxColumnWidth)
 
 	if len(at.sortByFields) > 0 {

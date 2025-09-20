@@ -108,11 +108,11 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(instances), fields, rds.GetFieldValue, rds.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, rds.GetFieldValue, rds.GetTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil

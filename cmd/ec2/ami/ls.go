@@ -96,11 +96,11 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 		table.SetRenderStyle("plain")
 	}
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(amis))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(amis))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(amis), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(amis), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()

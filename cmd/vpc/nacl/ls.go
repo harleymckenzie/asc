@@ -83,11 +83,11 @@ func ListNACLs(cmd *cobra.Command, args []string) error {
 		}
 
 		fields := getListFields()
-		fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(nacls))
+		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(nacls))
 
-		headerRow := cmdutil.BuildHeaderRow(fields)
+		headerRow := tablewriter.BuildHeaderRow(fields)
 		table.AppendHeader(headerRow)
-		table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(nacls), fields, vpc.GetFieldValue, vpc.GetTagValue))
+		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(nacls), fields, vpc.GetFieldValue, vpc.GetTagValue))
 		table.SortBy(fields, reverseSort)
 		table.Render()
 		return nil
@@ -122,9 +122,9 @@ func ListNACLRules(cmd *cobra.Command, args []string) error {
 		ingressTable.SetRenderStyle("plain")
 	}
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	ingressTable.AppendHeader(headerRow)
-	ingressTable.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(ingressRules), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	ingressTable.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(ingressRules), fields, vpc.GetFieldValue, vpc.GetTagValue))
 	ingressTable.SortBy(fields, reverseSort)
 	ingressTable.Render()
 
@@ -137,7 +137,7 @@ func ListNACLRules(cmd *cobra.Command, args []string) error {
 	}
 
 	egressTable.AppendHeader(headerRow)
-	egressTable.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(egressRules), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	egressTable.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(egressRules), fields, vpc.GetFieldValue, vpc.GetTagValue))
 	egressTable.SortBy(fields, reverseSort)
 	egressTable.Render()
 	return nil

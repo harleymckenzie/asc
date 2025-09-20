@@ -10,7 +10,7 @@ func NewCloudFormationRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cloudformation",
 		Short:   "Perform CloudFormation operations",
-		Long:    "Manage AWS CloudFormation stacks and templates for infrastructure as code",
+		Long:    "Manage AWS CloudFormation stacks and templates",
 		GroupID: "service",
 	}
 

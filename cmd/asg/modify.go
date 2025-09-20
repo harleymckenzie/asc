@@ -183,9 +183,9 @@ func addRevertSchedule(ctx context.Context, svc *asg.AutoScalingService, input *
 	})
 
 	fields := asgScheduleFields()
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
 
 	table.Render()
 	return nil

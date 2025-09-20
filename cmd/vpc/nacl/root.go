@@ -17,7 +17,7 @@ func NewNACLRootCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(lsCmd)
-	// cmd.AddCommand(showCmd) // Disabled - show.go.disabled
+	cmd.AddCommand(showCmd)
 
 	cmd.AddGroup(cmdutil.ActionGroups()...)
 	cmd.AddGroup(cmdutil.SubcommandGroups()...)

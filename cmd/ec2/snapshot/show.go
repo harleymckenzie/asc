@@ -37,7 +37,7 @@ func getShowFields() []tablewriter.Field {
 		{Name: "Source Volume", Category: "Snapshot Details", Visible: true},
 		{Name: "Volume ID", Category: "Snapshot Details", Visible: true},
 		{Name: "Volume Size", Category: "Snapshot Details", Visible: true},
-		
+
 		{Name: "Encryption", Category: "Snapshot Details", Visible: true},
 		{Name: "Encryption", Category: "Snapshot Details", Visible: true},
 		{Name: "KMS Key ID", Category: "Snapshot Details", Visible: true},
@@ -84,7 +84,7 @@ func ShowEC2Snapshot(cmd *cobra.Command, arg string) error {
 		Columns:        3,
 		MaxColumnWidth: 80,
 	})
-	fields, err := cmdutil.PopulateFieldValues(snapshots[0], getShowFields(), ec2.GetFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(snapshots[0], getShowFields(), ec2.GetFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

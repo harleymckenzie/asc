@@ -121,9 +121,9 @@ func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) error {
 	// Set "Auto Scaling Group" field Visible to false when listing for a single group
 	fields[0].Visible = false
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil
@@ -149,9 +149,9 @@ func ListSchedulesForAllGroups(svc *asg.AutoScalingService) error {
 
 	fields := getScheduleFields()
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil

@@ -114,14 +114,14 @@ func ListEC2Instances(cmd *cobra.Command, args []string) error {
 		Title: "Instances",
 	})
 	if list {
-		table.SetStyle("plain")
+		table.SetRenderStyle("plain")
 	}
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(instances), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()

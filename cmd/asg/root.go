@@ -17,7 +17,7 @@ func NewASGRootCmd() *cobra.Command {
 	cmd.AddCommand(lsCmd)
 	cmd.AddCommand(addCmd)
 	cmd.AddCommand(rmCmd)
-	// cmd.AddCommand(modifyCmd) // Disabled - modify.go.disabled
+	cmd.AddCommand(modifyCmd)
 
 	// Subcommands
 	cmd.AddCommand(schedule.NewScheduleRootCmd())

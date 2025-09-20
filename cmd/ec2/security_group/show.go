@@ -7,8 +7,8 @@ import (
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
-	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/awsutil"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -73,7 +73,7 @@ func ShowSecurityGroup(cmd *cobra.Command, arg string) error {
 		Columns:        3,
 		MaxColumnWidth: 70,
 	})
-	fields, err := cmdutil.PopulateFieldValues(groups[0], getShowFields(), ec2.GetFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(groups[0], getShowFields(), ec2.GetFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

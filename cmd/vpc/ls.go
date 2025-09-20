@@ -110,11 +110,11 @@ func ListVPCs(cmd *cobra.Command, args []string) error {
 		}
 
 		fields := getVPCListFields()
-		fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(vpcList))
+		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(vpcList))
 
-		headerRow := cmdutil.BuildHeaderRow(fields)
+		headerRow := tablewriter.BuildHeaderRow(fields)
 		table.AppendHeader(headerRow)
-		table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(vpcList), fields, vpc.GetFieldValue, vpc.GetTagValue))
+		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(vpcList), fields, vpc.GetFieldValue, vpc.GetTagValue))
 		table.SortBy(fields, reverseSort)
 		table.Render()
 		return nil
@@ -140,11 +140,11 @@ func ListVPCSubnets(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := getSubnetListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(subnets))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(subnets))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetSubnetFieldValue, vpc.GetSubnetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetSubnetFieldValue, vpc.GetSubnetTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil

@@ -75,7 +75,7 @@ func ShowSubnet(cmd *cobra.Command, id string) error {
 		MaxColumnWidth: 70,
 	})
 
-	fields, err := cmdutil.PopulateFieldValues(subnet, getShowFields(), vpc.GetFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(subnet, getShowFields(), vpc.GetFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

@@ -70,9 +70,9 @@ func ListElasticacheClusters(cmd *cobra.Command, args []string) error {
 	}
 	fields := getListFields()
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(instances), fields, elasticache.GetFieldValue, elasticache.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, elasticache.GetFieldValue, elasticache.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()

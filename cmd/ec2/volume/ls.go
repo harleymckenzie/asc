@@ -101,11 +101,11 @@ func ListVolumes(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(volumes))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(volumes))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(volumes), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(volumes), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil

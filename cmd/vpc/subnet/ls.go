@@ -70,11 +70,11 @@ func ListSubnets(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(subnets))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(subnets))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetFieldValue, vpc.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()

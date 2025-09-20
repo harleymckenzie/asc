@@ -74,7 +74,7 @@ func ShowCloudFormationStack(cmd *cobra.Command, args []string) error {
 		Columns: 3,
 	})
 
-	fields, err := cmdutil.PopulateFieldValues(stack[0], getShowFields(), cloudformation.GetFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(stack[0], getShowFields(), cloudformation.GetFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

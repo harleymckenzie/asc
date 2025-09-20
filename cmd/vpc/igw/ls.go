@@ -85,11 +85,11 @@ func ListIGWs(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(igws))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(igws))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(igws), fields, vpc.GetIGWFieldValue, vpc.GetIGWTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(igws), fields, vpc.GetIGWFieldValue, vpc.GetIGWTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil

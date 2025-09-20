@@ -85,7 +85,7 @@ func ShowEC2AMI(cmd *cobra.Command, arg string) error {
 		Columns:        3,
 		MaxColumnWidth: 90,
 	})
-	fields, err := cmdutil.PopulateFieldValues(image[0], getShowFields(), ec2.GetFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(image[0], getShowFields(), ec2.GetFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

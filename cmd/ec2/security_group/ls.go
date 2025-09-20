@@ -87,11 +87,11 @@ func ListSecurityGroups(cmd *cobra.Command, args []string) error {
 		table.SetRenderStyle("plain")
 	}
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(groups))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(groups))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(groups), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(groups), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()
@@ -128,21 +128,21 @@ func ListSecurityGroupRules(cmd *cobra.Command, args []string) error {
 	egressRules := ec2.FilterSecurityGroupRules(rules, true)
 
 	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title:   fmt.Sprintf("%s - Inbound Rules", args[0]),
+		Title:          fmt.Sprintf("%s - Inbound Rules", args[0]),
 		MaxColumnWidth: 50,
-		Columns: 8,
+		Columns:        8,
 	})
 	if list {
 		table.SetRenderStyle("plain")
 	}
 	fields := getListRulesFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(ingressRules))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(ingressRules))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(ingressRules), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(ingressRules), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.AppendTitleRow(fmt.Sprintf("%s - Outbound Rules", args[0]))
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(egressRules), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(egressRules), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil

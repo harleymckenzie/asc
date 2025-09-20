@@ -111,11 +111,11 @@ func ListAutoScalingGroups(cmd *cobra.Command, args []string) error {
 		}
 
 		fields := getListFields()
-		fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(autoScalingGroups))
+		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(autoScalingGroups))
 
-		headerRow := cmdutil.BuildHeaderRow(fields)
+		headerRow := tablewriter.BuildHeaderRow(fields)
 		table.AppendHeader(headerRow)
-		table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(autoScalingGroups), fields, asg.GetFieldValue, asg.GetTagValue))
+		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(autoScalingGroups), fields, asg.GetFieldValue, asg.GetTagValue))
 		table.SortBy(fields, reverseSort)
 		table.Render()
 		return nil
@@ -142,9 +142,9 @@ func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) 
 	}
 
 	fields := getInstanceFields()
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(instances), fields, asg.GetFieldValue, asg.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, asg.GetFieldValue, asg.GetTagValue))
 	table.SortBy(fields, reverseSort)
 	table.Render()
 	return nil

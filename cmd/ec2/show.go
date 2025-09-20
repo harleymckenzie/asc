@@ -87,7 +87,7 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		Columns:        3,
 		MaxColumnWidth: 70,
 	})
-	fields, err := cmdutil.PopulateFieldValues(instance[0], getShowFields(), ec2.GetFieldValue)
+	fields, err := tablewriter.PopulateFieldValues(instance[0], getShowFields(), ec2.GetFieldValue)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

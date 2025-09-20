@@ -82,11 +82,11 @@ func ListPrefixLists(cmd *cobra.Command, args []string) error {
 	}
 
 	fields := getListFields()
-	fields = cmdutil.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(pls))
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(pls))
 
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(pls), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(pls), fields, vpc.GetFieldValue, vpc.GetTagValue))
 	table.SortBy(fields, reverseSort)
 
 	table.Render()
@@ -111,9 +111,9 @@ func ListPrefixListEntries(cmd *cobra.Command, args []string) error {
 	})
 
 	fields := prefixListEntriesFields()
-	headerRow := cmdutil.BuildHeaderRow(fields)
+	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
-	table.AppendRows(cmdutil.BuildRows(utils.SlicesToAny(pl), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(pl), fields, vpc.GetFieldValue, vpc.GetTagValue))
 
 	table.Render()
 	return nil
