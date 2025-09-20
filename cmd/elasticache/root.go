@@ -11,6 +11,7 @@ func NewElasticacheRootCmd() *cobra.Command {
 		Use:     "elasticache",
 		Short:   "Perform ElastiCache operations",
 		Long:    "Manage ElastiCache clusters including Redis and Memcached instances",
+		Aliases: []string{"redis", "memcached", "cache"},
 		GroupID: "service",
 	}
 

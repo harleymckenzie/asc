@@ -11,6 +11,7 @@ func NewRDSRootCmd() *cobra.Command {
 		Use:     "rds",
 		Short:   "Perform RDS operations",
 		Long:    "Manage Amazon RDS database instances including MySQL, PostgreSQL, and other database engines",
+		Aliases: []string{"db", "database", "databases"},
 		GroupID: "service",
 	}
 

@@ -15,6 +15,7 @@ func NewVPCRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "vpc",
 		Short:   "Perform VPC operations",
+		Aliases: []string{"network", "networks"},
 		GroupID: "service",
 	}
 

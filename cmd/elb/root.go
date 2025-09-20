@@ -10,7 +10,7 @@ func NewELBRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "elb",
 		Short:   "Perform Elastic Load Balancer operations",
-		Aliases: []string{"alb"},
+		Aliases: []string{"lb", "alb", "load-balancer", "load-balancers"},
 		GroupID: "service",
 	}
 	
