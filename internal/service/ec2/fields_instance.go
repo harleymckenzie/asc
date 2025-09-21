@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/format"
 )
 
@@ -17,7 +19,6 @@ var ec2FieldValueGetters = map[string]FieldValueGetter{
 	"Instance ID":         getInstanceID,
 	"State":               getInstanceState,
 	"AMI ID":              getInstanceAMIID,
-	"AMI Name":            getInstanceAMIName,
 	"Launch Time":         getInstanceLaunchTime,
 	"Instance Type":       getInstanceType,
 	"Placement Group":     getInstancePlacementGroup,
@@ -35,7 +36,13 @@ var ec2FieldValueGetters = map[string]FieldValueGetter{
 }
 
 // getInstanceFieldValue returns the value of a field for an EC2 instance
-func getInstanceFieldValue(fieldName string, instance types.Instance) (string, error) {
+func getInstanceFieldValue(fieldName string, instance types.Instance, svc *EC2Service) (string, error) {
+	// Special handling for fields that need service context
+	if fieldName == "AMI Name" && svc != nil {
+		return getInstanceAMIName(instance, svc)
+	}
+	
+
 	if getter, exists := ec2FieldValueGetters[fieldName]; exists {
 		value, err := getter(instance)
 		if err != nil {
@@ -63,8 +70,23 @@ func getInstanceAMIID(instance any) (string, error) {
 	return aws.ToString(instance.(types.Instance).ImageId), nil
 }
 
-func getInstanceAMIName(instance any) (string, error) {
-	return aws.ToString(instance.(types.Instance).ImageId), nil
+// getInstanceAMINameWithService resolves the actual AMI name using the service
+func getInstanceAMIName(instance types.Instance, svc *EC2Service) (string, error) {
+	imageID := aws.ToString(instance.ImageId)
+	if imageID == "" {
+		return "", nil
+	}
+
+	images, err := svc.GetImages(context.TODO(), &ascTypes.GetImagesInput{
+		ImageIds: []string{imageID},
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(images) == 0 {
+		return "", nil
+	}
+	return aws.ToString(images[0].Name), nil
 }
 
 func getInstanceLaunchTime(instance any) (string, error) {

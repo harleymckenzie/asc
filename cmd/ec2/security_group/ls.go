@@ -92,7 +92,7 @@ func ListSecurityGroups(cmd *cobra.Command, args []string) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(groups), fields, ec2.GetFieldValue, ec2.GetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 
 	table.Render()
 	return nil
@@ -143,7 +143,7 @@ func ListSecurityGroupRules(cmd *cobra.Command, args []string) error {
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(ingressRules), fields, ec2.GetFieldValue, ec2.GetTagValue))
 	table.AppendTitleRow(fmt.Sprintf("%s - Outbound Rules", args[0]))
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(egressRules), fields, ec2.GetFieldValue, ec2.GetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 	table.Render()
 	return nil
 }

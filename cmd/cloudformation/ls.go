@@ -36,7 +36,7 @@ func getListFields() []tablewriter.Field {
 		{Name: "Stack Name", Category: "CloudFormation", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
 		{Name: "Status", Category: "CloudFormation", Visible: true, SortBy: sortStatus, SortDirection: tablewriter.Asc},
 		{Name: "Description", Category: "CloudFormation", Visible: showDescription},
-		{Name: "Last Updated", Category: "CloudFormation", Visible: true, SortBy: sortLastUpdate, SortDirection: tablewriter.Desc},
+		{Name: "Last Updated", Category: "CloudFormation", Visible: true, SortBy: sortLastUpdate, SortDirection: tablewriter.Desc, DefaultSort: true},
 	}
 }
 
@@ -88,7 +88,7 @@ func ListCloudFormationStacks(cmd *cobra.Command, args []string) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(stacks), fields, cloudformation.GetFieldValue, cloudformation.GetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 	table.Render()
 	return nil
 }

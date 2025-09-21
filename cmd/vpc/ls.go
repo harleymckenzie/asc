@@ -115,7 +115,7 @@ func ListVPCs(cmd *cobra.Command, args []string) error {
 		headerRow := tablewriter.BuildHeaderRow(fields)
 		table.AppendHeader(headerRow)
 		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(vpcList), fields, vpc.GetFieldValue, vpc.GetTagValue))
-		table.SortBy(fields, reverseSort)
+		table.SetFieldConfigs(fields, reverseSort)
 		table.Render()
 		return nil
 	}
@@ -145,7 +145,7 @@ func ListVPCSubnets(cmd *cobra.Command, args []string) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetSubnetFieldValue, vpc.GetSubnetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 	table.Render()
 	return nil
 }

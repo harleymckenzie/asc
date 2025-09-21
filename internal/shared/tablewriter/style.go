@@ -8,7 +8,7 @@ import (
 var TableStyles = map[string]table.Style{
 	"rounded":   StyleRounded,
 	"plain":     StylePlain,
-	"separated": StyleRoundedSeparated,
+	"rounded-separated": StyleRoundedSeparated,
 }
 
 // SetStyle sets the style of the table.
@@ -19,7 +19,7 @@ func (at *AscTable) SetStyle(style string) {
 		at.table.SetStyle(table.StyleRounded)
 	case "plain":
 		at.table.SetStyle(StylePlain)
-	case "separated":
+	case "rounded-separated":
 		at.table.SetStyle(StyleRoundedSeparated)
 	default:
 		at.table.SetStyle(table.StyleRounded)

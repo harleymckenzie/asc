@@ -1,6 +1,9 @@
 package tablewriter
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/jedib0t/go-pretty/v6/table"
+)
 
 // DetailTable handles detailed tables.
 type DetailTable struct {
@@ -123,6 +126,16 @@ func (dt *DetailTable) AddHeader(headers []string) {
 
 func (dt *DetailTable) AddRow(row Row) {
 	dt.Rows = append(dt.Rows, row)
+}
+
+// SetColumnWidth sets the minimum and maximum width for all columns.
+func (at *AscTable) SetColumnWidth(minWidth int, maxWidth int) {
+	// TODO: Implement this for DetailTable only
+	configs := make([]table.ColumnConfig, at.renderOptions.Columns)
+	for i := 0; i < at.renderOptions.Columns; i++ {
+		configs[i] = table.ColumnConfig{Number: i + 1, WidthMin: minWidth, WidthMax: maxWidth}
+	}
+	at.table.SetColumnConfigs(configs)
 }
 
 func (dt *DetailTable) Render() {

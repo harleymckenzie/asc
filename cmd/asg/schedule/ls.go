@@ -124,7 +124,7 @@ func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 	table.Render()
 	return nil
 }
@@ -152,7 +152,7 @@ func ListSchedulesForAllGroups(svc *asg.AutoScalingService) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 	table.Render()
 	return nil
 }

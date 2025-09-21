@@ -87,7 +87,11 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		Columns:        3,
 		MaxColumnWidth: 70,
 	})
-	fields, err := tablewriter.PopulateFieldValues(instance[0], getShowFields(), ec2.GetFieldValue)
+	// Create field getter with service context for AMI name resolution
+	fieldGetter := func(fieldName string, instance any) (string, error) {
+		return ec2.GetFieldValueWithService(fieldName, instance, svc)
+	}
+	fields, err := tablewriter.PopulateFieldValues(instance[0], getShowFields(), fieldGetter)
 	if err != nil {
 		return fmt.Errorf("populate field values: %w", err)
 	}

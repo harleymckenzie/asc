@@ -109,7 +109,7 @@ func ListELBs(cmd *cobra.Command, args []string) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(loadBalancers), fields, elb.GetFieldValue, elb.GetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 
 	table.Render()
 	return nil

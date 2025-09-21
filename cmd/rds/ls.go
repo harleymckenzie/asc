@@ -36,7 +36,7 @@ func init() {
 // Column functions
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Cluster Identifier", Category: "RDS", Visible: true, SortBy: sortCluster, SortDirection: tablewriter.Asc},
+		{Name: "Cluster Identifier", Category: "RDS", Visible: true, Merge: true, SortBy: sortCluster, SortDirection: tablewriter.Asc},
 		{Name: "Identifier", Category: "RDS", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
 		{Name: "Status", Category: "RDS", Visible: true, SortBy: sortStatus, SortDirection: tablewriter.Asc},
 		{Name: "Role", Category: "RDS", Visible: true, SortBy: sortRole, SortDirection: tablewriter.Asc},
@@ -102,6 +102,7 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 
 	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
 		Title: "Databases",
+		Style: "rounded-separated",
 	})
 	if list {
 		table.SetRenderStyle("plain")
@@ -113,7 +114,7 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, rds.GetFieldValue, rds.GetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 	table.Render()
 	return nil
 }

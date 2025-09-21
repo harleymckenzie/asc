@@ -88,7 +88,7 @@ func ListNACLs(cmd *cobra.Command, args []string) error {
 		headerRow := tablewriter.BuildHeaderRow(fields)
 		table.AppendHeader(headerRow)
 		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(nacls), fields, vpc.GetFieldValue, vpc.GetTagValue))
-		table.SortBy(fields, reverseSort)
+		table.SetFieldConfigs(fields, reverseSort)
 		table.Render()
 		return nil
 	}
@@ -125,7 +125,7 @@ func ListNACLRules(cmd *cobra.Command, args []string) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	ingressTable.AppendHeader(headerRow)
 	ingressTable.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(ingressRules), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	ingressTable.SortBy(fields, reverseSort)
+	ingressTable.SetFieldConfigs(fields, reverseSort)
 	ingressTable.Render()
 
 	// Print outbound rules table
@@ -138,7 +138,7 @@ func ListNACLRules(cmd *cobra.Command, args []string) error {
 
 	egressTable.AppendHeader(headerRow)
 	egressTable.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(egressRules), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	egressTable.SortBy(fields, reverseSort)
+	egressTable.SetFieldConfigs(fields, reverseSort)
 	egressTable.Render()
 	return nil
 }

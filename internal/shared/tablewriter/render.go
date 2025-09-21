@@ -22,7 +22,7 @@ type AscWriter interface {
 	GetColumns() int
 	SetStyle(style string)
 	SetRenderStyle(style string)
-	SortBy(fields []Field, reverse bool)
+	SetFieldConfigs(fields []Field, reverse bool)
 }
 
 // AscTable is the implementation of the AscWriter interface.
@@ -38,8 +38,10 @@ type AscTableRenderOptions struct {
 	Title          string
 	Style          string
 	Columns        int
+	ColumnConfigs  []table.ColumnConfig
 	MinColumnWidth int
 	MaxColumnWidth int
+	MergedColumns  []string
 }
 
 // Field is a single field in a row. It contains a name and a value.
@@ -48,6 +50,8 @@ type Field struct {
 	Name          string
 	Value         string
 	Visible       bool
+	Merge         bool
+	DefaultSort   bool
 	SortBy        bool
 	SortDirection SortDirection
 }
@@ -95,8 +99,8 @@ func (at *AscTable) Render() {
 	at.table.SetOutputMirror(os.Stdout)
 	at.table.SetTitle(text.Colors{text.Bold}.Sprint(at.renderOptions.Title))
 	at.table.SetStyle(TableStyles[at.getStyle()])
-	// at.table.SetStyle(StyleRounded)
 	at.SetColumnWidth(at.renderOptions.MinColumnWidth, at.renderOptions.MaxColumnWidth)
+	at.table.SetColumnConfigs(at.renderOptions.ColumnConfigs)
 
 	if len(at.sortByFields) > 0 {
 		sortBy := parseSortBy(at.sortByFields)
@@ -108,23 +112,21 @@ func (at *AscTable) Render() {
 	at.table.Render()
 }
 
-// SetColumnWidth sets the minimum and maximum width for all columns.
-func (at *AscTable) SetColumnWidth(minWidth int, maxWidth int) {
-	configs := make([]table.ColumnConfig, at.renderOptions.Columns)
-	for i := 0; i < at.renderOptions.Columns; i++ {
-		configs[i] = table.ColumnConfig{Number: i + 1, WidthMin: minWidth, WidthMax: maxWidth}
-	}
-	at.table.SetColumnConfigs(configs)
-}
-
 // GetColumns returns the number of columns in the table
 func (at *AscTable) GetColumns() int {
 	return at.renderOptions.Columns
 }
 
-// SortBy applies sorting based on fields configuration
-func (at *AscTable) SortBy(fields []Field, reverse bool) {
-	at.sortByFields = fields
+// SetFieldConfigs sets the field configurations for the table.
+func (at *AscTable) SetFieldConfigs(fields []Field, reverse bool) {
+	for _, field := range fields {
+		if field.Merge {
+			at.renderOptions.ColumnConfigs = append(at.renderOptions.ColumnConfigs, table.ColumnConfig{Name: field.Name, AutoMerge: true})
+		}
+		if field.SortBy {
+			at.sortByFields = append(at.sortByFields, field)
+		}
+	}
 	if reverse {
 		for i := 0; i < len(at.sortByFields)/2; i++ {
 			at.sortByFields[i].SortDirection = reverseSortDirection(at.sortByFields[i].SortDirection)
@@ -138,8 +140,28 @@ func parseSortBy(fields []Field) []table.SortBy {
 	for _, field := range fields {
 		if field.SortBy {
 			sortBy = append(sortBy, table.SortBy{
-				Name: field.Name,
-				Mode: table.SortMode(field.SortDirection),
+				Name:       field.Name,
+				Mode:       table.SortMode(field.SortDirection),
+				IgnoreCase: true,
+			})
+		}
+	}
+	// If no sort fields found, use the first field with DefaultSort=true
+	if len(sortBy) == 0 && len(fields) > 0 {
+		sortBy = parseDefaultSort(fields)
+	}
+	return sortBy
+}
+
+// parseDefaultSort sets the DefaultSort field to true if it is not already set.
+func parseDefaultSort(fields []Field) []table.SortBy {
+	var sortBy []table.SortBy
+	for _, field := range fields {
+		if field.DefaultSort {
+			sortBy = append(sortBy, table.SortBy{
+				Name:       field.Name,
+				Mode:       table.SortMode(field.SortDirection),
+				IgnoreCase: true,
 			})
 		}
 	}

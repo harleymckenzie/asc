@@ -14,9 +14,14 @@ type FieldValueGetter func(instance any) (string, error)
 // GetFieldValue returns the value of a field for the given instance.
 // This function routes field requests to the appropriate type-specific handler.
 func GetFieldValue(fieldName string, instance any) (string, error) {
+	return GetFieldValueWithService(fieldName, instance, nil)
+}
+
+// GetFieldValueWithService returns the value of a field for the given instance with optional service context.
+func GetFieldValueWithService(fieldName string, instance any, svc *EC2Service) (string, error) {
 	switch v := instance.(type) {
 	case types.Instance:
-		return getInstanceFieldValue(fieldName, v)
+		return getInstanceFieldValue(fieldName, v, svc)
 	case types.Image:
 		return getImageFieldValue(fieldName, v)
 	case types.Volume:

@@ -87,7 +87,7 @@ func ListRouteTables(cmd *cobra.Command, args []string) error {
 		headerRow := tablewriter.BuildHeaderRow(fields)
 		table.AppendHeader(headerRow)
 		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(rts), fields, vpc.GetFieldValue, vpc.GetTagValue))
-		table.SortBy(fields, reverseSort)
+		table.SetFieldConfigs(fields, reverseSort)
 
 		table.Render()
 		return nil
@@ -122,7 +122,7 @@ func ListRouteTableRules(cmd *cobra.Command, args []string) error {
 	headerRow := tablewriter.BuildHeaderRow(fields)
 	table.AppendHeader(headerRow)
 	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(routes), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	table.SortBy(fields, reverseSort)
+	table.SetFieldConfigs(fields, reverseSort)
 
 	table.Render()
 	return nil
