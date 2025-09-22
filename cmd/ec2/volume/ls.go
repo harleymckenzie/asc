@@ -40,7 +40,7 @@ func getListFields() []tablewriter.Field {
 		{Name: "Throughput", Category: "Volume Details", Visible: true},
 		{Name: "Snapshot ID", Category: "Volume Details", Visible: true},
 		{Name: "State", Category: "Volume Details", Visible: true, SortBy: sortState, SortDirection: tablewriter.Asc},
-		{Name: "Created", Category: "Volume Details", Visible: showCreatedAt, SortBy: sortCreatedAt, SortDirection: tablewriter.Desc},
+		{Name: "Created", Category: "Volume Details", Visible: showCreatedAt, DefaultSort: true, SortBy: sortCreatedAt, SortDirection: tablewriter.Desc},
 		{Name: "Attach Time", Category: "Volume Details", Visible: showAttachTime, SortBy: sortAttachTime, SortDirection: tablewriter.Desc},
 		{Name: "Availability Zone", Category: "Volume Details", Visible: false},
 		{Name: "Encryption", Category: "Volume Details", Visible: true},

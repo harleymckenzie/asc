@@ -35,7 +35,7 @@ func getScheduleFields() []tablewriter.Field {
 		{Name: "Auto Scaling Group", Category: "Schedule", Visible: true},
 		{Name: "Name", Category: "Schedule", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
 		{Name: "Recurrence", Category: "Schedule", Visible: true},
-		{Name: "Start Time", Category: "Schedule", Visible: true, SortBy: sortStartTime, SortDirection: tablewriter.Desc},
+		{Name: "Start Time", Category: "Schedule", Visible: true, DefaultSort: true, SortBy: sortStartTime, SortDirection: tablewriter.Desc},
 		{Name: "End Time", Category: "Schedule", Visible: true, SortBy: sortEndTime, SortDirection: tablewriter.Desc},
 		{Name: "Desired Capacity", Category: "Schedule", Visible: true, SortBy: sortDesiredCapacity, SortDirection: tablewriter.Desc},
 		{Name: "Min", Category: "Schedule", Visible: true, SortBy: sortMinSize, SortDirection: tablewriter.Desc},

@@ -15,12 +15,13 @@ import (
 )
 
 var (
-	list        bool
-	sortID      bool
-	sortName    bool
-	sortState   bool
-	showDesc    bool
-	reverseSort bool
+	list             bool
+	sortID           bool
+	sortName         bool
+	sortState        bool
+	sortCreationDate bool
+	showDesc         bool
+	reverseSort      bool
 
 	scope      string // Combined owner/visibility flag
 	nameFilter string
@@ -40,7 +41,7 @@ func getListFields() []tablewriter.Field {
 		{Name: "Owner", Category: "AMI Details", Visible: true},
 		{Name: "Visibility", Category: "AMI Details", Visible: false},
 		{Name: "Status", Category: "AMI Details", Visible: true, SortBy: sortState, SortDirection: tablewriter.Desc},
-		{Name: "Creation Date", Category: "AMI Details", Visible: true, SortBy: true, SortDirection: tablewriter.Desc},
+		{Name: "Creation Date", Category: "AMI Details", DefaultSort: true, Visible: true, SortBy: sortCreationDate, SortDirection: tablewriter.Desc},
 		{Name: "Platform", Category: "AMI Details", Visible: false},
 		{Name: "Root Device Type", Category: "AMI Details", Visible: false},
 		{Name: "Block Devices", Category: "AMI Details", Visible: false},
@@ -64,6 +65,7 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending image ID.")
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending image name.")
 	cobraCmd.Flags().BoolVarP(&sortState, "sort-state", "s", false, "Sort by descending image state.")
+	cobraCmd.Flags().BoolVarP(&sortCreationDate, "sort-creation-date", "c", false, "Sort by descending image creation date.")
 	cobraCmd.Flags().BoolVarP(&showDesc, "show-description", "d", false, "Show the AMI description column.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
 	cobraCmd.Flags().StringVar(&scope, "scope", "self", "Scope of AMIs to list: self (your private AMIs), private (all private AMIs you can access), public, amazon, all, or AWS account ID.")

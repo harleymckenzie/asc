@@ -26,7 +26,7 @@ func init() {
 
 func getTargetGroupFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Name", Category: "Target Group Details", Visible: true},
+		{Name: "Name", Category: "Target Group Details", Visible: true, DefaultSort: true},
 		{Name: "ARN", Category: "Target Group Details", Visible: showARNs},
 		{Name: "Port", Category: "Network", Visible: true},
 		{Name: "Protocol", Category: "Network", Visible: true},

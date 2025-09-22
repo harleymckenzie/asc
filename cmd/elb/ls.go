@@ -40,7 +40,7 @@ func init() {
 // Column functions
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Name", Category: "Load Balancer Details", Visible: true},
+		{Name: "Name", Category: "Load Balancer Details", Visible: true, DefaultSort: true},
 		{Name: "DNS Name", Category: "Network", Visible: showDNSName, SortBy: sortDNSName, SortDirection: tablewriter.Asc},
 		{Name: "Scheme", Category: "Load Balancer Details", Visible: showScheme, SortBy: sortScheme, SortDirection: tablewriter.Asc},
 		{Name: "State", Category: "Load Balancer Details", Visible: true},

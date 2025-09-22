@@ -34,7 +34,7 @@ func getListFields() []tablewriter.Field {
 		{Name: "Description", Category: "Snapshot Details", Visible: showDesc},
 		{Name: "Tier", Category: "Snapshot Details", Visible: true},
 		{Name: "State", Category: "Snapshot Details", Visible: true},
-		{Name: "Started", Category: "Snapshot Details", Visible: true},
+		{Name: "Started", Category: "Snapshot Details", Visible: true, DefaultSort: true},
 		{Name: "Progress", Category: "Snapshot Details", Visible: true},
 		{Name: "Encryption", Category: "Snapshot Details", Visible: true},
 		{Name: "Data Transfer Progress", Category: "Snapshot Details", Visible: false},

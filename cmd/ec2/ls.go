@@ -43,7 +43,7 @@ func init() {
 // getListFields returns a list of Field objects for displaying EC2 instance information
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Name", Category: "Instance Details", Visible: true},
+		{Name: "Name", Category: "Instance Details", Visible: true, DefaultSort: true},
 		{Name: "Instance ID", Category: "Instance Details", Visible: true, SortBy: sortByID, SortDirection: tablewriter.Asc},
 		{Name: "State", Category: "Instance Details", Visible: true},
 		{Name: "AMI ID", Category: "Instance Details", Visible: false},

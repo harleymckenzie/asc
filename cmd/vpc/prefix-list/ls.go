@@ -15,6 +15,7 @@ import (
 var (
 	list        bool
 	reverseSort bool
+	sortId      bool
 )
 
 func init() {
@@ -24,7 +25,7 @@ func init() {
 // getListFields returns the fields for the Prefix List list table.
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Prefix List ID", Category: "Details", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "Prefix List ID", Category: "Details", Visible: true, DefaultSort: true, SortBy: sortId, SortDirection: tablewriter.Asc},
 		{Name: "Prefix List Name", Category: "Details", Visible: true},
 		{Name: "Max Entries", Category: "Details", Visible: false},
 		{Name: "Address Family", Category: "Details", Visible: true},
@@ -56,6 +57,7 @@ var lsCmd = &cobra.Command{
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Prefix Lists in list format.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
+	cobraCmd.Flags().BoolVarP(&sortId, "sort-id", "i", false, "Sort by descending prefix list ID.")
 }
 
 // ListPrefixLists is the handler for the ls subcommand.

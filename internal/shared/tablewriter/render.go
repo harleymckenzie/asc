@@ -127,6 +127,10 @@ func (at *AscTable) SetFieldConfigs(fields []Field, reverse bool) {
 			at.sortByFields = append(at.sortByFields, field)
 		}
 	}
+	if len(at.sortByFields) == 0 {
+		at.sortByFields = append(at.sortByFields, parseDefaultSort(fields))
+	}
+
 	if reverse {
 		for i := 0; i < len(at.sortByFields)/2; i++ {
 			at.sortByFields[i].SortDirection = reverseSortDirection(at.sortByFields[i].SortDirection)
@@ -134,38 +138,27 @@ func (at *AscTable) SetFieldConfigs(fields []Field, reverse bool) {
 	}
 }
 
-// parseSortBy converts fields with SortBy=true to table.SortBy
+// parseSortBy converts fields to table.SortBy
 func parseSortBy(fields []Field) []table.SortBy {
 	var sortBy []table.SortBy
 	for _, field := range fields {
-		if field.SortBy {
 			sortBy = append(sortBy, table.SortBy{
 				Name:       field.Name,
 				Mode:       table.SortMode(field.SortDirection),
 				IgnoreCase: true,
-			})
-		}
-	}
-	// If no sort fields found, use the first field with DefaultSort=true
-	if len(sortBy) == 0 && len(fields) > 0 {
-		sortBy = parseDefaultSort(fields)
+		})
 	}
 	return sortBy
 }
 
 // parseDefaultSort sets the DefaultSort field to true if it is not already set.
-func parseDefaultSort(fields []Field) []table.SortBy {
-	var sortBy []table.SortBy
+func parseDefaultSort(fields []Field) Field {
 	for _, field := range fields {
 		if field.DefaultSort {
-			sortBy = append(sortBy, table.SortBy{
-				Name:       field.Name,
-				Mode:       table.SortMode(field.SortDirection),
-				IgnoreCase: true,
-			})
+			return field
 		}
 	}
-	return sortBy
+	return Field{}
 }
 
 // reverseSortDirection reverses the sort direction.

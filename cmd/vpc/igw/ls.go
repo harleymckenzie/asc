@@ -15,6 +15,7 @@ import (
 // Variables
 var (
 	list           bool
+	sortId         bool
 	sortType       bool
 	sortState      bool
 	sortSize       bool
@@ -34,7 +35,7 @@ func init() {
 // Define columns for Internet Gateways
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Internet Gateway ID", Category: "IGW", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "Internet Gateway ID", Category: "IGW", Visible: true, DefaultSort: true, SortBy: sortId, SortDirection: tablewriter.Asc},
 		{Name: "State", Category: "IGW", Visible: true, SortBy: sortState, SortDirection: tablewriter.Asc},
 		{Name: "VPC ID", Category: "IGW", Visible: true},
 		{Name: "Owner", Category: "IGW", Visible: true},
@@ -54,6 +55,7 @@ var lsCmd = &cobra.Command{
 // NewLsFlags adds flags for the ls subcommand.
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs volumes in list format.")
+	cobraCmd.Flags().BoolVarP(&sortId, "sort-id", "i", false, "Sort by descending internet gateway ID.")
 	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending volume type.")
 	cobraCmd.Flags().BoolVarP(&showKMS, "show-kms", "K", false, "Show the KMS Key ID column.")
 	cobraCmd.Flags().BoolVarP(&sortState, "sort-state", "S", false, "Sort by descending volume state.")

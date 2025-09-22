@@ -51,7 +51,7 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Group Name", Category: "Security Group", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
+		{Name: "Group Name", Category: "Security Group", Visible: true, DefaultSort: true, SortBy: sortName, SortDirection: tablewriter.Asc},
 		{Name: "Group ID", Category: "Security Group", Visible: true, SortBy: sortID, SortDirection: tablewriter.Asc},
 		{Name: "Description", Category: "Security Group", Visible: showDesc},
 		{Name: "VPC ID", Category: "Security Group", Visible: true, SortBy: sortVPCID, SortDirection: tablewriter.Asc},

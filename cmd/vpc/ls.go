@@ -16,6 +16,7 @@ import (
 // Variables
 var (
 	list               bool
+	sortId             bool
 	reverseSort        bool
 	sortName           bool
 	sortState          bool
@@ -36,7 +37,7 @@ func init() {
 // Column functions
 func getVPCListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "VPC ID", Category: "VPC", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "VPC ID", Category: "VPC", Visible: true, DefaultSort: true, SortBy: sortId, SortDirection: tablewriter.Asc},
 		{Name: "State", Category: "VPC", Visible: true, SortBy: sortState, SortDirection: tablewriter.Asc},
 		{Name: "Tenancy", Category: "VPC", Visible: showTenancy},
 		{Name: "DHCP Option Set", Category: "VPC", Visible: showDHCP},
@@ -76,9 +77,10 @@ func addLsFlags(lsCmd *cobra.Command) {
 	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs VPCs in list format.")
 	lsCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending VPC name.")
+	lsCmd.Flags().BoolVarP(&sortId, "sort-id", "i", false, "Sort by descending VPC ID.")
 	lsCmd.Flags().BoolVarP(&sortState, "sort-state", "s", false, "Sort by descending VPC state.")
-	lsCmd.Flags().BoolVarP(&sortIPv4CIDR, "sort-ipv4-cidr", "i", false, "Sort by descending VPC IPv4 CIDR.")
-	lsCmd.Flags().BoolVarP(&sortIPv6CIDR, "sort-ipv6-cidr", "I", false, "Sort by descending VPC IPv6 CIDR.")
+	lsCmd.Flags().BoolVarP(&sortIPv4CIDR, "sort-ipv4-cidr", "I", false, "Sort by descending VPC IPv4 CIDR.")
+	lsCmd.Flags().BoolVarP(&sortIPv6CIDR, "sort-ipv6-cidr", "6", false, "Sort by descending VPC IPv6 CIDR.")
 	lsCmd.Flags().BoolVarP(&sortOwnerID, "sort-owner-id", "o", false, "Sort by descending VPC owner ID.")
 	lsCmd.Flags().BoolVarP(&showDHCP, "show-dhcp", "d", false, "Show the DHCP option set for the VPC.")
 	lsCmd.Flags().BoolVarP(&showMainRouteTable, "show-main-route-table", "R", false, "Show the main route table for the VPC.")

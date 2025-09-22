@@ -36,7 +36,7 @@ func init() {
 // Column functions
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Cluster Identifier", Category: "RDS", Visible: true, Merge: true, SortBy: sortCluster, SortDirection: tablewriter.Asc},
+		{Name: "Cluster Identifier", Category: "RDS", Visible: true, DefaultSort: true, Merge: true, SortBy: sortCluster, SortDirection: tablewriter.Asc},
 		{Name: "Identifier", Category: "RDS", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
 		{Name: "Status", Category: "RDS", Visible: true, SortBy: sortStatus, SortDirection: tablewriter.Asc},
 		{Name: "Role", Category: "RDS", Visible: true, SortBy: sortRole, SortDirection: tablewriter.Asc},

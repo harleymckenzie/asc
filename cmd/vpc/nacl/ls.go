@@ -14,6 +14,7 @@ import (
 var (
 	list        bool
 	reverseSort bool
+	sortId      bool
 )
 
 func init() {
@@ -23,7 +24,7 @@ func init() {
 // getListFields returns the fields for the NACL list table.
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Network ACL ID", Category: "NACL", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "Network ACL ID", Category: "NACL", Visible: true, DefaultSort: true, SortBy: sortId, SortDirection: tablewriter.Asc},
 		{Name: "Associated with", Category: "NACL", Visible: true},
 		{Name: "Default", Category: "NACL", Visible: true},
 		{Name: "VPC ID", Category: "NACL", Visible: true},
@@ -58,6 +59,7 @@ var lsCmd = &cobra.Command{
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs NACLs in list format.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
+	cobraCmd.Flags().BoolVarP(&sortId, "sort-id", "i", false, "Sort by descending network ACL ID.")
 }
 
 // ListNACLs is the handler for the ls subcommand.

@@ -32,7 +32,7 @@ func init() {
 // Column functions
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Cache Name", Category: "Cluster Details", Visible: true},
+		{Name: "Cache Name", Category: "Cluster Details", Visible: true, DefaultSort: true},
 		{Name: "Status", Category: "Cluster Details", Visible: true, SortBy: sortStatus, SortDirection: tablewriter.Asc},
 		{Name: "Engine Version", Category: "Cluster Details", Visible: true, SortBy: sortEngine, SortDirection: tablewriter.Desc},
 		{Name: "Configuration", Category: "Cluster Details", Visible: true, SortBy: sortType, SortDirection: tablewriter.Asc},

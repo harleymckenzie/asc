@@ -39,7 +39,7 @@ func init() {
 
 func getListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Name", Category: "Auto Scaling Group", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "Name", Category: "Auto Scaling Group", Visible: true, DefaultSort: true, SortBy: sortName, SortDirection: tablewriter.Asc},
 		{Name: "Instances", Category: "Auto Scaling Group", Visible: true, SortBy: sortInstances, SortDirection: tablewriter.Desc},
 		{Name: "Desired", Category: "Auto Scaling Group", Visible: true, SortBy: sortDesiredCapacity, SortDirection: tablewriter.Desc},
 		{Name: "Min", Category: "Auto Scaling Group", Visible: true, SortBy: sortMinCapacity, SortDirection: tablewriter.Desc},

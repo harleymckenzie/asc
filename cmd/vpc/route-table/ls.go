@@ -15,6 +15,7 @@ import (
 var (
 	list        bool
 	reverseSort bool
+	sortId      bool
 )
 
 func init() {
@@ -24,7 +25,7 @@ func init() {
 // routeTableListFields returns the fields for the Route Table list table.
 func routeTableListFields() []tablewriter.Field {
 	return []tablewriter.Field{
-		{Name: "Route Table ID", Category: "VPC", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "Route Table ID", Category: "VPC", Visible: true, DefaultSort: true, SortBy: sortId, SortDirection: tablewriter.Asc},
 		{Name: "Association Count", Category: "VPC", Visible: true},
 		{Name: "Route Count", Category: "VPC", Visible: false},
 		{Name: "Main", Category: "VPC", Visible: true},
@@ -57,6 +58,7 @@ var lsCmd = &cobra.Command{
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Route Tables in list format.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
+	cobraCmd.Flags().BoolVarP(&sortId, "sort-id", "i", false, "Sort by descending route table ID.")
 }
 
 // ListRouteTables is the handler for the ls subcommand.
