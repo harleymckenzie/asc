@@ -24,7 +24,8 @@ var (
 	sortByID         bool
 	sortByType       bool
 	sortByLaunchTime bool
-
+	sortByPrivateIP  bool
+	sortByAMI        bool
 	reverseSort bool
 )
 
@@ -46,9 +47,9 @@ func getListFields() []tablewriter.Field {
 		{Name: "Name", Category: "Instance Details", Visible: true, DefaultSort: true},
 		{Name: "Instance ID", Category: "Instance Details", Visible: true, SortBy: sortByID, SortDirection: tablewriter.Asc},
 		{Name: "State", Category: "Instance Details", Visible: true},
-		{Name: "AMI ID", Category: "Instance Details", Visible: false},
+		{Name: "AMI ID", Category: "Instance Details", Visible: showAMI},
 		{Name: "AMI Name", Category: "Instance Details", Visible: false},
-		{Name: "Launch Time", Category: "Instance Details", Visible: false, SortBy: sortByLaunchTime, SortDirection: tablewriter.Desc},
+		{Name: "Launch Time", Category: "Instance Details", Visible: showLaunchTime, SortBy: sortByLaunchTime, SortDirection: tablewriter.Desc},
 		{Name: "Instance Type", Category: "Instance Details", Visible: true, SortBy: sortByType, SortDirection: tablewriter.Asc},
 		{Name: "Placement Group", Category: "Instance Details", Visible: false},
 		{Name: "Root Device Type", Category: "Instance Details", Visible: false},
@@ -56,7 +57,7 @@ func getListFields() []tablewriter.Field {
 		{Name: "Virtualization Type", Category: "Instance Details", Visible: false},
 		{Name: "vCPUs", Category: "Instance Details", Visible: false},
 		{Name: "Public IP", Category: "Network", Visible: true},
-		{Name: "Private IP", Category: "Network", Visible: false},
+		{Name: "Private IP", Category: "Network", Visible: showPrivateIP, SortBy: sortByPrivateIP, SortDirection: tablewriter.Asc},
 		{Name: "Subnet ID", Category: "Network", Visible: false},
 		{Name: "VPC ID", Category: "Network", Visible: false},
 		{Name: "Availability Zone", Category: "Network", Visible: false},
@@ -87,15 +88,16 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
 	cobraCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
 	cobraCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
-	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
+	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "I", false, "Show the private IP address of the instance.")
 	cmdutil.AddTagFlag(cobraCmd)
 
 	// Sorting flags
 	cobraCmd.Flags().BoolVarP(&sortByID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
 	cobraCmd.Flags().BoolVarP(&sortByType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
 	cobraCmd.Flags().BoolVarP(&sortByLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
+	cobraCmd.Flags().BoolVarP(&sortByPrivateIP, "sort-private-ip", "P", false, "Sort by ascending private IP address.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
-	cobraCmd.MarkFlagsMutuallyExclusive("sort-id", "sort-type", "sort-launch-time")
+	cobraCmd.MarkFlagsMutuallyExclusive("sort-id", "sort-type", "sort-launch-time", "sort-private-ip")
 }
 
 // ListEC2Instances handles the listing of EC2 instances and related resources
