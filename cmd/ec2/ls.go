@@ -3,11 +3,10 @@
 package ec2
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 
@@ -22,17 +21,18 @@ var (
 	showLaunchTime bool
 	showPrivateIP  bool
 
-	sortID         bool
-	sortType       bool
-	sortLaunchTime bool
-
+	sortByID         bool
+	sortByType       bool
+	sortByLaunchTime bool
+	sortByPrivateIP  bool
+	sortByAMI        bool
 	reverseSort bool
 )
 
 type ListInstancesInput struct {
 	GetInstancesInput *ascTypes.GetInstancesInput
 	SelectedColumns   []string
-	TableOpts         tableformat.RenderOptions
+	TableOpts         tablewriter.AscTableRenderOptions
 }
 
 // Init function
@@ -41,20 +41,32 @@ func init() {
 }
 
 // Column functions
-func ec2ListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Name", Display: true, Merge: false, DefaultSort: true},
-		{ID: "Instance ID", Display: true, Sort: sortID},
-		{ID: "State", Display: true, Sort: false},
-		{ID: "Instance Type", Display: true, Sort: sortType},
-		{ID: "Public IP", Display: true, Sort: false},
-		{ID: "AMI ID", Display: showAMI, Sort: false},
-		{ID: "Launch Time", Display: showLaunchTime, Sort: sortLaunchTime, SortDirection: "desc"},
-		{ID: "Private IP", Display: showPrivateIP, Sort: false},
+// getListFields returns a list of Field objects for displaying EC2 instance information
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Name", Category: "Instance Details", Visible: true, DefaultSort: true},
+		{Name: "Instance ID", Category: "Instance Details", Visible: true, SortBy: sortByID, SortDirection: tablewriter.Asc},
+		{Name: "State", Category: "Instance Details", Visible: true},
+		{Name: "AMI ID", Category: "Instance Details", Visible: showAMI},
+		{Name: "AMI Name", Category: "Instance Details", Visible: false},
+		{Name: "Launch Time", Category: "Instance Details", Visible: showLaunchTime, SortBy: sortByLaunchTime, SortDirection: tablewriter.Desc},
+		{Name: "Instance Type", Category: "Instance Details", Visible: true, SortBy: sortByType, SortDirection: tablewriter.Asc},
+		{Name: "Placement Group", Category: "Instance Details", Visible: false},
+		{Name: "Root Device Type", Category: "Instance Details", Visible: false},
+		{Name: "Root Device Name", Category: "Instance Details", Visible: false},
+		{Name: "Virtualization Type", Category: "Instance Details", Visible: false},
+		{Name: "vCPUs", Category: "Instance Details", Visible: false},
+		{Name: "Public IP", Category: "Network", Visible: true},
+		{Name: "Private IP", Category: "Network", Visible: showPrivateIP, SortBy: sortByPrivateIP, SortDirection: tablewriter.Asc},
+		{Name: "Subnet ID", Category: "Network", Visible: false},
+		{Name: "VPC ID", Category: "Network", Visible: false},
+		{Name: "Availability Zone", Category: "Network", Visible: false},
+		{Name: "Security Group(s)", Category: "Security", Visible: false},
+		{Name: "Key Name", Category: "Security", Visible: false},
 	}
 }
 
-// Command variable
+// lsCmd is the main command for listing EC2 instances and related resources
 var lsCmd = &cobra.Command{
 	Use:     "ls",
 	Short:   "List EC2 instances, AMIs, snapshots, and volumes",
@@ -70,61 +82,50 @@ var lsCmd = &cobra.Command{
 	},
 }
 
-// Flag function
+// newLsFlags configures the flags for the ls command
 func newLsFlags(cobraCmd *cobra.Command) {
-	// Add flags - Output
+	// Output format flags
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs EC2 instances in list format.")
 	cobraCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
 	cobraCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
-	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "P", false, "Show the private IP address of the instance.")
+	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "I", false, "Show the private IP address of the instance.")
 	cmdutil.AddTagFlag(cobraCmd)
 
-	// Add flags - Sorting
-	cobraCmd.Flags().BoolVarP(&sortID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
-	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
-	cobraCmd.Flags().BoolVarP(&sortLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
+	// Sorting flags
+	cobraCmd.Flags().BoolVarP(&sortByID, "sort-id", "i", false, "Sort by descending EC2 instance Id.")
+	cobraCmd.Flags().BoolVarP(&sortByType, "sort-type", "T", false, "Sort by descending EC2 instance type.")
+	cobraCmd.Flags().BoolVarP(&sortByLaunchTime, "sort-launch-time", "t", false, "Sort by descending launch time (most recently launched first).")
+	cobraCmd.Flags().BoolVarP(&sortByPrivateIP, "sort-private-ip", "P", false, "Sort by ascending private IP address.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
-	cobraCmd.MarkFlagsMutuallyExclusive("sort-id", "sort-type", "sort-launch-time")
+	cobraCmd.MarkFlagsMutuallyExclusive("sort-id", "sort-type", "sort-launch-time", "sort-private-ip")
 }
 
-// Command functions
-
-// ListEC2Instances is the function for listing EC2 instances
+// ListEC2Instances handles the listing of EC2 instances and related resources
 func ListEC2Instances(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
 		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	instances, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{})
+	instances, err := getInstances(svc, args)
 	if err != nil {
-		return fmt.Errorf("list ec2 instances: %w", err)
+		return fmt.Errorf("get instances: %w", err)
 	}
 
-	fields := ec2ListFields()
-	opts := tableformat.RenderOptions{
-		Title:  "Instances",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Instances",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
+	fields := getListFields()
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(instances),
-		Fields:    fields,
-		Tags:      cmdutil.Tags,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetAttributeValue(fieldID, instance)
-		},
-		GetTagValue: func(tag string, instance any) (string, error) {
-			return ec2.GetTagValue(tag, instance)
-		},
-	}, opts)
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+
+	table.Render()
 	return nil
 }

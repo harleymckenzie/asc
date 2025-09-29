@@ -8,7 +8,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -26,33 +26,6 @@ var (
 
 func init() {
 	NewLsFlags(lsCmd)
-}
-
-// ec2SecurityGroupListFields returns the fields for the security group list table.
-func ec2SecurityGroupListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Group Name", Display: true, Sort: sortName, DefaultSort: true},
-		{ID: "Group ID", Display: true, Sort: sortID},
-		{ID: "Description", Display: showDesc},
-		{ID: "VPC ID", Display: true, Sort: sortVPCID},
-		{ID: "Owner ID", Display: showOwnerID, Sort: sortOwnerID},
-		{ID: "Ingress Count", Display: true, SortDirection: "desc"},
-		{ID: "Egress Count", Display: true, SortDirection: "desc"},
-		{ID: "Tag Count", Display: false},
-	}
-}
-
-func ec2SecurityGroupRulesFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Rule ID", Display: true},
-		{ID: "IP Version", Display: true},
-		{ID: "Type", Display: true},
-		{ID: "Protocol", Display: true},
-		{ID: "Port Range", Display: true},
-		{ID: "Source", Display: true},      // Inbound rules only
-		{ID: "Destination", Display: true}, // Outbound rules only
-		{ID: "Description", Display: true},
-	}
 }
 
 // lsCmd is the cobra command for listing security groups.
@@ -76,88 +49,101 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&showOwnerID, "show-owner-id", "O", false, "Show the security group owner ID column.")
 }
 
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Group Name", Category: "Security Group", Visible: true, DefaultSort: true, SortBy: sortName, SortDirection: tablewriter.Asc},
+		{Name: "Group ID", Category: "Security Group", Visible: true, SortBy: sortID, SortDirection: tablewriter.Asc},
+		{Name: "Description", Category: "Security Group", Visible: showDesc},
+		{Name: "VPC ID", Category: "Security Group", Visible: true, SortBy: sortVPCID, SortDirection: tablewriter.Asc},
+		{Name: "Owner ID", Category: "Security Group", Visible: showOwnerID, SortBy: sortOwnerID, SortDirection: tablewriter.Asc},
+		{Name: "Ingress Count", Category: "Security Group", Visible: true, SortDirection: tablewriter.Desc},
+		{Name: "Egress Count", Category: "Security Group", Visible: true, SortDirection: tablewriter.Desc},
+		{Name: "Tag Count", Category: "Security Group", Visible: false},
+	}
+}
+
 // ListSecurityGroups is the handler for the ls subcommand.
 // If a security group name is provided, it will list the IP permissions for that security group.
 // Otherwise, it will list all security groups.
 func ListSecurityGroups(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
-	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
-	}
-
 	if len(args) > 0 {
 		return ListSecurityGroupRules(cmd, args)
-	} else {
-		groups, err := svc.GetSecurityGroups(ctx, &ascTypes.GetSecurityGroupsInput{})
-		if err != nil {
-			return fmt.Errorf("get security groups: %w", err)
-		}
+	}
 
-		fields := ec2SecurityGroupListFields()
-		opts := tableformat.RenderOptions{
-			Title:  "Security Groups",
-			Style:  "rounded",
-			SortBy: tableformat.GetSortByField(fields, reverseSort),
-		}
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
+	if err != nil {
+		return fmt.Errorf("create ec2 service: %w", err)
+	}
 
-		tableformat.RenderTableList(&tableformat.ListTable{
-			Instances: utils.SlicesToAny(groups),
-			Fields:    fields,
-			GetAttribute: func(fieldID string, instance any) (string, error) {
-				return ec2.GetSecurityGroupAttributeValue(fieldID, instance)
-			},
-		}, opts)
-		return nil
+	groups, err := svc.GetSecurityGroups(context.TODO(), &ascTypes.GetSecurityGroupsInput{})
+	if err != nil {
+		return fmt.Errorf("get security groups: %w", err)
+	}
+
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Security Groups",
+	})
+	if list {
+		table.SetRenderStyle("plain")
+	}
+	fields := getListFields()
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(groups))
+
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(groups), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+
+	table.Render()
+	return nil
+}
+
+func getListRulesFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Rule ID", Category: "Security Group Rule", Visible: true},
+		{Name: "IP Version", Category: "Security Group Rule", Visible: true},
+		{Name: "Type", Category: "Security Group Rule", Visible: true},
+		{Name: "Protocol", Category: "Security Group Rule", Visible: true},
+		{Name: "Port Range", Category: "Security Group Rule", Visible: true},
+		{Name: "Source", Category: "Security Group Rule", Visible: true},
+		{Name: "Destination", Category: "Security Group Rule", Visible: true},
+		{Name: "Description", Category: "Security Group Rule", Visible: true},
 	}
 }
 
-// ListSecurityGroupRules lists the rules for the provided security group.
 func ListSecurityGroupRules(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	rules, err := svc.GetSecurityGroupRules(ctx, &ascTypes.GetSecurityGroupRulesInput{
+	rules, err := svc.GetSecurityGroupRules(context.TODO(), &ascTypes.GetSecurityGroupRulesInput{
 		SecurityGroupID: args[0],
 	})
 	if err != nil {
-		return fmt.Errorf("get security groups: %w", err)
+		return fmt.Errorf("get security group rules: %w", err)
 	}
 
 	ingressRules := ec2.FilterSecurityGroupRules(rules, false)
 	egressRules := ec2.FilterSecurityGroupRules(rules, true)
 
-	fields := ec2SecurityGroupRulesFields()
-	ingressOpts := tableformat.RenderOptions{
-		Title:  fmt.Sprintf("%s - Inbound Rules", args[0]),
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title:          fmt.Sprintf("%s - Inbound Rules", args[0]),
+		MaxColumnWidth: 50,
+		Columns:        8,
+	})
+	if list {
+		table.SetRenderStyle("plain")
 	}
-	egressOpts := tableformat.RenderOptions{
-		Title:  fmt.Sprintf("%s - Outbound Rules", args[0]),
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
+	fields := getListRulesFields()
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(ingressRules))
 
-	// Print inbound and outbound rules separately
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(ingressRules),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetSecurityGroupRuleAttributeValue(fieldID, instance)
-		},
-	}, ingressOpts)
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(egressRules),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetSecurityGroupRuleAttributeValue(fieldID, instance)
-		},
-	}, egressOpts)
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(ingressRules), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.AppendTitleRow(fmt.Sprintf("%s - Outbound Rules", args[0]))
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(egressRules), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+	table.Render()
 	return nil
 }

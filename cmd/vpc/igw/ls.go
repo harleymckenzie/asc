@@ -2,13 +2,12 @@
 package igw
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +15,7 @@ import (
 // Variables
 var (
 	list           bool
+	sortId         bool
 	sortType       bool
 	sortState      bool
 	sortSize       bool
@@ -32,13 +32,13 @@ func init() {
 	NewLsFlags(lsCmd)
 }
 
-// Define columns for volumes
-func vpcIGWListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Internet Gateway ID", Display: true, DefaultSort: true},
-		{ID: "State", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Owner", Display: true},
+// Define columns for Internet Gateways
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Internet Gateway ID", Category: "IGW", Visible: true, DefaultSort: true, SortBy: sortId, SortDirection: tablewriter.Asc},
+		{Name: "State", Category: "IGW", Visible: true, SortBy: sortState, SortDirection: tablewriter.Asc},
+		{Name: "VPC ID", Category: "IGW", Visible: true},
+		{Name: "Owner", Category: "IGW", Visible: true},
 	}
 }
 
@@ -55,6 +55,7 @@ var lsCmd = &cobra.Command{
 // NewLsFlags adds flags for the ls subcommand.
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs volumes in list format.")
+	cobraCmd.Flags().BoolVarP(&sortId, "sort-id", "i", false, "Sort by descending internet gateway ID.")
 	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending volume type.")
 	cobraCmd.Flags().BoolVarP(&showKMS, "show-kms", "K", false, "Show the KMS Key ID column.")
 	cobraCmd.Flags().BoolVarP(&sortState, "sort-state", "S", false, "Sort by descending volume state.")
@@ -66,38 +67,32 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
 }
 
-// ListVolumes is the handler for the ls subcommand.
+// ListIGWs is the handler for the ls subcommand.
 func ListIGWs(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
 		return fmt.Errorf("create new VPC service: %w", err)
 	}
 
-	igws, err := svc.GetIGWs(ctx, &ascTypes.GetIGWsInput{})
+	igws, err := svc.GetIGWs(cmd.Context(), &ascTypes.GetIGWsInput{})
 	if err != nil {
 		return fmt.Errorf("get internet gateways: %w", err)
 	}
 
-	fields := vpcIGWListFields()
-	opts := tableformat.RenderOptions{
-		Title:  "Internet Gateways",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Internet Gateways",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(igws),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetIGWAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	fields := getListFields()
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(igws))
+
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(igws), fields, vpc.GetIGWFieldValue, vpc.GetIGWTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+	table.Render()
 	return nil
 }

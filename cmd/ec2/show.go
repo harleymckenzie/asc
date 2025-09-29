@@ -3,7 +3,6 @@
 package ec2
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -11,10 +10,9 @@ import (
 	"github.com/harleymckenzie/asc/cmd/ec2/snapshot"
 	"github.com/harleymckenzie/asc/cmd/ec2/volume"
 	"github.com/harleymckenzie/asc/internal/service/ec2"
-	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -26,41 +24,33 @@ func init() {
 	newShowFlags(showCmd)
 }
 
-// Column functions
-func ec2ShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Instance Details", Header: true},
-		{ID: "Instance ID", Display: true},
-		{ID: "State", Display: true},
-		{ID: "AMI ID", Display: true},
-		{ID: "AMI Name", Display: true},
-		{ID: "Launch Time", Display: true},
-		{ID: "Instance Type", Display: true},
-		{ID: "Placement Group", Display: true},
-		{ID: "Root Device Type", Display: true},
-		{ID: "Root Device Name", Display: true},
-		{ID: "Virtualization Type", Display: true},
-		{ID: "vCPUs", Display: true},
-
-		{ID: "Networking", Header: true},
-		{ID: "Public IP", Display: true},
-		{ID: "Private IP", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Subnet ID", Display: true},
-		{ID: "Availability Zone", Display: true},
-
-		{ID: "Security", Header: true},
-		{ID: "Security Group(s)", Display: true},
-		{ID: "Key Name", Display: true},
-
-		{ID: "Tags", Header: true},
-		{ID: "Tags", Display: true},
+// getShowFields returns a list of Field objects for the given instance.
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Instance ID", Category: "Instance Details", Visible: true},
+		{Name: "State", Category: "Instance Details", Visible: true},
+		{Name: "AMI ID", Category: "Instance Details", Visible: true},
+		{Name: "AMI Name", Category: "Instance Details", Visible: true},
+		{Name: "Launch Time", Category: "Instance Details", Visible: true},
+		{Name: "Instance Type", Category: "Instance Details", Visible: true},
+		{Name: "Placement Group", Category: "Instance Details", Visible: true},
+		{Name: "Root Device Type", Category: "Instance Details", Visible: true},
+		{Name: "Root Device Name", Category: "Instance Details", Visible: true},
+		{Name: "Virtualization Type", Category: "Instance Details", Visible: true},
+		{Name: "vCPUs", Category: "Instance Details", Visible: true},
+		{Name: "Public IP", Category: "Network", Visible: true},
+		{Name: "Private IP", Category: "Network", Visible: true},
+		{Name: "Subnet ID", Category: "Network", Visible: true},
+		{Name: "VPC ID", Category: "Network", Visible: true},
+		{Name: "Availability Zone", Category: "Network", Visible: true},
+		{Name: "Security Group(s)", Category: "Security", Visible: true},
+		{Name: "Key Name", Category: "Security", Visible: true},
 	}
 }
 
 // Flag function
 func newShowFlags(cmd *cobra.Command) {
-	cmdutil.AddShowFlags(cmd, "horizontal")
+	cmdutil.AddShowFlags(cmd, "vertical")
 }
 
 // Command functions
@@ -81,58 +71,43 @@ func ShowEC2Resource(cmd *cobra.Command, arg string) error {
 	}
 }
 
-// ShowEC2Instance is the function for showing EC2 instances
 func ShowEC2Instance(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
-	instance, err := svc.GetInstances(ctx, &ascTypes.GetInstancesInput{
-		InstanceIDs: args,
-	})
+	instance, err := getInstances(svc, args)
 	if err != nil {
 		return fmt.Errorf("get instances: %w", err)
 	}
 
-	// Check if any instances were returned
-	if len(instance) == 0 {
-		return fmt.Errorf("instance not found: %s", args[0])
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          "Instance summary for " + *instance[0].InstanceId,
+		Columns:        3,
+		MaxColumnWidth: 70,
+	})
+	// Create field getter with service context for AMI name resolution
+	fieldGetter := func(fieldName string, instance any) (string, error) {
+		return ec2.GetFieldValueWithService(fieldName, instance, svc)
+	}
+	fields, err := tablewriter.PopulateFieldValues(instance[0], getShowFields(), fieldGetter)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	tags, err := awsutil.NormalizeTags(instance[0].Tags)
+	// Layout = Horizontal or Grid
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+	tags, err := awsutil.PopulateTagFields(instance[0].Tags)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve tags from instance: %w", err)
 	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
 
-	opts := tableformat.RenderOptions{
-		Title: "Instance summary for " + *instance[0].InstanceId,
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type:           cmdutil.GetLayout(cmd),
-			ColumnsPerRow:  3,
-			ColumnMaxWidth: 50,
-		},
-	}
-
-	err = tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: instance[0],
-		Fields:   ec2ShowFields(),
-		Tags:     tags,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
+	table.Render()
 	return nil
 }

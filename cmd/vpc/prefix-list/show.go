@@ -6,8 +6,9 @@ import (
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -20,16 +21,16 @@ func init() {
 }
 
 // prefixListShowFields returns the fields for the Prefix List detail table.
-func prefixListShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Prefix List ID", Display: true},
-		{ID: "Prefix List ARN", Display: true},
-		{ID: "Prefix List Name", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Version", Display: true},
-		{ID: "Max Entries", Display: true},
-		{ID: "Address Family", Display: true},
-		{ID: "Owner", Display: true},
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Prefix List ID", Category: "VPC", Visible: true},
+		{Name: "Prefix List ARN", Category: "VPC", Visible: true},
+		{Name: "Prefix List Name", Category: "VPC", Visible: true},
+		{Name: "State", Category: "VPC", Visible: true},
+		{Name: "Version", Category: "VPC", Visible: true},
+		{Name: "Max Entries", Category: "VPC", Visible: true},
+		{Name: "Address Family", Category: "VPC", Visible: true},
+		{Name: "Owner", Category: "VPC", Visible: true},
 	}
 }
 
@@ -52,21 +53,14 @@ func NewShowFlags(cobraCmd *cobra.Command) {
 
 // ShowPrefixList displays detailed information for a specified Prefix List.
 func ShowPrefixList(cmd *cobra.Command, id string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
+	ctx := context.TODO()
 	pls, err := svc.GetManagedPrefixLists(ctx, &ascTypes.GetManagedPrefixListsInput{
-		// PrefixListIds: []string{id},
+		PrefixListIds: []string{id},
 	})
 	if err != nil {
 		return fmt.Errorf("get prefix lists: %w", err)
@@ -76,20 +70,30 @@ func ShowPrefixList(cmd *cobra.Command, id string) error {
 	}
 	pl := pls[0]
 
-	fields := prefixListShowFields()
-	opts := tableformat.RenderOptions{
-		Title: fmt.Sprintf("Prefix List Details\n(%s)", id),
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type: cmdutil.GetLayout(cmd),
-		},
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          "Prefix List summary for " + id,
+		Columns:        3,
+		MaxColumnWidth: 70,
+	})
+
+	fields, err := tablewriter.PopulateFieldValues(pl, getShowFields(), vpc.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	return tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: pl,
-		Fields:   fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetPrefixListAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	// Layout = Horizontal or Grid
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+
+	tags, err := awsutil.PopulateTagFields(pl.Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from prefix list: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
+
+	table.Render()
+	return nil
 }

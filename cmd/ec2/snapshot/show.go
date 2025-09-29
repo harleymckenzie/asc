@@ -7,8 +7,9 @@ import (
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -20,33 +21,29 @@ func init() {
 	NewShowFlags(showCmd)
 }
 
-// ec2SnapshotShowFields returns the fields for the snapshot detail table.
-func ec2SnapshotShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Details", Header: true},
-		{ID: "Snapshot ID", Display: true, Sort: sortID},
-		{ID: "Owner ID", Display: true},
-		{ID: "Owner Alias", Display: true},
-		{ID: "Description", Display: showDesc},
-		{ID: "Tier", Display: true},
-		{ID: "State", Display: true},
-		{ID: "State Message", Display: true},
-		{ID: "Encryption", Display: true},
-		{ID: "Started", Display: true, DefaultSort: true, SortDirection: "desc"},
-		{ID: "Progress", Display: true},
-		{ID: "Owner ID", Display: true},
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Snapshot ID", Category: "Snapshot Details", Visible: true, SortBy: sortID, SortDirection: tablewriter.Asc},
+		{Name: "Owner ID", Category: "Snapshot Details", Visible: true},
+		{Name: "Owner Alias", Category: "Snapshot Details", Visible: true},
+		{Name: "Description", Category: "Snapshot Details", Visible: showDesc},
+		{Name: "Tier", Category: "Snapshot Details", Visible: true},
+		{Name: "State", Category: "Snapshot Details", Visible: true},
+		{Name: "Encryption", Category: "Snapshot Details", Visible: true},
+		{Name: "Started", Category: "Snapshot Details", Visible: true, SortBy: sortID, SortDirection: tablewriter.Desc},
+		{Name: "Progress", Category: "Snapshot Details", Visible: true},
+		{Name: "Owner ID", Category: "Snapshot Details", Visible: true},
 
-		{ID: "Source Volume", Header: true},
-		{ID: "Volume ID", Display: true},
-		{ID: "Volume Size", Display: true},
+		{Name: "Source Volume", Category: "Snapshot Details", Visible: true},
+		{Name: "Volume ID", Category: "Snapshot Details", Visible: true},
+		{Name: "Volume Size", Category: "Snapshot Details", Visible: true},
 
-		{ID: "Encryption", Header: true},
-		{ID: "Encryption", Display: true},
-		{ID: "KMS Key ID", Display: true},
+		{Name: "Encryption", Category: "Snapshot Details", Visible: true},
+		{Name: "Encryption", Category: "Snapshot Details", Visible: true},
+		{Name: "KMS Key ID", Category: "Snapshot Details", Visible: true},
 
-		{ID: "Storage Tier", Header: true},
-		{ID: "Storage Tier", Display: true},
-		{ID: "Restore Expiry Time", Display: true},
+		{Name: "Storage Tier", Category: "Snapshot Details", Visible: true},
+		{Name: "Restore Expiry Time", Category: "Snapshot Details", Visible: true},
 	}
 }
 
@@ -69,41 +66,41 @@ var showCmd = &cobra.Command{
 
 // ShowEC2Snapshot displays detailed information for a specified snapshot.
 func ShowEC2Snapshot(cmd *cobra.Command, arg string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
-	snapshots, err := svc.GetSnapshots(ctx, &ascTypes.GetSnapshotsInput{SnapshotIDs: []string{arg}})
+	snapshots, err := svc.GetSnapshots(context.TODO(), &ascTypes.GetSnapshotsInput{SnapshotIDs: []string{arg}})
 	if err != nil {
 		return fmt.Errorf("get snapshots: %w", err)
 	}
 	if len(snapshots) == 0 {
-		return fmt.Errorf("Snapshot not found: %s", arg)
+		return fmt.Errorf("snapshot not found: %s", arg)
 	}
 
-	fields := ec2SnapshotShowFields()
-	opts := tableformat.RenderOptions{
-		Title: fmt.Sprintf("Snapshot Details\n(%s)", arg),
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type: cmdutil.GetLayout(cmd),
-		},
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          "Snapshot summary for " + *snapshots[0].SnapshotId,
+		Columns:        3,
+		MaxColumnWidth: 80,
+	})
+	fields, err := tablewriter.PopulateFieldValues(snapshots[0], getShowFields(), ec2.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	return tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: snapshots[0],
-		Fields:   fields,
-		GetAttribute: func(fieldID string, snapshot any) (string, error) {
-			return ec2.GetSnapshotAttributeValue(fieldID, snapshot)
-		},
-	}, opts)
+	// Layout = Horizontal or Grid
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+	tags, err := awsutil.PopulateTagFields(snapshots[0].Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from snapshot: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
+
+	table.Render()
+	return nil
 }

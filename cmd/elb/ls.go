@@ -3,13 +3,12 @@
 package elb
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/elb"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/elb/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -39,18 +38,18 @@ func init() {
 }
 
 // Column functions
-func elbFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Name", Display: true},
-		{ID: "DNS Name", Display: showDNSName, Sort: sortDNSName},
-		{ID: "Scheme", Display: showScheme, Sort: sortScheme},
-		{ID: "State", Display: true},
-		{ID: "Type", Display: true, Sort: sortType},
-		{ID: "IP Type", Display: showIPAddressType},
-		{ID: "VPC ID", Display: true, Sort: sortVPCID},
-		{ID: "Created Time", Display: true, Sort: sortCreatedTime, SortDirection: "desc"},
-		{ID: "ARN", Display: showARNs, Sort: false},
-		{ID: "Availability Zones", Display: showAZs},
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Name", Category: "Load Balancer Details", Visible: true, DefaultSort: true},
+		{Name: "DNS Name", Category: "Network", Visible: showDNSName, SortBy: sortDNSName, SortDirection: tablewriter.Asc},
+		{Name: "Scheme", Category: "Load Balancer Details", Visible: showScheme, SortBy: sortScheme, SortDirection: tablewriter.Asc},
+		{Name: "State", Category: "Load Balancer Details", Visible: true},
+		{Name: "Type", Category: "Load Balancer Details", Visible: true, SortBy: sortType, SortDirection: tablewriter.Asc},
+		{Name: "IP Type", Category: "Network", Visible: showIPAddressType},
+		{Name: "VPC ID", Category: "Network", Visible: true, SortBy: sortVPCID, SortDirection: tablewriter.Asc},
+		{Name: "Created Time", Category: "Load Balancer Details", Visible: true, SortBy: sortCreatedTime, SortDirection: tablewriter.Desc},
+		{Name: "ARN", Category: "Load Balancer Details", Visible: showARNs},
+		{Name: "Availability Zones", Category: "Network", Visible: showAZs},
 	}
 }
 
@@ -88,39 +87,30 @@ func addLsFlags(cobraCmd *cobra.Command) {
 }
 
 // Command functions
-func ListELBs(cobraCmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cobraCmd)
-
-	svc, err := elb.NewELBService(ctx, profile, region)
+func ListELBs(cmd *cobra.Command, args []string) error {
+	svc, err := cmdutil.CreateService(cmd, elb.NewELBService)
 	if err != nil {
-		return fmt.Errorf("create new Elastic Load Balancing service: %w", err)
+		return fmt.Errorf("create elb service: %w", err)
 	}
 
-	loadBalancers, err := svc.GetLoadBalancers(ctx, &ascTypes.GetLoadBalancersInput{})
+	loadBalancers, err := svc.GetLoadBalancers(cmd.Context(), &ascTypes.GetLoadBalancersInput{})
 	if err != nil {
-		return fmt.Errorf("list Elastic Load Balancers: %w", err)
+		return fmt.Errorf("get load balancers: %w", err)
 	}
 
-	fields := elbFields()
-
-	opts := tableformat.RenderOptions{
-		Title:  "Elastic Load Balancers",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Elastic Load Balancers",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetStyle("plain")
 	}
+	fields := getListFields()
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(loadBalancers),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return elb.GetAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(loadBalancers), fields, elb.GetFieldValue, elb.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
 
+	table.Render()
 	return nil
 }

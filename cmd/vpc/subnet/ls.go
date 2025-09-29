@@ -7,7 +7,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -15,22 +15,23 @@ import (
 var (
 	list        bool
 	reverseSort bool
+	sortId      bool
 )
 
 func init() {
 	NewLsFlags(lsCmd)
 }
 
-// subnetListFields returns the fields for the Subnet list table.
-func SubnetListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Subnet ID", Display: true, DefaultSort: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "CIDR Block", Display: true},
-		{ID: "Availability Zone", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Available IPs", Display: true},
-		{ID: "Default For AZ", Display: true},
+// getListFields returns the fields for the Subnet list table.
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Subnet ID", Category: "Subnet", Visible: true, DefaultSort: true, SortBy: sortId, SortDirection: tablewriter.Asc},
+		{Name: "VPC ID", Category: "Subnet", Visible: true},
+		{Name: "CIDR Block", Category: "Subnet", Visible: true},
+		{Name: "Availability Zone", Category: "Subnet", Visible: true},
+		{Name: "State", Category: "Subnet", Visible: true},
+		{Name: "Available IPs", Category: "Subnet", Visible: true},
+		{Name: "Default For AZ", Category: "Subnet", Visible: true},
 	}
 }
 
@@ -48,39 +49,36 @@ var lsCmd = &cobra.Command{
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Subnets in list format.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
+	cobraCmd.Flags().BoolVarP(&sortId, "sort-id", "i", false, "Sort by descending subnet ID.")
 }
 
 // ListSubnets is the handler for the ls subcommand.
 func ListSubnets(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create service: %w", err)
 	}
 
-	subnets, err := svc.GetSubnets(ctx, &ascTypes.GetSubnetsInput{})
+	subnets, err := svc.GetSubnets(context.TODO(), &ascTypes.GetSubnetsInput{})
 	if err != nil {
 		return fmt.Errorf("get subnets: %w", err)
 	}
 
-	fields := SubnetListFields()
-	opts := tableformat.RenderOptions{
-		Title:  "Subnets",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Subnets",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(subnets),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetSubnetAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	fields := getListFields()
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(subnets))
+
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+
+	table.Render()
 	return nil
 }

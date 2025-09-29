@@ -10,7 +10,7 @@ import (
 	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/format"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ var (
 	recurrence      string
 	startTimeStr    string
 	endTimeStr      string
-	tableOpts       tableformat.RenderOptions
+	tableOpts       tablewriter.AscTableRenderOptions
 )
 
 // addCmd defines the 'add' subcommand for schedule operations.
@@ -138,15 +138,14 @@ func AddSchedule(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get schedule: %w", err)
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(schedules),
-		Fields:    asgScheduleFields(),
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return asg.GetScheduleAttributeValue(fieldID, instance)
-		},
-	}, tableOpts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Scheduled Actions",
+	})
+
+	fields := getScheduleFields()
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetScheduleAttributeValue, asg.GetTagValue))
+	table.Render()
 	return nil
 }

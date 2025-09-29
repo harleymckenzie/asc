@@ -10,7 +10,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/asg"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/asg/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -37,25 +37,25 @@ func init() {
 // Column functions
 //
 
-func asgFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Name", Display: true, DefaultSort: true},
-		{ID: "Instances", Display: true, Sort: sortInstances},
-		{ID: "Desired", Display: true, Sort: sortDesiredCapacity},
-		{ID: "Min", Display: true, Sort: sortMinCapacity, SortDirection: "desc"},
-		{ID: "Max", Display: true, Sort: sortMaxCapacity, SortDirection: "desc"},
-		{ID: "ARN", Display: showARNs},
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Name", Category: "Auto Scaling Group", Visible: true, DefaultSort: true, SortBy: sortName, SortDirection: tablewriter.Asc},
+		{Name: "Instances", Category: "Auto Scaling Group", Visible: true, SortBy: sortInstances, SortDirection: tablewriter.Desc},
+		{Name: "Desired", Category: "Auto Scaling Group", Visible: true, SortBy: sortDesiredCapacity, SortDirection: tablewriter.Desc},
+		{Name: "Min", Category: "Auto Scaling Group", Visible: true, SortBy: sortMinCapacity, SortDirection: tablewriter.Desc},
+		{Name: "Max", Category: "Auto Scaling Group", Visible: true, SortBy: sortMaxCapacity, SortDirection: tablewriter.Desc},
+		{Name: "ARN", Category: "Auto Scaling Group", Visible: showARNs},
 	}
 }
 
-func asgInstanceFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Name", Display: true, Sort: sortName, DefaultSort: true},
-		{ID: "State", Display: true},
-		{ID: "Instance Type", Display: true},
-		{ID: "Launch Template/Configuration", Display: true},
-		{ID: "Availability Zone", Display: true},
-		{ID: "Health", Display: true},
+func getInstanceFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Name", Category: "Instance", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
+		{Name: "State", Category: "Instance", Visible: true},
+		{Name: "Instance Type", Category: "Instance", Visible: true},
+		{Name: "Launch Template/Configuration", Category: "Instance", Visible: true},
+		{Name: "Availability Zone", Category: "Instance", Visible: true},
+		{Name: "Health", Category: "Instance", Visible: true},
 	}
 }
 
@@ -89,10 +89,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 //
 
 func ListAutoScalingGroups(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-
-	svc, err := asg.NewAutoScalingService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, asg.NewAutoScalingService)
 	if err != nil {
 		return fmt.Errorf("create new Auto Scaling Group service: %w", err)
 	}
@@ -101,42 +98,34 @@ func ListAutoScalingGroups(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Listing instances for Auto Scaling Group %s\n", args[0])
 		return ListAutoScalingGroupInstances(svc, args[0])
 	} else {
-		autoScalingGroups, err := svc.GetAutoScalingGroups(ctx, &ascTypes.GetAutoScalingGroupsInput{})
+		autoScalingGroups, err := svc.GetAutoScalingGroups(cmd.Context(), &ascTypes.GetAutoScalingGroupsInput{})
 		if err != nil {
 			return fmt.Errorf("get Auto Scaling Groups: %w", err)
 		}
 
-		fields := asgFields()
-
-		opts := tableformat.RenderOptions{
-			Title:  "Auto Scaling Groups",
-			Style:  "rounded",
-			SortBy: tableformat.GetSortByField(fields, reverseSort),
-		}
-
+		table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+			Title: "Auto Scaling Groups",
+		})
 		if list {
-			opts.Style = "list"
+			table.SetRenderStyle("plain")
 		}
 
-		tableformat.RenderTableList(&tableformat.ListTable{
-			Instances: utils.SlicesToAny(autoScalingGroups),
-			Fields:    fields,
-			GetAttribute: func(fieldID string, instance any) (string, error) {
-				return asg.GetAttributeValue(fieldID, instance)
-			},
-		}, opts)
-		if err != nil {
-			return fmt.Errorf("render table: %w", err)
-		}
+		fields := getListFields()
+		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(autoScalingGroups))
+
+		headerRow := tablewriter.BuildHeaderRow(fields)
+		table.AppendHeader(headerRow)
+		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(autoScalingGroups), fields, asg.GetFieldValue, asg.GetTagValue))
+		table.SetFieldConfigs(fields, reverseSort)
+		table.Render()
 		return nil
 	}
 }
 
 // ListAutoScalingGroupInstances is the function for listing instances in an Auto Scaling Group
 func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) error {
-	ctx := context.TODO()
 	instances, err := svc.GetAutoScalingGroupInstances(
-		ctx,
+		context.TODO(),
 		&ascTypes.GetAutoScalingGroupInstancesInput{
 			AutoScalingGroupNames: []string{asgName},
 		},
@@ -145,28 +134,18 @@ func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) 
 		return fmt.Errorf("get instances for Auto Scaling Group %s: %w", asgName, err)
 	}
 
-	// Define columns for instances
-	fields := asgInstanceFields()
-
-	opts := tableformat.RenderOptions{
-		Title:  "Auto Scaling Group Instances",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Auto Scaling Group Instances",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(instances),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return asg.GetInstanceAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
+	fields := getInstanceFields()
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, asg.GetFieldValue, asg.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+	table.Render()
 	return nil
 }

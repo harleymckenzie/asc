@@ -3,12 +3,11 @@
 package cloudformation
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/cloudformation"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 
@@ -32,12 +31,12 @@ func init() {
 }
 
 // Column functions
-func cloudformationListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Stack Name", Display: true, Sort: sortName},
-		{ID: "Status", Display: true, Sort: sortStatus},
-		{ID: "Description", Display: showDescription},
-		{ID: "Last Updated", Display: true, Sort: sortLastUpdate, DefaultSort: true, SortDirection: "desc"},
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Stack Name", Category: "CloudFormation", Visible: true, SortBy: sortName, SortDirection: tablewriter.Asc},
+		{Name: "Status", Category: "CloudFormation", Visible: true, SortBy: sortStatus, SortDirection: tablewriter.Asc},
+		{Name: "Description", Category: "CloudFormation", Visible: showDescription},
+		{Name: "Last Updated", Category: "CloudFormation", Visible: true, SortBy: sortLastUpdate, SortDirection: tablewriter.Desc, DefaultSort: true},
 	}
 }
 
@@ -64,39 +63,32 @@ func addLsFlags(lsCmd *cobra.Command) {
 
 // Command functions
 func ListCloudFormationStacks(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-
-	svc, err := cloudformation.NewCloudFormationService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, cloudformation.NewCloudFormationService)
 	if err != nil {
 		return fmt.Errorf("create new CloudFormation service: %w", err)
 	}
 
-	stacks, err := svc.GetStacks(ctx, &ascTypes.GetStacksInput{
+	stacks, err := svc.GetStacks(cmd.Context(), &ascTypes.GetStacksInput{
 		StackName: nil,
 	})
 	if err != nil {
 		return fmt.Errorf("list CloudFormation stacks: %w", err)
 	}
 
-	fields := cloudformationListFields()
-
-	opts := tableformat.RenderOptions{
-		Title:  "Stacks",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Stacks",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(stacks),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return cloudformation.GetAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	fields := getListFields()
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(stacks))
+
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(stacks), fields, cloudformation.GetFieldValue, cloudformation.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+	table.Render()
 	return nil
 }

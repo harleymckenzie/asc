@@ -63,7 +63,7 @@ func (svc *EC2Service) GetInstances(ctx context.Context, input *ascTypes.GetInst
 }
 
 // getInstanceName gets the name of the instance from the tags.
-func getInstanceName(instance types.Instance) string {
+func getInstanceNameTag(instance types.Instance) string {
 	// Get instance name from tags
 	name := "-" // Use as default name if "Name" tag doesn't exist
 	for _, tag := range instance.Tags {
@@ -176,7 +176,9 @@ func (svc *EC2Service) GetSnapshots(ctx context.Context, input *ascTypes.GetSnap
 // GetImages fetches EC2 images and returns them directly.
 func (svc *EC2Service) GetImages(ctx context.Context, input *ascTypes.GetImagesInput) ([]types.Image, error) {
 	output, err := svc.Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
-		ImageIds: input.ImageIDs,
+		ImageIds: input.ImageIds,
+		Filters: input.Filters,
+		Owners:  input.Owners,
 	})
 	if err != nil {
 		return nil, err
@@ -202,9 +204,9 @@ func (svc *EC2Service) GetSecurityGroups(ctx context.Context, input *ascTypes.Ge
 // GetImagesWithFilters fetches EC2 images with custom filters and owners.
 func (svc *EC2Service) GetImagesWithFilters(ctx context.Context, input *ascTypes.GetImagesInput, filters []types.Filter, owners []string) ([]types.Image, error) {
 	output, err := svc.Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
-		ImageIds: input.ImageIDs,
-		Filters:  filters,
-		Owners:   owners,
+		// ImageIds: input.ImageIds,
+		Filters: filters,
+		Owners:  owners,
 	})
 	if err != nil {
 		return nil, err

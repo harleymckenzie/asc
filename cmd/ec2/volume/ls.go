@@ -2,13 +2,10 @@
 package volume
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/harleymckenzie/asc/internal/service/ec2"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -33,23 +30,23 @@ func init() {
 }
 
 // Define columns for volumes
-func ec2VolumeListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Volume ID", Display: true, DefaultSort: true},
-		{ID: "Type", Display: true, Sort: sortType},
-		{ID: "Size", Display: true},
-		{ID: "Size Raw", Hidden: true, Sort: sortSize, SortDirection: "desc"}, // This is used for sorting, as Size is a combination of numbers and letters
-		{ID: "IOPS", Display: true},
-		{ID: "Throughput", Display: true},
-		{ID: "Snapshot ID", Display: true},
-		{ID: "State", Display: true},
-		{ID: "Created", Display: showCreatedAt, Sort: sortCreatedAt, SortDirection: "desc"},
-		{ID: "Attach Time", Display: showAttachTime, Sort: sortAttachTime, SortDirection: "desc"},
-		{ID: "Availability Zone", Display: false},
-		{ID: "Encryption", Display: true},
-		{ID: "Fast Snapshot Restored", Display: true},
-		{ID: "Multi-Attach Enabled", Display: false},
-		{ID: "KMS Key ID", Display: showKMS},
+func getListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Volume ID", Category: "Volume Details", Visible: true, SortBy: true, SortDirection: tablewriter.Asc},
+		{Name: "Type", Category: "Volume Details", Visible: true, SortBy: sortType, SortDirection: tablewriter.Asc},
+		{Name: "Size", Category: "Volume Details", Visible: true},
+		{Name: "Size Raw", Category: "Volume Details", Visible: false, SortBy: sortSize, SortDirection: tablewriter.Desc},
+		{Name: "IOPS", Category: "Volume Details", Visible: true},
+		{Name: "Throughput", Category: "Volume Details", Visible: true},
+		{Name: "Snapshot ID", Category: "Volume Details", Visible: true},
+		{Name: "State", Category: "Volume Details", Visible: true, SortBy: sortState, SortDirection: tablewriter.Asc},
+		{Name: "Created", Category: "Volume Details", Visible: showCreatedAt, DefaultSort: true, SortBy: sortCreatedAt, SortDirection: tablewriter.Desc},
+		{Name: "Attach Time", Category: "Volume Details", Visible: showAttachTime, SortBy: sortAttachTime, SortDirection: tablewriter.Desc},
+		{Name: "Availability Zone", Category: "Volume Details", Visible: false},
+		{Name: "Encryption", Category: "Volume Details", Visible: true},
+		{Name: "Fast Snapshot Restored", Category: "Volume Details", Visible: false},
+		{Name: "Multi-Attach Enabled", Category: "Volume Details", Visible: false},
+		{Name: "KMS Key ID", Category: "Volume Details", Visible: showKMS},
 	}
 }
 
@@ -86,36 +83,30 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 
 // ListVolumes is the handler for the ls subcommand.
 func ListVolumes(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-
-	svc, err := ec2.NewEC2Service(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, ec2.NewEC2Service)
 	if err != nil {
-		return fmt.Errorf("create new EC2 service: %w", err)
+		return err
 	}
 
-	volumes, err := svc.GetVolumes(ctx, &ascTypes.GetVolumesInput{})
+	volumes, err := svc.GetVolumes(cmd.Context(), &ascTypes.GetVolumesInput{})
 	if err != nil {
-		return fmt.Errorf("get volumes: %w", err)
+		return err
 	}
 
-	fields := ec2VolumeListFields()
-	opts := tableformat.RenderOptions{
-		Title:  "Volumes",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Volumes",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(volumes),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return ec2.GetVolumeAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	fields := getListFields()
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(volumes))
+
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(volumes), fields, ec2.GetFieldValue, ec2.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+	table.Render()
 	return nil
 }

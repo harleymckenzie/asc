@@ -43,37 +43,59 @@ release:
     Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
 
 brews:
-  -
-    name: asc
+  # Stable formula (only on stable tags)
+  - name: asc
     goarm: 6
     goamd64: v1
     url_template: "https://github.com/harleymckenzie/asc/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     homepage: "https://github.com/harleymckenzie/asc"
-
-    # Git author used to commit to the repository.
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-
-    # The project name and current git tag are used in the format string.
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-
-    # Directory inside the repository to put the formula.
     directory: Formula
     description: "AWS Simple CLI (ASC) - A simplified interface for AWS operations."
     license: "MIT"
-    skip_upload: false
-
+    # Skip on prerelease tags
+    skip_upload: "{{ if .Prerelease }}true{{ end }}"
     test: |
       system "#{bin}/asc help"
-
     install: |
       bin.install "asc"
-
     extra_install: |
       generate_completions_from_executable(bin/"asc", "completion", shells: [:bash, :zsh, :fish])
+    repository:
+      owner: harleymckenzie
+      name: homebrew-asc
+      pull_request:
+        enabled: true
+        draft: true
+        base:
+          owner: harleymckenzie
+          name: homebrew-asc
+          branch: main
 
-    # Repository to push the generated files to.
+  # Beta formula (only on prerelease tags)
+  - name: asc-beta
+    goarm: 6
+    goamd64: v1
+    url_template: "https://github.com/harleymckenzie/asc/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    homepage: "https://github.com/harleymckenzie/asc"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }}-beta version {{ .Tag }}"
+    directory: Formula
+    description: "AWS Simple CLI (ASC) - A simplified interface for AWS operations. (Beta channel)"
+    license: "MIT"
+    # Skip on stable tags
+    skip_upload: "{{ if not .Prerelease }}true{{ end }}"
+    test: |
+      system "#{bin}/asc help"
+    install: |
+      bin.install "asc"
+    extra_install: |
+      generate_completions_from_executable(bin/"asc", "completion", shells: [:bash, :zsh, :fish])
     repository:
       owner: harleymckenzie
       name: homebrew-asc

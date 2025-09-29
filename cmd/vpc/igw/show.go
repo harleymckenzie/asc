@@ -8,8 +8,10 @@ import (
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
+
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -22,12 +24,12 @@ func init() {
 }
 
 // Column functions
-func vpcIGWShowFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Internet Gateway ID", Display: true},
-		{ID: "State", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Owner", Display: true},
+func getShowFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Internet Gateway ID", Category: "VPC", Visible: true},
+		{Name: "State", Category: "VPC", Visible: true},
+		{Name: "VPC ID", Category: "VPC", Visible: true},
+		{Name: "Owner", Category: "VPC", Visible: true},
 	}
 }
 
@@ -50,19 +52,12 @@ func NewShowFlags(cobraCmd *cobra.Command) {
 
 // ShowVPCIGW is the function for showing VPC internet gateways
 func ShowVPCIGW(cmd *cobra.Command, id string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	if cmd.Flags().Changed("output") {
-		if err := cmdutil.ValidateFlagChoice(cmd, "output", cmdutil.ValidLayouts); err != nil {
-			return err
-		}
-	}
-
+	ctx := context.TODO()
 	igws, err := svc.GetIGWs(ctx, &ascTypes.GetIGWsInput{IGWIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get internet gateways: %w", err)
@@ -72,21 +67,30 @@ func ShowVPCIGW(cmd *cobra.Command, id string) error {
 	}
 	igw := igws[0]
 
-	fields := vpcIGWShowFields()
-	opts := tableformat.RenderOptions{
-		Title: fmt.Sprintf("Internet Gateway Details\n(%s)", id),
-		Style: "rounded",
-		Layout: tableformat.DetailTableLayout{
-			Type: cmdutil.GetLayout(cmd),
-			ColumnsPerRow: 4,
-		},
+	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+		Title:          "Internet Gateway summary for " + id,
+		Columns:        3,
+		MaxColumnWidth: 70,
+	})
+
+	fields, err := tablewriter.PopulateFieldValues(igw, getShowFields(), vpc.GetFieldValue)
+	if err != nil {
+		return fmt.Errorf("populate field values: %w", err)
 	}
 
-	return tableformat.RenderTableDetail(&tableformat.DetailTable{
-		Instance: igw,
-		Fields:   fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetIGWAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	// Layout = Horizontal or Grid
+	layout := tablewriter.Horizontal
+	if cmdutil.GetLayout(cmd) == "grid" {
+		layout = tablewriter.Grid
+	}
+	table.AddSections(tablewriter.BuildSections(fields, layout))
+
+	tags, err := awsutil.PopulateTagFields(igw.Tags)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve tags from internet gateway: %w", err)
+	}
+	table.AddSection(tablewriter.BuildSection("Tags", tags, tablewriter.Horizontal))
+
+	table.Render()
+	return nil
 }

@@ -1,13 +1,12 @@
 package target_group
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/elb"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/elb/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -25,18 +24,18 @@ func init() {
 	NewLsFlags(lsCmd)
 }
 
-func targetGroupFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Name", Display: true, DefaultSort: true},
-		{ID: "ARN", Display: showARNs},
-		{ID: "Port", Display: true},
-		{ID: "Protocol", Display: true},
-		{ID: "Target Type", Display: true},
-		{ID: "Load Balancer", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Health Check Enabled", Display: showHealthCheckEnabled},
-		{ID: "Health Check Path", Display: showHealthCheckPath},
-		{ID: "Health Check Port", Display: showHealthCheckPort},
+func getTargetGroupFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Name", Category: "Target Group Details", Visible: true, DefaultSort: true},
+		{Name: "ARN", Category: "Target Group Details", Visible: showARNs},
+		{Name: "Port", Category: "Network", Visible: true},
+		{Name: "Protocol", Category: "Network", Visible: true},
+		{Name: "Target Type", Category: "Target Group Details", Visible: true},
+		{Name: "Load Balancer", Category: "Load Balancer", Visible: true},
+		{Name: "VPC ID", Category: "Network", Visible: true},
+		{Name: "Health Check Enabled", Category: "Health Check", Visible: showHealthCheckEnabled},
+		{Name: "Health Check Path", Category: "Health Check", Visible: showHealthCheckPath},
+		{Name: "Health Check Port", Category: "Health Check", Visible: showHealthCheckPort},
 	}
 }
 
@@ -62,13 +61,10 @@ func NewLsFlags(cobraCmd *cobra.Command) {
 }
 
 // ListELBTargetGroups lists all target groups for a given ELB
-func ListTargetGroups(cobraCmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cobraCmd)
-
-	svc, err := elb.NewELBService(ctx, profile, region)
+func ListTargetGroups(cmd *cobra.Command, args []string) error {
+	svc, err := cmdutil.CreateService(cmd, elb.NewELBService)
 	if err != nil {
-		return fmt.Errorf("create new ELB service: %w", err)
+		return fmt.Errorf("create elb service: %w", err)
 	}
 
 	input := &ascTypes.ListTargetGroupsInput{}
@@ -76,34 +72,26 @@ func ListTargetGroups(cobraCmd *cobra.Command, args []string) error {
 		input.Names = []string{args[0]}
 	}
 
-	targetGroups, err := svc.GetTargetGroups(ctx, &ascTypes.GetTargetGroupsInput{
+	targetGroups, err := svc.GetTargetGroups(cmd.Context(), &ascTypes.GetTargetGroupsInput{
 		ListTargetGroupsInput: *input,
 	})
 	if err != nil {
 		return fmt.Errorf("get target groups: %w", err)
 	}
 
-	fields := targetGroupFields()
-
-	opts := tableformat.RenderOptions{
-		Title:  "Target Groups",
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: "Target Groups",
+	})
 	if list {
-		opts.Style = "list"
+		table.SetStyle("plain")
 	}
+	fields := getTargetGroupFields()
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(targetGroups),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return elb.GetTargetGroupAttributeValue(fieldID, instance)
-		},
-	}, opts)
-	if err != nil {
-		return fmt.Errorf("render table: %w", err)
-	}
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(targetGroups), fields, elb.GetFieldValue, elb.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+
+	table.Render()
 	return nil
 }

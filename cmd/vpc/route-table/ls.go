@@ -7,7 +7,7 @@ import (
 	"github.com/harleymckenzie/asc/internal/service/vpc"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/vpc/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
-	"github.com/harleymckenzie/asc/internal/shared/tableformat"
+	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
 )
@@ -15,6 +15,7 @@ import (
 var (
 	list        bool
 	reverseSort bool
+	sortId      bool
 )
 
 func init() {
@@ -22,24 +23,24 @@ func init() {
 }
 
 // routeTableListFields returns the fields for the Route Table list table.
-func routeTableListFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Route Table ID", Display: true, DefaultSort: true},
-		{ID: "Association Count", Display: true},
-		{ID: "Route Count", Display: false},
-		{ID: "Main", Display: true},
-		{ID: "VPC ID", Display: true},
-		{ID: "Owner", Display: true},
+func routeTableListFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Route Table ID", Category: "VPC", Visible: true, DefaultSort: true, SortBy: sortId, SortDirection: tablewriter.Asc},
+		{Name: "Association Count", Category: "VPC", Visible: true},
+		{Name: "Route Count", Category: "VPC", Visible: false},
+		{Name: "Main", Category: "VPC", Visible: true},
+		{Name: "VPC ID", Category: "VPC", Visible: true},
+		{Name: "Owner", Category: "VPC", Visible: true},
 	}
 }
 
 // routeTableRouteFields returns the fields for the Route Table route list table.
-func routeTableRouteFields() []tableformat.Field {
-	return []tableformat.Field{
-		{ID: "Destination", Display: true},
-		{ID: "Target", Display: true},
-		{ID: "Status", Display: true},
-		{ID: "Propagated", Display: true},
+func routeTableRouteFields() []tablewriter.Field {
+	return []tablewriter.Field{
+		{Name: "Destination", Category: "VPC", Visible: true},
+		{Name: "Target", Category: "VPC", Visible: true},
+		{Name: "Status", Category: "VPC", Visible: true},
+		{Name: "Propagated", Category: "VPC", Visible: true},
 	}
 }
 
@@ -57,56 +58,51 @@ var lsCmd = &cobra.Command{
 func NewLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Route Tables in list format.")
 	cobraCmd.Flags().BoolVarP(&reverseSort, "reverse", "r", false, "Reverse the sort order")
+	cobraCmd.Flags().BoolVarP(&sortId, "sort-id", "i", false, "Sort by descending route table ID.")
 }
 
 // ListRouteTables is the handler for the ls subcommand.
 func ListRouteTables(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create service: %w", err)
 	}
 
 	if len(args) > 0 {
 		return ListRouteTableRules(cmd, args)
 	} else {
-		rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{})
+		rts, err := svc.GetRouteTables(context.TODO(), &ascTypes.GetRouteTablesInput{})
 		if err != nil {
 			return fmt.Errorf("get route tables: %w", err)
 		}
 
-		fields := routeTableListFields()
-		opts := tableformat.RenderOptions{
-			Title:  "Route Tables",
-			Style:  "rounded",
-			SortBy: tableformat.GetSortByField(fields, reverseSort),
-		}
-
+		table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+			Title: "Route Tables",
+		})
 		if list {
-			opts.Style = "list"
+			table.SetRenderStyle("plain")
 		}
 
-		tableformat.RenderTableList(&tableformat.ListTable{
-			Instances: utils.SlicesToAny(rts),
-			Fields:    fields,
-			GetAttribute: func(fieldID string, instance any) (string, error) {
-				return vpc.GetRouteTableAttributeValue(fieldID, instance)
-			},
-		}, opts)
+		fields := routeTableListFields()
+		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(rts))
+
+		headerRow := tablewriter.BuildHeaderRow(fields)
+		table.AppendHeader(headerRow)
+		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(rts), fields, vpc.GetFieldValue, vpc.GetTagValue))
+		table.SetFieldConfigs(fields, reverseSort)
+
+		table.Render()
 		return nil
 	}
 }
 
 func ListRouteTableRules(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
-	profile, region := cmdutil.GetPersistentFlags(cmd)
-	svc, err := vpc.NewVPCService(ctx, profile, region)
+	svc, err := cmdutil.CreateService(cmd, vpc.NewVPCService)
 	if err != nil {
-		return fmt.Errorf("create new VPC service: %w", err)
+		return fmt.Errorf("create service: %w", err)
 	}
 
-	rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{
+	rts, err := svc.GetRouteTables(context.TODO(), &ascTypes.GetRouteTablesInput{
 		RouteTableIds: []string{args[0]},
 	})
 	if err != nil {
@@ -115,23 +111,21 @@ func ListRouteTableRules(cmd *cobra.Command, args []string) error {
 
 	routes := rts[0].Routes
 
-	fields := routeTableRouteFields()
-	opts := tableformat.RenderOptions{
-		Title:  fmt.Sprintf("%s - Routes", args[0]),
-		Style:  "rounded",
-		SortBy: tableformat.GetSortByField(fields, reverseSort),
-	}
-
+	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
+		Title: fmt.Sprintf("%s - Routes", args[0]),
+	})
 	if list {
-		opts.Style = "list"
+		table.SetRenderStyle("plain")
 	}
 
-	tableformat.RenderTableList(&tableformat.ListTable{
-		Instances: utils.SlicesToAny(routes),
-		Fields:    fields,
-		GetAttribute: func(fieldID string, instance any) (string, error) {
-			return vpc.GetRouteTableRouteAttributeValue(fieldID, instance)
-		},
-	}, opts)
+	fields := routeTableRouteFields()
+	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(routes))
+
+	headerRow := tablewriter.BuildHeaderRow(fields)
+	table.AppendHeader(headerRow)
+	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(routes), fields, vpc.GetFieldValue, vpc.GetTagValue))
+	table.SetFieldConfigs(fields, reverseSort)
+
+	table.Render()
 	return nil
 }
