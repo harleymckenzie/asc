@@ -79,17 +79,6 @@ var volumeLsCmd = &cobra.Command{
 	},
 }
 
-var showCmd = &cobra.Command{
-	Use:     "show",
-	Short:   "Show detailed information about an EC2 instance",
-	Aliases: []string{"describe"},
-	GroupID: "actions",
-	Args:    cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return cmdutil.DefaultErrorHandler(ShowEC2Resource(cmd, args[0]))
-	},
-}
-
 var amiShowCmd = &cobra.Command{
 	Use:     "amis",
 	Short:   "Show detailed information about an AMI",

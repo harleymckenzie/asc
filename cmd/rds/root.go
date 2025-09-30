@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"github.com/harleymckenzie/asc/cmd/rds/cluster"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/spf13/cobra"
 )
@@ -17,9 +18,14 @@ func NewRDSRootCmd() *cobra.Command {
 
 	// Add action commands
 	cmd.AddCommand(lsCmd)
+	cmd.AddCommand(showCmd)
+
+	// Subcommands
+	cmd.AddCommand(cluster.NewClusterRootCmd())
 
 	// Add command groups for better organization
 	cmd.AddGroup(cmdutil.ActionGroups()...)
+	cmd.AddGroup(cmdutil.SubcommandGroups()...)
 
 	return cmd
 }

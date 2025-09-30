@@ -3,9 +3,9 @@ package rds
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/rds/types"
 
 	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 )
@@ -33,8 +33,10 @@ func NewRDSService(ctx context.Context, profile string, region string) (*RDSServ
 }
 
 // GetInstances gets all the RDS instances.
-func (svc *RDSService) GetInstances(ctx context.Context) ([]types.DBInstance, error) {
-	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{})
+func (svc *RDSService) GetInstances(ctx context.Context, input *ascTypes.GetInstancesInput) ([]types.DBInstance, error) {
+	output, err := svc.Client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{
+		DBInstanceIdentifier: &input.InstanceIdentifier,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +47,10 @@ func (svc *RDSService) GetInstances(ctx context.Context) ([]types.DBInstance, er
 }
 
 // GetClusters gets all the RDS clusters.
-func (svc *RDSService) GetClusters(ctx context.Context) ([]types.DBCluster, error) {
-	clusterOutput, err := svc.Client.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{})
+func (svc *RDSService) GetClusters(ctx context.Context, input *ascTypes.GetClustersInput) ([]types.DBCluster, error) {
+	clusterOutput, err := svc.Client.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{
+		DBClusterIdentifier: &input.ClusterIdentifier,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -54,34 +58,4 @@ func (svc *RDSService) GetClusters(ctx context.Context) ([]types.DBCluster, erro
 	var clusters []types.DBCluster
 	clusters = append(clusters, clusterOutput.DBClusters...)
 	return clusters, nil
-}
-
-// getDBInstanceRole gets the role of the RDS instance.
-func getDBInstanceRole(instance types.DBInstance, clusters []types.DBCluster) string {
-	// If ReadReplicaSourceDBInstanceIdentifier is set, then this is a replica. If
-	// if ReadReplicaDBInstanceIdentifiers is set, then this is a primary.
-	if instance.ReadReplicaSourceDBInstanceIdentifier != nil {
-		return "Replica"
-	}
-
-	if len(instance.ReadReplicaDBInstanceIdentifiers) > 0 {
-		return "Primary"
-	}
-
-	if instance.DBClusterIdentifier == nil {
-		return "None"
-	}
-
-	for _, cluster := range clusters {
-		for _, member := range cluster.DBClusterMembers {
-			if aws.ToString(member.DBInstanceIdentifier) == aws.ToString(instance.DBInstanceIdentifier) {
-				if member.IsClusterWriter != nil && *member.IsClusterWriter {
-					return "Writer"
-				}
-				return "Reader"
-			}
-		}
-	}
-
-	return "Unknown"
 }

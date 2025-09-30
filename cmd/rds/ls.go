@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/rds"
+	ascTypes "github.com/harleymckenzie/asc/internal/service/rds/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
@@ -42,7 +43,7 @@ func getListFields() []tablewriter.Field {
 		{Name: "Role", Category: "RDS", Visible: true, SortBy: sortRole, SortDirection: tablewriter.Asc},
 		{Name: "Engine", Category: "RDS", Visible: true, SortBy: sortEngine, SortDirection: tablewriter.Asc},
 		{Name: "Engine Version", Category: "RDS", Visible: showEngineVersion},
-		{Name: "Size", Category: "RDS", Visible: true},
+		{Name: "Class", Category: "RDS", Visible: true},
 		{Name: "Endpoint", Category: "RDS", Visible: showEndpoint},
 	}
 }
@@ -68,7 +69,7 @@ func addLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Sorting
 	cobraCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending RDS instance identifier.")
 	cobraCmd.Flags().BoolVarP(&sortCluster, "sort-cluster", "c", false, "Sort by descending RDS cluster identifier.")
-	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending RDS instance type.")
+	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending RDS instance class.")
 	cobraCmd.Flags().BoolVarP(&sortEngine, "sort-engine", "E", false, "Sort by descending database engine type.")
 	cobraCmd.Flags().BoolVarP(&sortStatus, "sort-status", "s", false, "Sort by descending RDS instance status.")
 	cobraCmd.Flags().BoolVarP(&sortRole, "sort-role", "R", false, "Sort by descending RDS instance role.")
@@ -87,12 +88,12 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new RDS service: %w", err)
 	}
 
-	instances, err := svc.GetInstances(cmd.Context())
+	instances, err := svc.GetInstances(cmd.Context(), &ascTypes.GetInstancesInput{})
 	if err != nil {
 		return fmt.Errorf("list RDS instances: %w", err)
 	}
 
-	clusters, err := svc.GetClusters(cmd.Context())
+	clusters, err := svc.GetClusters(cmd.Context(), &ascTypes.GetClustersInput{})
 	if err != nil {
 		return fmt.Errorf("list RDS clusters: %w", err)
 	}

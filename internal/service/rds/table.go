@@ -2,6 +2,8 @@ package rds
 
 import (
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -28,6 +30,41 @@ func GetAttributeValue(fieldID string, instance any, clusters []types.DBCluster)
 
 func availableAttributes() map[string]Attribute {
 	return map[string]Attribute{
+		"Auto Minor Version Upgrade": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return strconv.FormatBool(*i.AutoMinorVersionUpgrade)
+			},
+		},
+		"Availability Zone": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.AvailabilityZone)
+			},
+		},
+		"ARN": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.DBInstanceArn)
+			},
+		},
+		"AWS KMS Key": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.KmsKeyId)
+			},
+		},
+		"Certificate Authority": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.CertificateDetails.CAIdentifier)
+			},
+		},
+		"Certificate Expiry Date": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return i.CertificateDetails.ValidTill.Format(time.DateTime)
+			},
+		},
+		"Class": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return string(*i.DBInstanceClass)
+			},
+		},
 		"Cluster Identifier": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				if i.DBClusterIdentifier != nil {
@@ -36,14 +73,24 @@ func availableAttributes() map[string]Attribute {
 				return "-"
 			},
 		},
-		"Identifier": {
+		"Created Time": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-				return aws.ToString(i.DBInstanceIdentifier)
+				return i.InstanceCreateTime.Format(time.DateTime)
 			},
 		},
-		"Status": {
+		"DB Name": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-				return format.Status(aws.ToString(i.DBInstanceStatus))
+				return aws.ToString(i.DBName)
+			},
+		},
+		"Encryption": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return strconv.FormatBool(*i.StorageEncrypted)
+			},
+		},
+		"Endpoint": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.Endpoint.Address)
 			},
 		},
 		"Engine": {
@@ -56,34 +103,110 @@ func availableAttributes() map[string]Attribute {
 				return string(*i.EngineVersion)
 			},
 		},
-		"Size": {
+		"Failover Priority": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-				return string(*i.DBInstanceClass)
+				return strconv.Itoa(int(*i.PromotionTier))
+			},
+		},
+		"Identifier": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.DBInstanceIdentifier)
+			},
+		},
+		"Maintenance Window": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.PreferredMaintenanceWindow)
+			},
+		},
+		"Monitoring Interval": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return strconv.Itoa(int(*i.MonitoringInterval))
+			},
+		},
+		"Monitoring Role": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.MonitoringRoleArn)
+			},
+		},
+		"Network Type": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return string(*i.DBSubnetGroup.VpcId)
+			},
+		},
+		"Option Group": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.OptionGroupMemberships[0].OptionGroupName)
+			},
+		},
+		"Parameter Group": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.DBParameterGroups[0].DBParameterGroupName)
+			},
+		},
+		"Pending Modifications": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return fmt.Sprintf("%v", i.PendingModifiedValues)
+			},
+		},
+		"Performance Insights": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return strconv.FormatBool(*i.PerformanceInsightsEnabled)
+			},
+		},
+		"Port": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return strconv.Itoa(int(*i.Endpoint.Port))
+			},
+		},
+		"Publicly Accessible": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return strconv.FormatBool(*i.PubliclyAccessible)
+			},
+		},
+		"RDS Extended Support": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.EngineLifecycleSupport)
+			},
+		},
+		"Resource ID": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.DbiResourceId)
 			},
 		},
 		"Role": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-				return getDBInstanceRole(*i, clusters)
+				return calculateDBInstanceRole(*i, clusters)
 			},
 		},
-		"Endpoint": {
+		"Security Group(s)": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
-				return aws.ToString(i.Endpoint.Address)
+				return aws.ToString(i.DBSecurityGroups[0].DBSecurityGroupName)
+			},
+		},
+		"Status": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return format.Status(aws.ToString(i.DBInstanceStatus))
+			},
+		},
+		"Storage Type": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.StorageType)
+			},
+		},
+		"Subnet Group": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.DBSubnetGroup.DBSubnetGroupName)
+			},
+		},
+		"Subnets": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.DBSubnetGroup.Subnets[0].SubnetIdentifier)
+			},
+		},
+		"VPC ID": {
+			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
+				return aws.ToString(i.DBSubnetGroup.VpcId)
 			},
 		},
 	}
-}
-
-// GetTagValue is a function that returns the value of a tag for a DB instance.
-func GetTagValue(tagKey string, instance any) (string, error) {
-	inst, ok := instance.(types.DBInstance)
-	if !ok {
-		return "", fmt.Errorf("instance is not a types.DBInstance")
-	}
-	for _, tag := range inst.TagList {
-		if aws.ToString(tag.Key) == tagKey {
-			return aws.ToString(tag.Value), nil
-		}
-	}
-	return "", nil
 }

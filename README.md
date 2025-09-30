@@ -94,7 +94,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | RDS            | ls                        | ✓      | List RDS instances                                                          |
 | RDS            | modify                    | ✗      | Modify RDS instances                                                        |
 | RDS            | rm                        | ✗      | Terminate RDS instances                                                     |
-| RDS            | show / describe           | ✗      | Show RDS instance details                                                   |
+| RDS            | show / describe           | ✓      | Show RDS instance details                                                   |
 | Route53        | ls                        | ✗      | List Route53 hosted zones and records                                       |
 | Route53        | modify                    | ✗      | Modify Route53 hosted zones and records                                     |
 | Route53        | rm                        | ✗      | Terminate Route53 hosted zones and records                                  |
