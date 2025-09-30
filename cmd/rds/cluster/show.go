@@ -31,11 +31,11 @@ func getShowFields() []tablewriter.Field {
 		{Name: "Custom Endpoints", Category: "Connectivity & Security", Visible: true},
 		{Name: "Port", Category: "Connectivity & Security", Visible: true},
 		{Name: "Availability Zones", Category: "Connectivity & Security", Visible: true},
-		{Name: "DB Subnet Group", Category: "Connectivity & Security", Visible: true},
-		{Name: "VPC Security Groups", Category: "Connectivity & Security", Visible: true},
+		{Name: "Subnet Group", Category: "Connectivity & Security", Visible: true},
+		{Name: "Security Groups", Category: "Connectivity & Security", Visible: true},
 		{Name: "Publicly Accessible", Category: "Connectivity & Security", Visible: true},
-		{Name: "Certificate Authority", Category: "Connectivity & Security", Visible: true},
-		{Name: "Certificate Expiry Date", Category: "Connectivity & Security", Visible: true},
+		{Name: "Certificate Authority", Category: "Connectivity & Security", Visible: false},
+		{Name: "Certificate Expiry Date", Category: "Connectivity & Security", Visible: false},
 
 		// Configuration
 		{Name: "Cluster Identifier", Category: "Configuration", Visible: true},
@@ -43,7 +43,7 @@ func getShowFields() []tablewriter.Field {
 		{Name: "Resource ID", Category: "Configuration", Visible: true},
 		{Name: "DB Cluster ARN", Category: "Configuration", Visible: true},
 		{Name: "Network Type", Category: "Configuration", Visible: true},
-		{Name: "DB Cluster Instance Class", Category: "Configuration", Visible: true},
+		{Name: "DB Cluster Instance Class", Category: "Configuration", Visible: false},
 		{Name: "Parameter Group", Category: "Configuration", Visible: true},
 		{Name: "Deletion Protection", Category: "Configuration", Visible: true},
 

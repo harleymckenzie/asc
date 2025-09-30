@@ -32,6 +32,7 @@ var dbInstanceFieldValueGetters = map[string]FieldValueGetter{
 	"Failover Priority":          getDBInstanceFailoverPriority,
 	"Identifier":                 getDBInstanceID,
 	"Maintenance Window":         getDBInstanceMaintenanceWindow,
+	"Maximum Storage Threshold":  getDBInstanceMaximumStorageThreshold,
 	"Monitoring Interval":        getDBInstanceMonitoringInterval,
 	"Monitoring Role":            getDBInstanceMonitoringRole,
 	"Network Type":               getDBInstanceNetworkType,
@@ -41,12 +42,16 @@ var dbInstanceFieldValueGetters = map[string]FieldValueGetter{
 	"Performance Insights":       getDBInstancePerformanceInsights,
 	"Port":                       getDBInstancePort,
 	"Publicly Accessible":        getDBInstancePubliclyAccessible,
+	"Provisioned IOPS":           getDBInstanceProvisionedIOPS,
 	"RDS Extended Support":       getDBInstanceRDSExtendedSupport,
 	"Resource ID":                getDBInstanceResourceID,
 	"Role":                       getDBInstanceRoleField,
-	"Security Group(s)":          getDBInstanceSecurityGroups,
+	"Security Groups":            getDBInstanceSecurityGroups,
 	"Size":                       getDBInstanceSize,
 	"Status":                     getDBInstanceStatus,
+	"Storage":                    getDBInstanceStorage,
+	"Storage Autoscaling":        getDBInstanceStorageAutoscaling,
+	"Storage Throughput":         getDBInstanceStorageThroughput,
 	"Storage Type":               getDBInstanceStorageType,
 	"Subnet Group":               getDBInstanceSubnetGroup,
 	"Subnets":                    getDBInstanceSubnets,
@@ -133,15 +138,6 @@ func getDBInstanceEngineVersion(instance any) (string, error) {
 		return "", nil
 	}
 	return string(*dbInstance.EngineVersion), nil
-}
-
-// getDBInstanceSize returns the instance class/size of the database
-func getDBInstanceSize(instance any) (string, error) {
-	dbInstance := instance.(types.DBInstance)
-	if dbInstance.DBInstanceClass == nil {
-		return "", nil
-	}
-	return string(*dbInstance.DBInstanceClass), nil
 }
 
 // getDBInstanceRoleField returns the role of the instance within a cluster (Primary, Replica, etc.)
@@ -247,6 +243,15 @@ func getDBInstanceFailoverPriority(instance any) (string, error) {
 func getDBInstanceMaintenanceWindow(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
 	return aws.ToString(dbInstance.PreferredMaintenanceWindow), nil
+}
+
+// getDBInstanceMaximumStorageThreshold returns the maximum storage threshold
+func getDBInstanceMaximumStorageThreshold(instance any) (string, error) {
+	dbInstance := instance.(types.DBInstance)
+	if dbInstance.MaxAllocatedStorage == nil {
+		return "-", nil
+	}
+	return strconv.Itoa(int(*dbInstance.MaxAllocatedStorage)) + " GB", nil
 }
 
 // getDBInstanceMonitoringInterval returns the monitoring interval in seconds
@@ -440,6 +445,15 @@ func getDBInstancePubliclyAccessible(instance any) (string, error) {
 	return "Disabled", nil
 }
 
+// getDBInstanceProvisionedIOPS returns the provisioned IOPS of the database instance
+func getDBInstanceProvisionedIOPS(instance any) (string, error) {
+	dbInstance := instance.(types.DBInstance)
+	if dbInstance.Iops == nil {
+		return "-", nil
+	}
+	return strconv.Itoa(int(*dbInstance.Iops)) + " IOPS", nil
+}
+
 // getDBInstanceRDSExtendedSupport returns the RDS Extended Support status
 func getDBInstanceRDSExtendedSupport(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
@@ -474,6 +488,49 @@ func getDBInstanceSecurityGroups(instance any) (string, error) {
 
 	// Join with commas for cleaner display
 	return strings.Join(securityGroups, ", "), nil
+}
+
+// getDBInstanceSize returns the instance class/size of the database
+func getDBInstanceSize(instance any) (string, error) {
+	dbInstance := instance.(types.DBInstance)
+	if dbInstance.DBInstanceClass == nil {
+		return "", nil
+	}
+	return string(*dbInstance.DBInstanceClass), nil
+}
+
+// getDBInstanceStorage returns the storage size of the database instance
+func getDBInstanceStorage(instance any) (string, error) {
+	dbInstance := instance.(types.DBInstance)
+	if dbInstance.AllocatedStorage == nil {
+		return "-", nil
+	}
+	return strconv.Itoa(int(*dbInstance.AllocatedStorage)) + " GB", nil
+}
+
+// getDBInstanceStorageAutoscaling returns the storage autoscaling status
+func getDBInstanceStorageAutoscaling(instance any) (string, error) {
+	// Enabled if MaxAllocatedStorage is greater than AllocatedStorage
+	dbInstance := instance.(types.DBInstance)
+	if dbInstance.MaxAllocatedStorage == nil || dbInstance.AllocatedStorage == nil {
+		return "Disabled", nil
+	}
+	if *dbInstance.MaxAllocatedStorage > *dbInstance.AllocatedStorage {
+		return "Enabled", nil
+	}
+	return "Disabled", nil
+}
+
+// getDBInstanceStorageThroughput returns the storage throughput of the database instance
+func getDBInstanceStorageThroughput(instance any) (string, error) {
+	dbInstance := instance.(types.DBInstance)
+	if dbInstance.StorageThroughput == nil {
+		return "-", nil
+	}
+	if *dbInstance.StorageThroughput == 0 {
+		return "-", nil
+	}
+	return strconv.Itoa(int(*dbInstance.StorageThroughput)) + " MiB/s", nil
 }
 
 // getDBInstanceStorageType returns the storage type of the database instance

@@ -178,7 +178,7 @@ func availableAttributes() map[string]Attribute {
 				return calculateDBInstanceRole(*i, clusters)
 			},
 		},
-		"Security Group(s)": {
+		"Security Groups": {
 			GetValue: func(i *types.DBInstance, clusters []types.DBCluster) string {
 				return aws.ToString(i.DBSecurityGroups[0].DBSecurityGroupName)
 			},

@@ -36,7 +36,6 @@ var dbClusterFieldValueGetters = map[string]FieldValueGetter{
 	"DB Cluster ARN":                 getDBClusterARN,
 	"DB Cluster Instance Class":      getDBClusterInstanceClass,
 	"DB Name":                        getDBClusterDBName,
-	"DB Subnet Group":                getDBClusterSubnetGroup,
 	"Database Name":                  getDBClusterDatabaseName,
 	"Deletion Protection":            getDBClusterDeletionProtection,
 	"Domain Memberships":             getDBClusterDomainMemberships,
@@ -79,13 +78,14 @@ var dbClusterFieldValueGetters = map[string]FieldValueGetter{
 	"Replication Source Identifier":  getDBClusterReplicationSourceIdentifier,
 	"Resource ID":                    getDBClusterResourceID,
 	"Scaling Configuration":          getDBClusterScalingConfiguration,
+	"Security Groups":                getDBClusterVPCSecurityGroups,
 	"Serverless V2 Platform Version": getDBClusterServerlessV2PlatformVersion,
 	"Serverless V2 Scaling Config":   getDBClusterServerlessV2ScalingConfig,
 	"Status":                         getDBClusterStatus,
 	"Storage Encrypted":              getDBClusterStorageEncrypted,
 	"Storage Throughput":             getDBClusterStorageThroughput,
 	"Storage Type":                   getDBClusterStorageType,
-	"VPC Security Groups":            getDBClusterVPCSecurityGroups,
+	"Subnet Group":                   getDBClusterSubnetGroup,
 }
 
 // SetClustersContext sets the clusters context for role calculation
@@ -286,6 +286,9 @@ func getDBClusterARN(instance any) (string, error) {
 
 // getDBClusterInstanceClass returns the cluster instance class
 func getDBClusterInstanceClass(instance any) (string, error) {
+	if instance.(types.DBCluster).DBClusterInstanceClass == nil {
+		return "-", nil
+	}
 	return aws.ToString(instance.(types.DBCluster).DBClusterInstanceClass), nil
 }
 
