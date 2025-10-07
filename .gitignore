@@ -29,3 +29,5 @@ dist/
 # IDE files
 .idea/
 .vscode/
+
+todo.md
