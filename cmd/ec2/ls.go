@@ -25,7 +25,7 @@ var (
 	sortByType       bool
 	sortByLaunchTime bool
 	sortByPrivateIP  bool
-	sortByAMI        bool
+
 	reverseSort bool
 )
 
