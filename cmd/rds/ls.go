@@ -15,9 +15,10 @@ import (
 
 // Variables
 var (
-	list              bool
-	showEndpoint      bool
-	showEngineVersion bool
+	list                 bool
+	showEndpoint         bool
+	showEngineVersion    bool
+	showModificationInfo bool
 
 	sortName    bool
 	sortCluster bool
@@ -45,6 +46,8 @@ func getListFields() []tablewriter.Field {
 		{Name: "Engine Version", Category: "RDS", Visible: showEngineVersion},
 		{Name: "Class", Category: "RDS", Visible: true},
 		{Name: "Endpoint", Category: "RDS", Visible: showEndpoint},
+		{Name: "Pending Modifications", Category: "RDS", Visible: showModificationInfo},
+		{Name: "Maintenance Window", Category: "RDS", Visible: showModificationInfo},
 	}
 }
 
@@ -64,6 +67,7 @@ func addLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs RDS clusters and instances in list format.")
 	cobraCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
 	cobraCmd.Flags().BoolVarP(&showEngineVersion, "engine-version", "v", false, "Show the engine version of the cluster")
+	cobraCmd.Flags().BoolVarP(&showModificationInfo, "modification-info", "m", false, "Show the modification info of the instance")
 	cmdutil.AddTagFlag(cobraCmd)
 
 	// Add flags - Sorting

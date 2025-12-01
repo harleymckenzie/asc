@@ -14,6 +14,7 @@ import (
 type RDSClientAPI interface {
 	DescribeDBInstances(context.Context, *rds.DescribeDBInstancesInput, ...func(*rds.Options)) (*rds.DescribeDBInstancesOutput, error)
 	DescribeDBClusters(context.Context, *rds.DescribeDBClustersInput, ...func(*rds.Options)) (*rds.DescribeDBClustersOutput, error)
+	ModifyDBInstance(context.Context, *rds.ModifyDBInstanceInput, ...func(*rds.Options)) (*rds.ModifyDBInstanceOutput, error)
 }
 
 // RDSService is the service for the RDS client.
@@ -58,4 +59,15 @@ func (svc *RDSService) GetClusters(ctx context.Context, input *ascTypes.GetClust
 	var clusters []types.DBCluster
 	clusters = append(clusters, clusterOutput.DBClusters...)
 	return clusters, nil
+}
+
+// ModifyInstance modifies an RDS instance.
+func (svc *RDSService) ModifyInstance(ctx context.Context, input *ascTypes.ModifyInstanceInput) error {
+	_, err := svc.Client.ModifyDBInstance(ctx, &rds.ModifyDBInstanceInput{
+		DBInstanceIdentifier: input.DBInstanceIdentifier,
+		ApplyImmediately: input.ApplyImmediately,
+		DBInstanceClass: input.DBInstanceClass,
+		PreferredMaintenanceWindow: input.PreferredMaintenanceWindow,
+	})
+	return err
 }

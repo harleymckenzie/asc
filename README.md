@@ -33,127 +33,128 @@ brew install asc
 Below is a table of service features and commands that I plan to implement, and their current status.
 
 _**\*** Partly implemented. Missing some features that I hope to add in the future_
-| Service        | Command / Subcommand      | Status | Notes / Features                                                            |
-|:---------------|:--------------------------|:------:|:----------------------------------------------------------------------------|
-| ASG            | ls                        | ✓      | List ASGs                                                                   |
-| ASG            | modify                    | ✓*     | Modify ASGs, supports relative and absolute values for min, max and desired capacity<br><sub>_\* Currently supports min, max and desired capacity only_</sub>   |
-| ASG            | detach                    | ✗      | The specified instance will be removed from the ASG, but will not be terminated. |
-| ASG            | schedule add              | ✓      | Add schedule to ASG, supports human friendly time input                     |
-| ASG            | schedule ls               | ✓      | List ASG schedules                                                          |
-| ASG            | schedule rm               | ✓      | Remove schedule from ASG                                                    |
-| ASG            | show / describe           | ✗      | Show ASG details                                                            |
-| CloudFormation | events                    | ✗      | List CloudFormation stack events                                            |
-| CloudFormation | ls                        | ✓      | List CloudFormation stacks                                                  |
-| CloudFormation | rm                        | ✗      | Delete CloudFormation stacks                                                |
-| CloudFormation | show / describe           | ✗      | Show CloudFormation stack details                                           |
-| CloudFormation | parameter ls              | ✗      | List CloudFormation stack parameters                                        |
-| CloudFormation | parameter edit            | ✗      | Edit CloudFormation stack parameters                                        |
-| EC2            | ls                        | ✓      | List EC2 instances                                                          |
-| EC2            | modify                    | ✗      | Modify EC2 instances                                                        |
-| EC2            | show / describe           | ✗      | Show EC2 instance details                                                   |
-| EC2            | start                     | ✓      | Start EC2 instances                                                         |
-| EC2            | stop                      | ✓      | Stop EC2 instances                                                          |
-| EC2            | restart                   | ✓      | Restart EC2 instances                                                       |
-| EC2            | rm / terminate            | ✓      | Terminate EC2 instances                                                     |
-| EC2            | ami cp                    | ✗      | Copy EC2 AMI                                                                |
-| EC2            | ami ls                    | ✓      | List EC2 AMIs                                                               |
-| EC2            | ami rm                    | ✗      | Remove EC2 AMI                                                              |
-| EC2            | ami show                  | ✓      | Show EC2 AMI details                                                        |
-| EC2            | ami rm                    | ✗      | Remove EC2 AMI                                                              |
-| EC2            | security-group add        | ✗      | Add EC2 security group rule                                                 |
-| EC2            | security-group ls         | ✓      | List EC2 security groups                                                    |
-| EC2            | security-group rm         | ✗      | Remove EC2 security group                                                   |
-| EC2            | security-group show       | ✓      | Show EC2 security group details                                             |
-| EC2            | security-group rule add   | ✗      | Add EC2 security group rule                                                 |
-| EC2            | security-group rule rm    | ✗      | Remove EC2 security group rule                                              |
-| EC2            | volume create             | ✗      | Create EC2 volume                                                           |
-| EC2            | volume ls                 | ✗      | List EC2 volumes                                                            |
-| EC2            | volume show               | ✗      | Show EC2 volume details                                                     |
-| EC2            | volume rm                 | ✗      | Remove EC2 volume                                                           |
-| EC2            | snapshot ls               | ✗      | List EC2 snapshots                                                          |
-| EC2            | snapshot show             | ✗      | Show EC2 snapshot details                                                   |
-| EC2            | snapshot rm               | ✗      | Remove EC2 snapshot                                                         |
-| ECS            | ls                        | ✗      | List ECS clusters, services, tasks                                          |
-| ECS            | modify                    | ✗      | Modify ECS clusters and services                                            |
-| ECS            | rm / terminate            | ✗      | Terminate ECS tasks                                                         |
-| ECS            | schedule add              | ✗      | Add schedule to ECS services                                                |
-| ECS            | schedule ls               | ✗      | List ECS schedules                                                          |
-| ECS            | schedule rm               | ✗      | Remove schedule from ECS services                                           |
-| ElastiCache    | ls                        | ✓      | List ElastiCache clusters                                                   |
-| ElastiCache    | modify                    | ✗      | Modify ElastiCache clusters                                                 |
-| ElastiCache    | rm / terminate            | ✗      | Terminate ElastiCache clusters                                              |
-| ElastiCache    | show / describe           | ✗      | Show ElastiCache instance details                                           |
-| ELB            | ls                        | ✓      | List Elastic Load Balancers                                                 |
-| ELB            | modify                    | ✗      | Modify Elastic Load Balancers                                               |
-| ELB            | rm                        | ✗      | Terminate Elastic Load Balancers                                            |
-| ELB            | show / describe           | ✗      | Show Elastic Load Balancer details                                          |
-| ELB            | target-group ls           | ✓      | List Elastic Load Balancer target groups                                    |
-| ELB            | target-group add          | ✗      | Add target to Elastic Load Balancer target group                            |
-| ELB            | target-group rm           | ✗      | Remove target from Elastic Load Balancer target group                       |
-| ELB            | target-group show         | ✗      | Show Elastic Load Balancer target group details                             |
-| RDS            | ls                        | ✓      | List RDS instances                                                          |
-| RDS            | modify                    | ✗      | Modify RDS instances                                                        |
-| RDS            | rm                        | ✗      | Terminate RDS instances                                                     |
-| RDS            | show / describe           | ✓      | Show RDS instance details                                                   |
-| Route53        | ls                        | ✗      | List Route53 hosted zones and records                                       |
-| Route53        | modify                    | ✗      | Modify Route53 hosted zones and records                                     |
-| Route53        | rm                        | ✗      | Terminate Route53 hosted zones and records                                  |
-| Route53        | show / describe           | ✗      | Show Route53 hosted zone and record details                                 |
-| S3             | cp                        | ✗      | Copy S3 objects                                                             |
-| S3             | ls                        | ✗      | List S3 buckets and objects                                                 |
-| S3             | mv                        | ✗      | Move S3 objects                                                             |
-| S3             | rm                        | ✗      | Delete S3 buckets                                                           |
-| S3             | show / describe           | ✗      | Show S3 bucket or object details                                            |
-| SSM            | document ls               | ✗      | List SSM documents                                                          |
-| SSM            | document run              | ✗      | Run SSM documents                                                           |
-| SSM            | document rm               | ✗      | Delete SSM documents                                                        |
-| SSM            | document show             | ✗      | Show SSM document details                                                   |
-| SSM            | parameter add             | ✗      | Add SSM parameters                                                          |
-| SSM            | parameter cp              | ✗      | Copy SSM parameters, supports wildcards and cross account copying           |
-| SSM            | parameter diff            | ✗      | Diff SSM parameters, supports wildcards and cross account diffing           |
-| SSM            | parameter edit            | ✗      | Edit SSM parameters                                                         |
-| SSM            | parameter ls              | ✗      | List SSM parameters, supports wildcards                                     |
-| SSM            | parameter mv              | ✗      | Move SSM parameters, supports wildcards and cross account moving            |
-| SSM            | parameter rm              | ✗      | Delete SSM parameters, supports wildcards                                   |
-| SSM            | parameter show            | ✗      | Show SSM parameter details                                                  |
-| SSM            | session ls                | ✗      | List SSM sessions                                                           |
-| SSM            | session start             | ✗      | Start SSM sessions                                                          |
-| SSM            | session stop              | ✗      | Stop SSM sessions                                                           |
-| SSM            | session rm                | ✗      | Delete SSM sessions                                                         |
-| SSM            | session show              | ✗      | Show SSM session details                                                    |
-| VPC            | ls                        | ✓      | List VPCs                                                                   |
-| VPC            | modify                    | ✗      | Modify VPCs                                                                 |
-| VPC            | rm                        | ✗      | Terminate VPCs                                                              |
-| VPC            | show / describe           | ✓      | Show VPC details                                                            |
-| VPC            | igw ls                    | ✓      | List VPC internet gateways                                                  |
-| VPC            | igw add                   | ✗      | Add VPC internet gateway                                                    |
-| VPC            | igw rm                    | ✗      | Remove VPC internet gateway                                                 |
-| VPC            | igw show                  | ✓      | Show VPC internet gateway details                                           |
-| VPC            | nacl ls                   | ✓      | List VPC network access control lists                                       |
-| VPC            | nacl add                  | ✗      | Add VPC network access control list                                         |
-| VPC            | nacl rm                   | ✗      | Remove VPC network access control list                                      |
-| VPC            | nacl show                 | ✓      | Show VPC network access control list details                                |
-| VPC            | nat-gateway ls            | ✓      | List VPC NAT gateways                                                       |
-| VPC            | nat-gateway add           | ✗      | Add VPC NAT gateway                                                         |
-| VPC            | nat-gateway rm            | ✗      | Remove VPC NAT gateway                                                      |
-| VPC            | nat-gateway show          | ✓      | Show VPC NAT gateway details                                                |
-| VPC            | prefix-list ls            | ✓      | List VPC prefix lists                                                       |
-| VPC            | prefix-list add           | ✗      | Add VPC prefix list                                                         |
-| VPC            | prefix-list rm            | ✗      | Remove VPC prefix list                                                      |
-| VPC            | prefix-list show          | ✓      | Show VPC prefix list details                                                |
-| VPC            | route-table ls            | ✓      | List VPC route tables                                                       |
-| VPC            | route-table add           | ✗      | Add VPC route table                                                         |
-| VPC            | route-table rm            | ✗      | Remove VPC route table                                                      |
-| VPC            | subnet ls                 | ✓      | List VPC subnets                                                            |
-| VPC            | subnet add                | ✗      | Add VPC subnet                                                              |
-| VPC            | subnet rm                 | ✗      | Remove VPC subnet                                                           |
-| VPC            | subnet show               | ✓      | Show VPC subnet details                                                     |
-| VPC            | route-table ls            | ✓      | List VPC route tables                                                       |
-| VPC            | route-table add           | ✗      | Add VPC route table                                                         |
-| VPC            | route-table rm            | ✗      | Remove VPC route table                                                      |
-| VPC            | route-table show          | ✓      | Show VPC route table details                                                |
-| VPC            | route-table rule add      | ✗      | Add VPC route table rule                                                    |
-| VPC            | route-table rule rm       | ✗      | Remove VPC route table rule                                                 |
+| Service        | Command / Subcommand         | Status | Notes / Features                                                            |
+|:---------------|:-----------------------------|:------:|:----------------------------------------------------------------------------|
+| ASG            | ls                           | ✓      | List ASGs                                                                   |
+| ASG            | modify                       | ✓*     | Modify ASGs, supports relative and absolute values for min, max and desired capacity<br><sub>_\* Currently supports min, max and desired capacity only_</sub>   |
+| ASG            | detach                       | ✗      | The specified instance will be removed from the ASG, but will not be terminated. |
+| ASG            | schedule add                 | ✓      | Add schedule to ASG, supports human friendly time input                     |
+| ASG            | schedule ls                  | ✓      | List ASG schedules                                                          |
+| ASG            | schedule rm                  | ✓      | Remove schedule from ASG                                                    |
+| ASG            | show / describe              | ✗      | Show ASG details                                                            |
+| CloudFormation | events                       | ✗      | List CloudFormation stack events                                            |
+| CloudFormation | ls                           | ✓      | List CloudFormation stacks                                                  |
+| CloudFormation | rm                           | ✗      | Delete CloudFormation stacks                                                |
+| CloudFormation | show / describe              | ✗      | Show CloudFormation stack details                                           |
+| CloudFormation | parameter ls                 | ✗      | List CloudFormation stack parameters                                        |
+| CloudFormation | parameter edit               | ✗      | Edit CloudFormation stack parameters                                        |
+| EC2            | ls                           | ✓      | List EC2 instances                                                          |
+| EC2            | modify                       | ✗      | Modify EC2 instances                                                        |
+| EC2            | show / describe              | ✗      | Show EC2 instance details                                                   |
+| EC2            | start                        | ✓      | Start EC2 instances                                                         |
+| EC2            | stop                         | ✓      | Stop EC2 instances                                                          |
+| EC2            | restart                      | ✓      | Restart EC2 instances                                                       |
+| EC2            | rm / terminate               | ✓      | Terminate EC2 instances                                                     |
+| EC2            | ami cp                       | ✗      | Copy EC2 AMI                                                                |
+| EC2            | ami ls                       | ✓      | List EC2 AMIs                                                               |
+| EC2            | ami rm                       | ✗      | Remove EC2 AMI                                                              |
+| EC2            | ami show                     | ✓      | Show EC2 AMI details                                                        |
+| EC2            | ami rm                       | ✗      | Remove EC2 AMI                                                              |
+| EC2            | security-group add           | ✗      | Add EC2 security group rule                                                 |
+| EC2            | security-group ls            | ✓      | List EC2 security groups                                                    |
+| EC2            | security-group rm            | ✗      | Remove EC2 security group                                                   |
+| EC2            | security-group show          | ✓      | Show EC2 security group details                                             |
+| EC2            | security-group rule add      | ✗      | Add EC2 security group rule                                                 |
+| EC2            | security-group rule rm       | ✗      | Remove EC2 security group rule                                              |
+| EC2            | volume create                | ✗      | Create EC2 volume                                                           |
+| EC2            | volume ls                    | ✗      | List EC2 volumes                                                            |
+| EC2            | volume show                  | ✗      | Show EC2 volume details                                                     |
+| EC2            | volume rm                    | ✗      | Remove EC2 volume                                                           |
+| EC2            | snapshot ls                  | ✗      | List EC2 snapshots                                                          |
+| EC2            | snapshot show                | ✗      | Show EC2 snapshot details                                                   |
+| EC2            | snapshot rm                  | ✗      | Remove EC2 snapshot                                                         |
+| ECS            | ls                           | ✗      | List ECS clusters, services, tasks                                          |
+| ECS            | modify                       | ✗      | Modify ECS clusters and services                                            |
+| ECS            | rm / terminate               | ✗      | Terminate ECS tasks                                                         |
+| ECS            | schedule add                 | ✗      | Add schedule to ECS services                                                |
+| ECS            | schedule ls                  | ✗      | List ECS schedules                                                          |
+| ECS            | schedule rm                  | ✗      | Remove schedule from ECS services                                           |
+| ElastiCache    | ls                           | ✓      | List ElastiCache clusters                                                   |
+| ElastiCache    | modify                       | ✗      | Modify ElastiCache clusters                                                 |
+| ElastiCache    | rm / terminate               | ✗      | Terminate ElastiCache clusters                                              |
+| ElastiCache    | show / describe              | ✗      | Show ElastiCache instance details                                           |
+| ELB            | ls                           | ✓      | List Elastic Load Balancers                                                 |
+| ELB            | modify                       | ✗      | Modify Elastic Load Balancers                                               |
+| ELB            | rm                           | ✗      | Terminate Elastic Load Balancers                                            |
+| ELB            | show / describe              | ✗      | Show Elastic Load Balancer details                                          |
+| ELB            | target-group ls              | ✓      | List Elastic Load Balancer target groups                                    |
+| ELB            | target-group add             | ✗      | Add target to Elastic Load Balancer target group                            |
+| ELB            | target-group rm              | ✗      | Remove target from Elastic Load Balancer target group                       |
+| ELB            | target-group show            | ✗      | Show Elastic Load Balancer target group details                             |
+| RDS            | ls                           | ✓      | List RDS instances                                                          |
+| RDS            | modify                       | ✓*     | Modify RDS instances<br><sub>_\* Currently supports instance class and preferred maintenance window only_</sub>                                                        |
+| RDS            | cancel-pending-modifications | ✓     | Cancel pending modifications of an RDS instance                             |
+| RDS            | rm                           | ✗      | Terminate RDS instances                                                     |
+| RDS            | show / describe              | ✓      | Show RDS instance details                                                   |
+| Route53        | ls                           | ✗      | List Route53 hosted zones and records                                       |
+| Route53        | modify                       | ✗      | Modify Route53 hosted zones and records                                     |
+| Route53        | rm                           | ✗      | Terminate Route53 hosted zones and records                                  |
+| Route53        | show / describe              | ✗      | Show Route53 hosted zone and record details                                 |
+| S3             | cp                           | ✗      | Copy S3 objects                                                             |
+| S3             | ls                           | ✗      | List S3 buckets and objects                                                 |
+| S3             | mv                           | ✗      | Move S3 objects                                                             |
+| S3             | rm                           | ✗      | Delete S3 buckets                                                           |
+| S3             | show / describe              | ✗      | Show S3 bucket or object details                                            |
+| SSM            | document ls                  | ✗      | List SSM documents                                                          |
+| SSM            | document run                 | ✗      | Run SSM documents                                                           |
+| SSM            | document rm                  | ✗      | Delete SSM documents                                                        |
+| SSM            | document show                | ✗      | Show SSM document details                                                   |
+| SSM            | parameter add                | ✗      | Add SSM parameters                                                          |
+| SSM            | parameter cp                 | ✗      | Copy SSM parameters, supports wildcards and cross account copying           |
+| SSM            | parameter diff               | ✗      | Diff SSM parameters, supports wildcards and cross account diffing           |
+| SSM            | parameter edit               | ✗      | Edit SSM parameters                                                         |
+| SSM            | parameter ls                 | ✗      | List SSM parameters, supports wildcards                                     |
+| SSM            | parameter mv                 | ✗      | Move SSM parameters, supports wildcards and cross account moving            |
+| SSM            | parameter rm                 | ✗      | Delete SSM parameters, supports wildcards                                   |
+| SSM            | parameter show               | ✗      | Show SSM parameter details                                                  |
+| SSM            | session ls                   | ✗      | List SSM sessions                                                           |
+| SSM            | session start                | ✗      | Start SSM sessions                                                          |
+| SSM            | session stop                 | ✗      | Stop SSM sessions                                                           |
+| SSM            | session rm                   | ✗      | Delete SSM sessions                                                         |
+| SSM            | session show                 | ✗      | Show SSM session details                                                    |
+| VPC            | ls                           | ✓      | List VPCs                                                                   |
+| VPC            | modify                       | ✗      | Modify VPCs                                                                 |
+| VPC            | rm                           | ✗      | Terminate VPCs                                                              |
+| VPC            | show / describe              | ✓      | Show VPC details                                                            |
+| VPC            | igw ls                       | ✓      | List VPC internet gateways                                                  |
+| VPC            | igw add                      | ✗      | Add VPC internet gateway                                                    |
+| VPC            | igw rm                       | ✗      | Remove VPC internet gateway                                                 |
+| VPC            | igw show                     | ✓      | Show VPC internet gateway details                                           |
+| VPC            | nacl ls                      | ✓      | List VPC network access control lists                                       |
+| VPC            | nacl add                     | ✗      | Add VPC network access control list                                         |
+| VPC            | nacl rm                      | ✗      | Remove VPC network access control list                                      |
+| VPC            | nacl show                    | ✓      | Show VPC network access control list details                                |
+| VPC            | nat-gateway ls               | ✓      | List VPC NAT gateways                                                       |
+| VPC            | nat-gateway add              | ✗      | Add VPC NAT gateway                                                         |
+| VPC            | nat-gateway rm               | ✗      | Remove VPC NAT gateway                                                      |
+| VPC            | nat-gateway show             | ✓      | Show VPC NAT gateway details                                                |
+| VPC            | prefix-list ls               | ✓      | List VPC prefix lists                                                       |
+| VPC            | prefix-list add              | ✗      | Add VPC prefix list                                                         |
+| VPC            | prefix-list rm               | ✗      | Remove VPC prefix list                                                      |
+| VPC            | prefix-list show             | ✓      | Show VPC prefix list details                                                |
+| VPC            | route-table ls               | ✓      | List VPC route tables                                                       |
+| VPC            | route-table add              | ✗      | Add VPC route table                                                         |
+| VPC            | route-table rm               | ✗      | Remove VPC route table                                                      |
+| VPC            | subnet ls                    | ✓      | List VPC subnets                                                            |
+| VPC            | subnet add                   | ✗      | Add VPC subnet                                                              |
+| VPC            | subnet rm                    | ✗      | Remove VPC subnet                                                           |
+| VPC            | subnet show                  | ✓      | Show VPC subnet details                                                     |
+| VPC            | route-table ls               | ✓      | List VPC route tables                                                       |
+| VPC            | route-table add              | ✗      | Add VPC route table                                                         |
+| VPC            | route-table rm               | ✗      | Remove VPC route table                                                      |
+| VPC            | route-table show             | ✓      | Show VPC route table details                                                |
+| VPC            | route-table rule add         | ✗      | Add VPC route table rule                                                    |
+| VPC            | route-table rule rm          | ✗      | Remove VPC route table rule                                                 |
 
 ### Service Implementation: Other Features
 | Description                                                 | Status | Notes / Features                                 |
