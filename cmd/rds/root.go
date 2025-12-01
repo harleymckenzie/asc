@@ -19,6 +19,8 @@ func NewRDSRootCmd() *cobra.Command {
 	// Add action commands
 	cmd.AddCommand(lsCmd)
 	cmd.AddCommand(showCmd)
+	cmd.AddCommand(modifyCmd)
+	cmd.AddCommand(cancelPendingModificationsCmd)
 
 	// Subcommands
 	cmd.AddCommand(cluster.NewClusterRootCmd())
