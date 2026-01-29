@@ -132,7 +132,7 @@ func (at *AscTable) SetFieldConfigs(fields []Field, reverse bool) {
 	}
 
 	if reverse {
-		for i := 0; i < len(at.sortByFields)/2; i++ {
+		for i := 0; i < len(at.sortByFields); i++ {
 			at.sortByFields[i].SortDirection = reverseSortDirection(at.sortByFields[i].SortDirection)
 		}
 	}
