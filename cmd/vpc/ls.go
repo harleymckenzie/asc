@@ -15,18 +15,16 @@ import (
 
 // Variables
 var (
-	list               bool
-	sortId             bool
-	reverseSort        bool
-	sortName           bool
-	sortState          bool
-	sortIPv4CIDR       bool
-	sortIPv6CIDR       bool
-	sortOwnerID        bool
-	showDHCP           bool
-	showMainRouteTable bool
-	showMainNetworkACL bool
-	showTenancy        bool
+	list         bool
+	sortId       bool
+	reverseSort  bool
+	sortName     bool
+	sortState    bool
+	sortIPv4CIDR bool
+	sortIPv6CIDR bool
+	sortOwnerID  bool
+	showDHCP     bool
+	showTenancy  bool
 )
 
 // Init function
@@ -41,8 +39,6 @@ func getVPCListFields() []tablewriter.Field {
 		{Name: "State", Category: "VPC", Visible: true, SortBy: sortState, SortDirection: tablewriter.Asc},
 		{Name: "Tenancy", Category: "VPC", Visible: showTenancy},
 		{Name: "DHCP Option Set", Category: "VPC", Visible: showDHCP},
-		{Name: "Main Route Table", Category: "VPC", Visible: showMainRouteTable},
-		{Name: "Main Network ACL", Category: "VPC", Visible: showMainNetworkACL},
 		{Name: "IPv4 CIDR", Category: "VPC", Visible: true, SortBy: sortIPv4CIDR, SortDirection: tablewriter.Asc},
 		{Name: "IPv6 CIDR", Category: "VPC", Visible: true, SortBy: sortIPv6CIDR, SortDirection: tablewriter.Asc},
 		{Name: "Default VPC", Category: "VPC", Visible: true},
@@ -83,8 +79,6 @@ func newLsFlags(lsCmd *cobra.Command) {
 	lsCmd.Flags().BoolVarP(&sortIPv6CIDR, "sort-ipv6-cidr", "6", false, "Sort by descending VPC IPv6 CIDR.")
 	lsCmd.Flags().BoolVarP(&sortOwnerID, "sort-owner-id", "o", false, "Sort by descending VPC owner ID.")
 	lsCmd.Flags().BoolVarP(&showDHCP, "show-dhcp", "d", false, "Show the DHCP option set for the VPC.")
-	lsCmd.Flags().BoolVarP(&showMainRouteTable, "show-main-route-table", "R", false, "Show the main route table for the VPC.")
-	lsCmd.Flags().BoolVarP(&showMainNetworkACL, "show-main-network-acl", "N", false, "Show the main network ACL for the VPC.")
 	lsCmd.Flags().BoolVarP(&showTenancy, "show-tenancy", "T", false, "Show the tenancy for the VPC.")
 	lsCmd.MarkFlagsMutuallyExclusive()
 }

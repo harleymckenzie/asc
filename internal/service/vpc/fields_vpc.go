@@ -9,15 +9,13 @@ import (
 
 // VPC field getters
 var vpcFieldValueGetters = map[string]FieldValueGetter{
-	"VPC ID":           getVPCID,
-	"State":            getVPCState,
-	"IPv4 CIDR":        getVPCIPv4CIDR,
-	"IPv6 CIDR":        getVPCIPv6CIDR,
-	"DHCP Option Set":  getVPCDHCPOptions,
-	"Main Route Table": getVPCMainRouteTable,
-	"Main Network ACL": getVPCMainNetworkACL,
-	"Tenancy":          getVPCTenancy,
-	"Default VPC":      getVPCIsDefault,
+	"VPC ID":          getVPCID,
+	"State":           getVPCState,
+	"IPv4 CIDR":       getVPCIPv4CIDR,
+	"IPv6 CIDR":       getVPCIPv6CIDR,
+	"DHCP Option Set": getVPCDHCPOptions,
+	"Tenancy":         getVPCTenancy,
+	"Default VPC":     getVPCIsDefault,
 }
 
 // GetVPCFieldValue returns the value of a field for the given VPC instance.
@@ -64,16 +62,6 @@ func getVPCIPv6CIDR(instance any) (string, error) {
 
 func getVPCDHCPOptions(instance any) (string, error) {
 	return format.StringOrEmpty(instance.(types.Vpc).DhcpOptionsId), nil
-}
-
-func getVPCMainRouteTable(instance any) (string, error) {
-	// TODO: Implement lookup for main route table
-	return "-", nil
-}
-
-func getVPCMainNetworkACL(instance any) (string, error) {
-	// TODO: Implement lookup for main network ACL
-	return "-", nil
 }
 
 func getVPCTenancy(instance any) (string, error) {

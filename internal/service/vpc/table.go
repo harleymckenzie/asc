@@ -89,18 +89,6 @@ func vpcAttributes() map[string]VPCAttribute {
 				return format.StringOrEmpty(vpc.DhcpOptionsId)
 			},
 		},
-		"Main Route Table": {
-			// TODO: Implement lookup for main route table
-			GetValue: func(vpc *types.Vpc) string {
-				return "-"
-			},
-		},
-		"Main Network ACL": {
-			// TODO: Implement lookup for main network ACL
-			GetValue: func(vpc *types.Vpc) string {
-				return "-"
-			},
-		},
 		"Owner ID": {
 			GetValue: func(vpc *types.Vpc) string {
 				return format.StringOrEmpty(vpc.OwnerId)
