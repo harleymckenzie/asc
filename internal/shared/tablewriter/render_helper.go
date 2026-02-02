@@ -13,6 +13,18 @@ type RenderListOptions struct {
 	ReverseSort   bool
 }
 
+// SetFieldVisibility sets the visibility of a field by name.
+// It iterates through the fields slice and sets Visible to the specified value
+// for the first field matching the given name.
+func SetFieldVisibility(fields []Field, name string, visible bool) {
+	for i := range fields {
+		if fields[i].Name == name {
+			fields[i].Visible = visible
+			return
+		}
+	}
+}
+
 // RenderList creates and renders a list-style table with the provided options.
 // This helper consolidates the common pattern used across all list commands:
 //   - Creates a table with the specified title and style

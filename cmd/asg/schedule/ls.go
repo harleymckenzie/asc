@@ -111,8 +111,8 @@ func ListSchedulesForGroup(ctx context.Context, svc *asg.AutoScalingService, asg
 	}
 
 	fields := getScheduleFields()
-	// Set "Auto Scaling Group" field Visible to false when listing for a single group
-	fields[0].Visible = false
+	// Hide "Auto Scaling Group" field when listing for a single group
+	tablewriter.SetFieldVisibility(fields, "Auto Scaling Group", false)
 
 	tablewriter.RenderList(tablewriter.RenderListOptions{
 		Title:         fmt.Sprintf("Scheduled Actions\n(%s)", asgName),
