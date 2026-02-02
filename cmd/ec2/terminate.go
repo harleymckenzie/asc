@@ -22,10 +22,10 @@ var terminateCmd = &cobra.Command{
 	},
 }
 
-func addTerminateFlags(terminateCmd *cobra.Command) {}
+func newTerminateFlags(terminateCmd *cobra.Command) {}
 
 func init() {
-	addTerminateFlags(terminateCmd)
+	newTerminateFlags(terminateCmd)
 }
 
 func TerminateEC2Instance(cmd *cobra.Command, args []string) error {

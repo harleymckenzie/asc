@@ -27,7 +27,7 @@ var stopCmd = &cobra.Command{
 	},
 }
 
-func addStopFlags(stopCmd *cobra.Command) {
+func newStopFlags(stopCmd *cobra.Command) {
 	stopCmd.Flags().BoolVarP(&force, "force", "f", false, "Force stop the EC2 instance")
 }
 
@@ -57,5 +57,5 @@ func StopEC2Instance(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	addStopFlags(stopCmd)
+	newStopFlags(stopCmd)
 }

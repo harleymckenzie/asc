@@ -25,7 +25,7 @@ var (
 
 // Init function
 func init() {
-	addModifyFlags(modifyCmd)
+	newModifyFlags(modifyCmd)
 }
 
 func asgScheduleFields() []tablewriter.Field {
@@ -58,7 +58,7 @@ var modifyCmd = &cobra.Command{
 }
 
 // Flag function
-func addModifyFlags(cobraCmd *cobra.Command) {
+func newModifyFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().SortFlags = false
 	cobraCmd.Flags().StringVarP(&minSizeStr, "min", "m", "", "The minimum capacity (absolute or relative, e.g. 3, +1, -2)")
 	cobraCmd.Flags().StringVarP(&maxSizeStr, "max", "M", "", "The maximum capacity (absolute or relative, e.g. 3, +3, -3)")

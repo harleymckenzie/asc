@@ -31,7 +31,7 @@ var (
 
 // Init function
 func init() {
-	addLsFlags(lsCmd)
+	newLsFlags(lsCmd)
 }
 
 // Column functions
@@ -73,7 +73,7 @@ var lsCmd = &cobra.Command{
 }
 
 // Flag function
-func addLsFlags(lsCmd *cobra.Command) {
+func newLsFlags(lsCmd *cobra.Command) {
 	lsCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs VPCs in list format.")
 	lsCmd.Flags().BoolVarP(&reverseSort, "reverse-sort", "r", false, "Reverse the sort order.")
 	lsCmd.Flags().BoolVarP(&sortName, "sort-name", "n", false, "Sort by descending VPC name.")

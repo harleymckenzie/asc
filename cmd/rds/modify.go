@@ -21,11 +21,11 @@ var (
 
 // Init function
 func init() {
-	addModifyFlags(modifyCmd)
+	newModifyFlags(modifyCmd)
 }
 
 // Flag function
-func addModifyFlags(cobraCmd *cobra.Command) {
+func newModifyFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().SortFlags = false
 	cobraCmd.Flags().BoolVar(&applyImmediately, "apply-immediately", false, "Whether to apply the changes immediately")
 	cobraCmd.Flags().StringVarP(&dbInstanceClass, "type", "T", "", "The new instance type")

@@ -34,7 +34,7 @@ var (
 
 // Init function
 func init() {
-	addLsFlags(lsCmd)
+	newLsFlags(lsCmd)
 }
 
 // Column functions
@@ -68,7 +68,7 @@ var lsCmd = &cobra.Command{
 }
 
 // Flag function
-func addLsFlags(cobraCmd *cobra.Command) {
+func newLsFlags(cobraCmd *cobra.Command) {
 	// Output flags
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elastic Load Balancers in list format.")
 	cobraCmd.Flags().BoolVarP(&showARNs, "arn", "a", false, "Show ARNs for each Elastic Load Balancer.")

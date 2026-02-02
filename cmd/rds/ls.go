@@ -32,7 +32,7 @@ var (
 
 // Init function
 func init() {
-	addLsFlags(lsCmd)
+	newLsFlags(lsCmd)
 }
 
 // Column functions
@@ -62,7 +62,7 @@ var lsCmd = &cobra.Command{
 }
 
 // Flag function
-func addLsFlags(cobraCmd *cobra.Command) {
+func newLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Output
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs RDS clusters and instances in list format.")
 	cobraCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")

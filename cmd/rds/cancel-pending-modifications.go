@@ -17,11 +17,11 @@ var ()
 
 // Init function
 func init() {
-	addCancelPendingModificationsFlags(cancelPendingModificationsCmd)
+	newCancelPendingModificationsFlags(cancelPendingModificationsCmd)
 }
 
 // Flag function
-func addCancelPendingModificationsFlags(cobraCmd *cobra.Command) {
+func newCancelPendingModificationsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().SortFlags = false
 }
 
