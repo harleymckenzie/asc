@@ -1,7 +1,6 @@
 package prefix_list
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -58,7 +57,7 @@ func ShowPrefixList(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	ctx := context.TODO()
+	ctx := cmd.Context()
 	pls, err := svc.GetManagedPrefixLists(ctx, &ascTypes.GetManagedPrefixListsInput{
 		PrefixListIds: []string{id},
 	})

@@ -90,16 +90,16 @@ func ListSchedules(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create new Auto Scaling Group service: %w", err)
 	}
 
+	ctx := cmd.Context()
 	if len(args) > 0 {
-		return ListSchedulesForGroup(svc, args[0])
+		return ListSchedulesForGroup(ctx, svc, args[0])
 	} else {
-		return ListSchedulesForAllGroups(svc)
+		return ListSchedulesForAllGroups(ctx, svc)
 	}
 }
 
 // ListSchedulesForGroup lists all schedules for a given Auto Scaling Group.
-func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) error {
-	ctx := context.TODO()
+func ListSchedulesForGroup(ctx context.Context, svc *asg.AutoScalingService, asgName string) error {
 	schedules, err := svc.GetAutoScalingGroupSchedules(
 		ctx,
 		&ascTypes.GetAutoScalingGroupSchedulesInput{
@@ -130,8 +130,7 @@ func ListSchedulesForGroup(svc *asg.AutoScalingService, asgName string) error {
 }
 
 // ListSchedulesForAllGroups lists all schedules for all Auto Scaling Groups.
-func ListSchedulesForAllGroups(svc *asg.AutoScalingService) error {
-	ctx := context.TODO()
+func ListSchedulesForAllGroups(ctx context.Context, svc *asg.AutoScalingService) error {
 	schedules, err := svc.GetAutoScalingGroupSchedules(
 		ctx,
 		&ascTypes.GetAutoScalingGroupSchedulesInput{},

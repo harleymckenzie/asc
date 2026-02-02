@@ -1,7 +1,6 @@
 package route_table
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -56,7 +55,7 @@ func ShowRouteTable(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	ctx := context.TODO()
+	ctx := cmd.Context()
 	rts, err := svc.GetRouteTables(ctx, &ascTypes.GetRouteTablesInput{RouteTableIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get route tables: %w", err)

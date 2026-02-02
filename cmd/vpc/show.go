@@ -1,7 +1,6 @@
 package vpc
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -60,7 +59,7 @@ func showVPC(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	ctx := context.TODO()
+	ctx := cmd.Context()
 	vpcs, err := svc.GetVPCs(ctx, &ascTypes.GetVPCsInput{})
 	if err != nil {
 		return fmt.Errorf("get vpc: %w", err)

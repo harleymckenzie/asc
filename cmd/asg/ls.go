@@ -96,7 +96,7 @@ func ListAutoScalingGroups(cmd *cobra.Command, args []string) error {
 
 	if len(args) > 0 {
 		fmt.Printf("Listing instances for Auto Scaling Group %s\n", args[0])
-		return ListAutoScalingGroupInstances(svc, args[0])
+		return ListAutoScalingGroupInstances(cmd.Context(), svc, args[0])
 	} else {
 		autoScalingGroups, err := svc.GetAutoScalingGroups(cmd.Context(), &ascTypes.GetAutoScalingGroupsInput{})
 		if err != nil {
@@ -123,9 +123,9 @@ func ListAutoScalingGroups(cmd *cobra.Command, args []string) error {
 }
 
 // ListAutoScalingGroupInstances is the function for listing instances in an Auto Scaling Group
-func ListAutoScalingGroupInstances(svc *asg.AutoScalingService, asgName string) error {
+func ListAutoScalingGroupInstances(ctx context.Context, svc *asg.AutoScalingService, asgName string) error {
 	instances, err := svc.GetAutoScalingGroupInstances(
-		context.TODO(),
+		ctx,
 		&ascTypes.GetAutoScalingGroupInstancesInput{
 			AutoScalingGroupNames: []string{asgName},
 		},

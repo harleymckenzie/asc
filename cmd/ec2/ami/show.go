@@ -73,7 +73,7 @@ func ShowEC2AMI(cmd *cobra.Command, arg string) error {
 		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	image, err := getImages(svc, &ascTypes.GetImagesInput{
+	image, err := getImages(cmd.Context(), svc, &ascTypes.GetImagesInput{
 		ImageIds: []string{arg},
 	})
 	if err != nil {

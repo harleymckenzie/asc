@@ -83,7 +83,7 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("parse scope: %w", err)
 	}
-	amis, err := getImages(svc, &ascTypes.GetImagesInput{
+	amis, err := getImages(cmd.Context(), svc, &ascTypes.GetImagesInput{
 		Filters: filters,
 		Owners:  owners,
 	})

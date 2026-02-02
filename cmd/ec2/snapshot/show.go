@@ -2,7 +2,6 @@
 package snapshot
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
@@ -71,7 +70,7 @@ func ShowEC2Snapshot(cmd *cobra.Command, arg string) error {
 		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	snapshots, err := svc.GetSnapshots(context.TODO(), &ascTypes.GetSnapshotsInput{SnapshotIDs: []string{arg}})
+	snapshots, err := svc.GetSnapshots(cmd.Context(), &ascTypes.GetSnapshotsInput{SnapshotIDs: []string{arg}})
 	if err != nil {
 		return fmt.Errorf("get snapshots: %w", err)
 	}

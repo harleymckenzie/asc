@@ -3,7 +3,6 @@
 package igw
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -57,7 +56,7 @@ func ShowVPCIGW(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	ctx := context.TODO()
+	ctx := cmd.Context()
 	igws, err := svc.GetIGWs(ctx, &ascTypes.GetIGWsInput{IGWIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get internet gateways: %w", err)

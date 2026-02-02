@@ -1,7 +1,6 @@
 package subnet
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -59,7 +58,7 @@ func ShowSubnet(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	ctx := context.TODO()
+	ctx := cmd.Context()
 	subnets, err := svc.GetSubnets(ctx, &ascTypes.GetSubnetsInput{SubnetIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get subnets: %w", err)

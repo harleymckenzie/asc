@@ -2,7 +2,6 @@
 package security_group
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
@@ -58,7 +57,7 @@ func ShowSecurityGroup(cmd *cobra.Command, arg string) error {
 		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	groups, err := svc.GetSecurityGroups(context.TODO(), &ascTypes.GetSecurityGroupsInput{
+	groups, err := svc.GetSecurityGroups(cmd.Context(), &ascTypes.GetSecurityGroupsInput{
 		GroupIDs: []string{arg},
 	})
 	if err != nil {

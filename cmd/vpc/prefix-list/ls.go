@@ -1,7 +1,6 @@
 package prefix_list
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -71,7 +70,7 @@ func ListPrefixLists(cmd *cobra.Command, args []string) error {
 		return ListPrefixListEntries(cmd, args)
 	}
 
-	pls, err := svc.GetManagedPrefixLists(context.TODO(), &ascTypes.GetManagedPrefixListsInput{})
+	pls, err := svc.GetManagedPrefixLists(cmd.Context(), &ascTypes.GetManagedPrefixListsInput{})
 	if err != nil {
 		return fmt.Errorf("get prefix lists: %w", err)
 	}
@@ -101,7 +100,7 @@ func ListPrefixListEntries(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	pl, err := svc.GetPrefixLists(context.TODO(), &ascTypes.GetPrefixListsInput{
+	pl, err := svc.GetPrefixLists(cmd.Context(), &ascTypes.GetPrefixListsInput{
 		PrefixListIds: []string{args[0]},
 	})
 	if err != nil {

@@ -1,7 +1,6 @@
 package nacl
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -57,7 +56,7 @@ func ShowNACL(cmd *cobra.Command, id string) error {
 		return fmt.Errorf("create vpc service: %w", err)
 	}
 
-	nacls, err := svc.GetNACLs(context.TODO(), &ascTypes.GetNACLsInput{
+	nacls, err := svc.GetNACLs(cmd.Context(), &ascTypes.GetNACLsInput{
 		NetworkAclIds: []string{id},
 	})
 	if err != nil {

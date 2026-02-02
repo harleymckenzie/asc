@@ -2,7 +2,6 @@
 package snapshot
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
@@ -71,7 +70,7 @@ func ListSnapshots(cmd *cobra.Command, args []string) error {
 	}
 
 	ownerIds := getOwnerIds(owner)
-	snapshots, err := svc.GetSnapshots(context.TODO(), &ascTypes.GetSnapshotsInput{
+	snapshots, err := svc.GetSnapshots(cmd.Context(), &ascTypes.GetSnapshotsInput{
 		OwnerIds: ownerIds,
 	})
 	if err != nil {

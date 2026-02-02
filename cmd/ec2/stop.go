@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
@@ -32,7 +31,7 @@ func newStopFlags(stopCmd *cobra.Command) {
 }
 
 func StopEC2Instance(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
+	ctx := cmd.Context()
 	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	if len(args) == 0 {

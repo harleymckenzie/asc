@@ -1,7 +1,6 @@
 package nat_gateway
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -58,7 +57,7 @@ func ListNatGateways(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create service: %w", err)
 	}
 
-	nats, err := svc.GetNatGateways(context.TODO(), &ascTypes.GetNatGatewaysInput{})
+	nats, err := svc.GetNatGateways(cmd.Context(), &ascTypes.GetNatGatewaysInput{})
 	if err != nil {
 		return fmt.Errorf("get nat gateways: %w", err)
 	}

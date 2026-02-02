@@ -88,7 +88,7 @@ func ShowEC2Instance(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	instance, err := getInstances(svc, args)
+	instance, err := getInstances(cmd.Context(), svc, args)
 	if err != nil {
 		return fmt.Errorf("get instances: %w", err)
 	}

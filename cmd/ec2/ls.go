@@ -107,7 +107,7 @@ func ListEC2Instances(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create ec2 service: %w", err)
 	}
 
-	instances, err := getInstances(svc, args)
+	instances, err := getInstances(cmd.Context(), svc, args)
 	if err != nil {
 		return fmt.Errorf("get instances: %w", err)
 	}

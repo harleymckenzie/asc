@@ -1,7 +1,6 @@
 package route_table
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -71,7 +70,7 @@ func ListRouteTables(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		return ListRouteTableRules(cmd, args)
 	} else {
-		rts, err := svc.GetRouteTables(context.TODO(), &ascTypes.GetRouteTablesInput{})
+		rts, err := svc.GetRouteTables(cmd.Context(), &ascTypes.GetRouteTablesInput{})
 		if err != nil {
 			return fmt.Errorf("get route tables: %w", err)
 		}
@@ -102,7 +101,7 @@ func ListRouteTableRules(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create service: %w", err)
 	}
 
-	rts, err := svc.GetRouteTables(context.TODO(), &ascTypes.GetRouteTablesInput{
+	rts, err := svc.GetRouteTables(cmd.Context(), &ascTypes.GetRouteTablesInput{
 		RouteTableIds: []string{args[0]},
 	})
 	if err != nil {

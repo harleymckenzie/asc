@@ -10,7 +10,6 @@ import (
 )
 
 // getImages retrieves EC2 images (AMIs) based on the provided input parameters
-func getImages(svc *ec2.EC2Service, input *ascTypes.GetImagesInput) ([]types.Image, error) {
-	ctx := context.TODO()
+func getImages(ctx context.Context, svc *ec2.EC2Service, input *ascTypes.GetImagesInput) ([]types.Image, error) {
 	return svc.GetImages(ctx, input)
 }

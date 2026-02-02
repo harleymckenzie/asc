@@ -1,7 +1,6 @@
 package nat_gateway
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/vpc"
@@ -64,7 +63,7 @@ func ShowNatGateway(cmd *cobra.Command, id string) error {
 		}
 	}
 
-	nats, err := svc.GetNatGateways(context.TODO(), &ascTypes.GetNatGatewaysInput{NatGatewayIds: []string{id}})
+	nats, err := svc.GetNatGateways(cmd.Context(), &ascTypes.GetNatGatewaysInput{NatGatewayIds: []string{id}})
 	if err != nil {
 		return fmt.Errorf("get nat gateways: %w", err)
 	}

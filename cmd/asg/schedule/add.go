@@ -2,7 +2,6 @@
 package schedule
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -60,7 +59,7 @@ func init() {
 
 // AddSchedule is the handler for the add schedule subcommand.
 func AddSchedule(cmd *cobra.Command, args []string) error {
-	ctx := context.TODO()
+	ctx := cmd.Context()
 	profile, region := cmdutil.GetPersistentFlags(cmd)
 
 	svc, err := asg.NewAutoScalingService(ctx, profile, region)
