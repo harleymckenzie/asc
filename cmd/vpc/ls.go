@@ -104,21 +104,16 @@ func ListVPCs(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("list VPCs: %w", err)
 		}
 
-		table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-			Title: "VPCs",
+		tablewriter.RenderList(tablewriter.RenderListOptions{
+			Title:         "VPCs",
+			PlainStyle:    list,
+			Fields:        getVPCListFields(),
+			Tags:          cmdutil.Tags,
+			Data:          utils.SlicesToAny(vpcList),
+			GetFieldValue: vpc.GetFieldValue,
+			GetTagValue:   vpc.GetTagValue,
+			ReverseSort:   reverseSort,
 		})
-		if list {
-			table.SetRenderStyle("plain")
-		}
-
-		fields := getVPCListFields()
-		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(vpcList))
-
-		headerRow := tablewriter.BuildHeaderRow(fields)
-		table.AppendHeader(headerRow)
-		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(vpcList), fields, vpc.GetFieldValue, vpc.GetTagValue))
-		table.SetFieldConfigs(fields, reverseSort)
-		table.Render()
 		return nil
 	}
 }
@@ -134,20 +129,15 @@ func ListVPCSubnets(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("list subnets: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: fmt.Sprintf("%s - Subnets", args[0]),
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         fmt.Sprintf("%s - Subnets", args[0]),
+		PlainStyle:    list,
+		Fields:        getSubnetListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(subnets),
+		GetFieldValue: vpc.GetSubnetFieldValue,
+		GetTagValue:   vpc.GetSubnetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getSubnetListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(subnets))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetSubnetFieldValue, vpc.GetSubnetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-	table.Render()
 	return nil
 }

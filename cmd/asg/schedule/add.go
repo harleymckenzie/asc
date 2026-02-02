@@ -22,7 +22,6 @@ var (
 	recurrence      string
 	startTimeStr    string
 	endTimeStr      string
-	tableOpts       tablewriter.AscTableRenderOptions
 )
 
 // addCmd defines the 'add' subcommand for schedule operations.
@@ -137,14 +136,12 @@ func AddSchedule(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get schedule: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Scheduled Actions",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Scheduled Actions",
+		Fields:        getScheduleFields(),
+		Data:          utils.SlicesToAny(schedules),
+		GetFieldValue: asg.GetScheduleAttributeValue,
+		GetTagValue:   asg.GetTagValue,
 	})
-
-	fields := getScheduleFields()
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetScheduleAttributeValue, asg.GetTagValue))
-	table.Render()
 	return nil
 }

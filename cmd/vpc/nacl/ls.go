@@ -77,21 +77,16 @@ func ListNACLs(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("get network acls: %w", err)
 		}
 
-		table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-			Title: "Network ACLs",
+		tablewriter.RenderList(tablewriter.RenderListOptions{
+			Title:         "Network ACLs",
+			PlainStyle:    list,
+			Fields:        getListFields(),
+			Tags:          cmdutil.Tags,
+			Data:          utils.SlicesToAny(nacls),
+			GetFieldValue: vpc.GetFieldValue,
+			GetTagValue:   vpc.GetTagValue,
+			ReverseSort:   reverseSort,
 		})
-		if list {
-			table.SetRenderStyle("plain")
-		}
-
-		fields := getListFields()
-		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(nacls))
-
-		headerRow := tablewriter.BuildHeaderRow(fields)
-		table.AppendHeader(headerRow)
-		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(nacls), fields, vpc.GetFieldValue, vpc.GetTagValue))
-		table.SetFieldConfigs(fields, reverseSort)
-		table.Render()
 		return nil
 	}
 }
@@ -117,30 +112,25 @@ func ListNACLRules(cmd *cobra.Command, args []string) error {
 	fields := getRulesFields()
 
 	// Print inbound rules table
-	ingressTable := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: fmt.Sprintf("%s - Inbound Rules", args[0]),
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         fmt.Sprintf("%s - Inbound Rules", args[0]),
+		PlainStyle:    list,
+		Fields:        fields,
+		Data:          utils.SlicesToAny(ingressRules),
+		GetFieldValue: vpc.GetFieldValue,
+		GetTagValue:   vpc.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		ingressTable.SetRenderStyle("plain")
-	}
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	ingressTable.AppendHeader(headerRow)
-	ingressTable.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(ingressRules), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	ingressTable.SetFieldConfigs(fields, reverseSort)
-	ingressTable.Render()
 
 	// Print outbound rules table
-	egressTable := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: fmt.Sprintf("%s - Outbound Rules", args[0]),
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         fmt.Sprintf("%s - Outbound Rules", args[0]),
+		PlainStyle:    list,
+		Fields:        fields,
+		Data:          utils.SlicesToAny(egressRules),
+		GetFieldValue: vpc.GetFieldValue,
+		GetTagValue:   vpc.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		egressTable.SetRenderStyle("plain")
-	}
-
-	egressTable.AppendHeader(headerRow)
-	egressTable.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(egressRules), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	egressTable.SetFieldConfigs(fields, reverseSort)
-	egressTable.Render()
 	return nil
 }

@@ -63,21 +63,15 @@ func ListSubnets(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get subnets: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Subnets",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Subnets",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(subnets),
+		GetFieldValue: vpc.GetFieldValue,
+		GetTagValue:   vpc.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(subnets))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(subnets), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }

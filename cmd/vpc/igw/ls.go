@@ -65,20 +65,15 @@ func ListIGWs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get internet gateways: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Internet Gateways",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Internet Gateways",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(igws),
+		GetFieldValue: vpc.GetIGWFieldValue,
+		GetTagValue:   vpc.GetIGWTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(igws))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(igws), fields, vpc.GetIGWFieldValue, vpc.GetIGWTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-	table.Render()
 	return nil
 }

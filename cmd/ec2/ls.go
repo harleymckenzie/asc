@@ -6,12 +6,10 @@ import (
 	"fmt"
 
 	"github.com/harleymckenzie/asc/internal/service/ec2"
+	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 	"github.com/harleymckenzie/asc/internal/shared/tablewriter"
 	"github.com/harleymckenzie/asc/internal/shared/utils"
 	"github.com/spf13/cobra"
-
-	ascTypes "github.com/harleymckenzie/asc/internal/service/ec2/types"
-	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
 )
 
 // Variables
@@ -28,12 +26,6 @@ var (
 
 	reverseSort bool
 )
-
-type ListInstancesInput struct {
-	GetInstancesInput *ascTypes.GetInstancesInput
-	SelectedColumns   []string
-	TableOpts         tablewriter.AscTableRenderOptions
-}
 
 // Init function
 func init() {
@@ -112,20 +104,15 @@ func ListEC2Instances(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get instances: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Instances",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Instances",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(instances),
+		GetFieldValue: ec2.GetFieldValue,
+		GetTagValue:   ec2.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, ec2.GetFieldValue, ec2.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }

@@ -103,21 +103,16 @@ func ListAutoScalingGroups(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("get Auto Scaling Groups: %w", err)
 		}
 
-		table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-			Title: "Auto Scaling Groups",
+		tablewriter.RenderList(tablewriter.RenderListOptions{
+			Title:         "Auto Scaling Groups",
+			PlainStyle:    list,
+			Fields:        getListFields(),
+			Tags:          cmdutil.Tags,
+			Data:          utils.SlicesToAny(autoScalingGroups),
+			GetFieldValue: asg.GetFieldValue,
+			GetTagValue:   asg.GetTagValue,
+			ReverseSort:   reverseSort,
 		})
-		if list {
-			table.SetRenderStyle("plain")
-		}
-
-		fields := getListFields()
-		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(autoScalingGroups))
-
-		headerRow := tablewriter.BuildHeaderRow(fields)
-		table.AppendHeader(headerRow)
-		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(autoScalingGroups), fields, asg.GetFieldValue, asg.GetTagValue))
-		table.SetFieldConfigs(fields, reverseSort)
-		table.Render()
 		return nil
 	}
 }
@@ -134,18 +129,14 @@ func ListAutoScalingGroupInstances(ctx context.Context, svc *asg.AutoScalingServ
 		return fmt.Errorf("get instances for Auto Scaling Group %s: %w", asgName, err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Auto Scaling Group Instances",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Auto Scaling Group Instances",
+		PlainStyle:    list,
+		Fields:        getInstanceFields(),
+		Data:          utils.SlicesToAny(instances),
+		GetFieldValue: asg.GetFieldValue,
+		GetTagValue:   asg.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getInstanceFields()
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, asg.GetFieldValue, asg.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-	table.Render()
 	return nil
 }

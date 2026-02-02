@@ -79,21 +79,16 @@ func ListSecurityGroups(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get security groups: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Security Groups",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Security Groups",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(groups),
+		GetFieldValue: ec2.GetFieldValue,
+		GetTagValue:   ec2.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(groups))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(groups), fields, ec2.GetFieldValue, ec2.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }
 

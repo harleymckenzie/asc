@@ -62,20 +62,15 @@ func ListElasticacheClusters(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get instances: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Elasticache Clusters",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Elasticache Clusters",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Data:          utils.SlicesToAny(instances),
+		GetFieldValue: elasticache.GetFieldValue,
+		GetTagValue:   elasticache.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetStyle("plain")
-	}
-	fields := getListFields()
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, elasticache.GetFieldValue, elasticache.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }
 

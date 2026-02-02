@@ -93,20 +93,15 @@ func ListVolumes(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Volumes",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Volumes",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(volumes),
+		GetFieldValue: ec2.GetFieldValue,
+		GetTagValue:   ec2.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(volumes))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(volumes), fields, ec2.GetFieldValue, ec2.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-	table.Render()
 	return nil
 }

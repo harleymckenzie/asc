@@ -178,15 +178,12 @@ func addRevertSchedule(ctx context.Context, svc *asg.AutoScalingService, input *
 		return fmt.Errorf("get scheduled revert action: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Scheduled Revert Action",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Scheduled Revert Action",
+		Fields:        asgScheduleFields(),
+		Data:          utils.SlicesToAny(schedules),
+		GetFieldValue: asg.GetFieldValue,
+		GetTagValue:   asg.GetTagValue,
 	})
-
-	fields := asgScheduleFields()
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
-
-	table.Render()
 	return nil
 }

@@ -75,22 +75,16 @@ func ListPrefixLists(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get prefix lists: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Prefix Lists",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Prefix Lists",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(pls),
+		GetFieldValue: vpc.GetFieldValue,
+		GetTagValue:   vpc.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(pls))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(pls), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }
 
@@ -107,15 +101,12 @@ func ListPrefixListEntries(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get prefix list: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: fmt.Sprintf("%s - Entries", args[0]),
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         fmt.Sprintf("%s - Entries", args[0]),
+		Fields:        prefixListEntriesFields(),
+		Data:          utils.SlicesToAny(pl),
+		GetFieldValue: vpc.GetFieldValue,
+		GetTagValue:   vpc.GetTagValue,
 	})
-
-	fields := prefixListEntriesFields()
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(pl), fields, vpc.GetFieldValue, vpc.GetTagValue))
-
-	table.Render()
 	return nil
 }

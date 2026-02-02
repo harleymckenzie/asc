@@ -75,20 +75,15 @@ func ListCloudFormationStacks(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("list CloudFormation stacks: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Stacks",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Stacks",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(stacks),
+		GetFieldValue: cloudformation.GetFieldValue,
+		GetTagValue:   cloudformation.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(stacks))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(stacks), fields, cloudformation.GetFieldValue, cloudformation.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-	table.Render()
 	return nil
 }

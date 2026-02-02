@@ -91,21 +91,16 @@ func ListAMIs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get images: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "AMIs",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "AMIs",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(amis),
+		GetFieldValue: ec2.GetFieldValue,
+		GetTagValue:   ec2.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(amis))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(amis), fields, ec2.GetFieldValue, ec2.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }
 

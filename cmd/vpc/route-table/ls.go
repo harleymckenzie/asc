@@ -75,22 +75,16 @@ func ListRouteTables(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("get route tables: %w", err)
 		}
 
-		table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-			Title: "Route Tables",
+		tablewriter.RenderList(tablewriter.RenderListOptions{
+			Title:         "Route Tables",
+			PlainStyle:    list,
+			Fields:        routeTableListFields(),
+			Tags:          cmdutil.Tags,
+			Data:          utils.SlicesToAny(rts),
+			GetFieldValue: vpc.GetFieldValue,
+			GetTagValue:   vpc.GetTagValue,
+			ReverseSort:   reverseSort,
 		})
-		if list {
-			table.SetRenderStyle("plain")
-		}
-
-		fields := routeTableListFields()
-		fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(rts))
-
-		headerRow := tablewriter.BuildHeaderRow(fields)
-		table.AppendHeader(headerRow)
-		table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(rts), fields, vpc.GetFieldValue, vpc.GetTagValue))
-		table.SetFieldConfigs(fields, reverseSort)
-
-		table.Render()
 		return nil
 	}
 }
@@ -110,21 +104,15 @@ func ListRouteTableRules(cmd *cobra.Command, args []string) error {
 
 	routes := rts[0].Routes
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: fmt.Sprintf("%s - Routes", args[0]),
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         fmt.Sprintf("%s - Routes", args[0]),
+		PlainStyle:    list,
+		Fields:        routeTableRouteFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(routes),
+		GetFieldValue: vpc.GetFieldValue,
+		GetTagValue:   vpc.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := routeTableRouteFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(routes))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(routes), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }

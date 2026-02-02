@@ -110,22 +110,19 @@ func ListSchedulesForGroup(ctx context.Context, svc *asg.AutoScalingService, asg
 		return fmt.Errorf("get schedules for Auto Scaling Group %s: %w", asgName, err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: fmt.Sprintf("Scheduled Actions\n(%s)", asgName),
-	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
 	fields := getScheduleFields()
 	// Set "Auto Scaling Group" field Visible to false when listing for a single group
 	fields[0].Visible = false
 
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-	table.Render()
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         fmt.Sprintf("Scheduled Actions\n(%s)", asgName),
+		PlainStyle:    list,
+		Fields:        fields,
+		Data:          utils.SlicesToAny(schedules),
+		GetFieldValue: asg.GetFieldValue,
+		GetTagValue:   asg.GetTagValue,
+		ReverseSort:   reverseSort,
+	})
 	return nil
 }
 
@@ -139,19 +136,14 @@ func ListSchedulesForAllGroups(ctx context.Context, svc *asg.AutoScalingService)
 		return fmt.Errorf("get schedules for all Auto Scaling Groups: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Scheduled Actions",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Scheduled Actions",
+		PlainStyle:    list,
+		Fields:        getScheduleFields(),
+		Data:          utils.SlicesToAny(schedules),
+		GetFieldValue: asg.GetFieldValue,
+		GetTagValue:   asg.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getScheduleFields()
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(schedules), fields, asg.GetFieldValue, asg.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-	table.Render()
 	return nil
 }

@@ -105,21 +105,16 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 	// Set clusters context for role calculation
 	rds.SetClustersContext(clusters)
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Databases",
-		Style: "rounded-separated",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Databases",
+		Style:         "rounded-separated",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(instances),
+		GetFieldValue: rds.GetFieldValue,
+		GetTagValue:   rds.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(instances))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(instances), fields, rds.GetFieldValue, rds.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-	table.Render()
 	return nil
 }

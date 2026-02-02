@@ -79,19 +79,14 @@ func ListTargetGroups(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get target groups: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Target Groups",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Target Groups",
+		PlainStyle:    list,
+		Fields:        getTargetGroupFields(),
+		Data:          utils.SlicesToAny(targetGroups),
+		GetFieldValue: elb.GetFieldValue,
+		GetTagValue:   elb.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetStyle("plain")
-	}
-	fields := getTargetGroupFields()
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(targetGroups), fields, elb.GetFieldValue, elb.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }

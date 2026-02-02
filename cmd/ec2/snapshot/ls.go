@@ -77,21 +77,16 @@ func ListSnapshots(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get snapshots: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Snapshots",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Snapshots",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(snapshots),
+		GetFieldValue: ec2.GetFieldValue,
+		GetTagValue:   ec2.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetStyle("plain")
-	}
-	fields := getListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(snapshots))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(snapshots), fields, ec2.GetFieldValue, ec2.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }
 

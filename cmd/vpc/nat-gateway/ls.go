@@ -62,21 +62,15 @@ func ListNatGateways(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get nat gateways: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "NAT Gateways",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "NAT Gateways",
+		PlainStyle:    list,
+		Fields:        natGatewayListFields(),
+		Tags:          cmdutil.Tags,
+		Data:          utils.SlicesToAny(nats),
+		GetFieldValue: vpc.GetFieldValue,
+		GetTagValue:   vpc.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetRenderStyle("plain")
-	}
-
-	fields := natGatewayListFields()
-	fields = tablewriter.AppendTagFields(fields, cmdutil.Tags, utils.SlicesToAny(nats))
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(nats), fields, vpc.GetFieldValue, vpc.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }

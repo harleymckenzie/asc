@@ -98,19 +98,14 @@ func ListELBs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("get load balancers: %w", err)
 	}
 
-	table := tablewriter.NewAscWriter(tablewriter.AscTableRenderOptions{
-		Title: "Elastic Load Balancers",
+	tablewriter.RenderList(tablewriter.RenderListOptions{
+		Title:         "Elastic Load Balancers",
+		PlainStyle:    list,
+		Fields:        getListFields(),
+		Data:          utils.SlicesToAny(loadBalancers),
+		GetFieldValue: elb.GetFieldValue,
+		GetTagValue:   elb.GetTagValue,
+		ReverseSort:   reverseSort,
 	})
-	if list {
-		table.SetStyle("plain")
-	}
-	fields := getListFields()
-
-	headerRow := tablewriter.BuildHeaderRow(fields)
-	table.AppendHeader(headerRow)
-	table.AppendRows(tablewriter.BuildRows(utils.SlicesToAny(loadBalancers), fields, elb.GetFieldValue, elb.GetTagValue))
-	table.SetFieldConfigs(fields, reverseSort)
-
-	table.Render()
 	return nil
 }
