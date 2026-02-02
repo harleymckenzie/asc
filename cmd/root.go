@@ -17,7 +17,7 @@ import (
 var (
 	Profile string     // AWS profile to use for authentication
 	Region  string     // AWS region to operate in
-	Version = "0.0.40" // Current version of the application
+	Version = "0.1.0" // Current version of the application
 )
 
 // NewRootCmd creates and configures the root command for the AWS Simple CLI
