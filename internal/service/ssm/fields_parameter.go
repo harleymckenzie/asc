@@ -123,3 +123,68 @@ func getMetadataDescription(param any) (string, error) {
 func GetDecryptedValue(param types.Parameter) string {
 	return aws.ToString(param.Value)
 }
+
+// ParameterHistory field getters
+
+var parameterHistoryFieldValueGetters = map[string]FieldValueGetter{
+	"Version":            getHistoryVersion,
+	"Value":              getHistoryValue,
+	"Type":               getHistoryType,
+	"Last Modified Date": getHistoryLastModifiedDate,
+	"Last Modified User": getHistoryLastModifiedUser,
+	"Labels":             getHistoryLabels,
+	"Description":        getHistoryDescription,
+}
+
+func getParameterHistoryFieldValue(fieldName string, param types.ParameterHistory) (string, error) {
+	if getter, exists := parameterHistoryFieldValueGetters[fieldName]; exists {
+		return getter(param)
+	}
+	return "", fmt.Errorf("field %s not found in parameterHistory fieldValueGetters", fieldName)
+}
+
+func getHistoryVersion(param any) (string, error) {
+	return fmt.Sprintf("%d", param.(types.ParameterHistory).Version), nil
+}
+
+func getHistoryValue(param any) (string, error) {
+	p := param.(types.ParameterHistory)
+	// Mask SecureString values
+	if p.Type == types.ParameterTypeSecureString {
+		return "****", nil
+	}
+	return aws.ToString(p.Value), nil
+}
+
+func getHistoryType(param any) (string, error) {
+	return string(param.(types.ParameterHistory).Type), nil
+}
+
+func getHistoryLastModifiedDate(param any) (string, error) {
+	t := param.(types.ParameterHistory).LastModifiedDate
+	if t == nil {
+		return "", nil
+	}
+	return t.Format(time.RFC3339), nil
+}
+
+func getHistoryLastModifiedUser(param any) (string, error) {
+	return aws.ToString(param.(types.ParameterHistory).LastModifiedUser), nil
+}
+
+func getHistoryLabels(param any) (string, error) {
+	labels := param.(types.ParameterHistory).Labels
+	if len(labels) == 0 {
+		return "", nil
+	}
+	return fmt.Sprintf("%v", labels), nil
+}
+
+func getHistoryDescription(param any) (string, error) {
+	return aws.ToString(param.(types.ParameterHistory).Description), nil
+}
+
+// GetDecryptedHistoryValue returns the actual value for display when --decrypt flag is used.
+func GetDecryptedHistoryValue(param types.ParameterHistory) string {
+	return aws.ToString(param.Value)
+}

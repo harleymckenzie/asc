@@ -18,10 +18,13 @@ type SSMClientAPI interface {
 	GetParameter(ctx context.Context, params *ssm.GetParameterInput, optFns ...func(*ssm.Options)) (*ssm.GetParameterOutput, error)
 	GetParameters(ctx context.Context, params *ssm.GetParametersInput, optFns ...func(*ssm.Options)) (*ssm.GetParametersOutput, error)
 	GetParametersByPath(ctx context.Context, params *ssm.GetParametersByPathInput, optFns ...func(*ssm.Options)) (*ssm.GetParametersByPathOutput, error)
+	GetParameterHistory(ctx context.Context, params *ssm.GetParameterHistoryInput, optFns ...func(*ssm.Options)) (*ssm.GetParameterHistoryOutput, error)
 	PutParameter(ctx context.Context, params *ssm.PutParameterInput, optFns ...func(*ssm.Options)) (*ssm.PutParameterOutput, error)
 	DeleteParameter(ctx context.Context, params *ssm.DeleteParameterInput, optFns ...func(*ssm.Options)) (*ssm.DeleteParameterOutput, error)
 	DeleteParameters(ctx context.Context, params *ssm.DeleteParametersInput, optFns ...func(*ssm.Options)) (*ssm.DeleteParametersOutput, error)
 	DescribeParameters(ctx context.Context, params *ssm.DescribeParametersInput, optFns ...func(*ssm.Options)) (*ssm.DescribeParametersOutput, error)
+	LabelParameterVersion(ctx context.Context, params *ssm.LabelParameterVersionInput, optFns ...func(*ssm.Options)) (*ssm.LabelParameterVersionOutput, error)
+	UnlabelParameterVersion(ctx context.Context, params *ssm.UnlabelParameterVersionInput, optFns ...func(*ssm.Options)) (*ssm.UnlabelParameterVersionOutput, error)
 }
 
 // SSMService is a struct that holds the SSM client.
@@ -337,6 +340,75 @@ func (svc *SSMService) MoveParametersRecursive(ctx context.Context, sourcePath, 
 	}
 
 	return moved, nil
+}
+
+// GetParameterHistory returns the version history of a parameter.
+func (svc *SSMService) GetParameterHistory(ctx context.Context, input *ascTypes.GetParameterHistoryInput) ([]types.ParameterHistory, error) {
+	var history []types.ParameterHistory
+	var nextToken *string
+
+	for {
+		apiInput := &ssm.GetParameterHistoryInput{
+			Name:           aws.String(input.Name),
+			WithDecryption: aws.Bool(input.Decrypt),
+			NextToken:      nextToken,
+		}
+
+		if input.MaxResults > 0 {
+			apiInput.MaxResults = aws.Int32(int32(input.MaxResults))
+		}
+
+		output, err := svc.Client.GetParameterHistory(ctx, apiInput)
+		if err != nil {
+			return nil, err
+		}
+
+		history = append(history, output.Parameters...)
+
+		if output.NextToken == nil {
+			break
+		}
+		nextToken = output.NextToken
+
+		// If we have a max and reached it, stop
+		if input.MaxResults > 0 && len(history) >= input.MaxResults {
+			break
+		}
+	}
+
+	return history, nil
+}
+
+// LabelParameterVersion adds labels to a specific parameter version.
+func (svc *SSMService) LabelParameterVersion(ctx context.Context, input *ascTypes.LabelParameterVersionInput) ([]string, error) {
+	apiInput := &ssm.LabelParameterVersionInput{
+		Name:   aws.String(input.Name),
+		Labels: input.Labels,
+	}
+
+	if input.Version > 0 {
+		apiInput.ParameterVersion = aws.Int64(input.Version)
+	}
+
+	output, err := svc.Client.LabelParameterVersion(ctx, apiInput)
+	if err != nil {
+		return nil, err
+	}
+
+	return output.InvalidLabels, nil
+}
+
+// UnlabelParameterVersion removes labels from a parameter.
+func (svc *SSMService) UnlabelParameterVersion(ctx context.Context, input *ascTypes.UnlabelParameterVersionInput) ([]string, error) {
+	output, err := svc.Client.UnlabelParameterVersion(ctx, &ssm.UnlabelParameterVersionInput{
+		Name:   aws.String(input.Name),
+		Labels: input.Labels,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.InvalidLabels, nil
 }
 
 // transformPath converts /source/path/key to /dest/path/key.
