@@ -67,49 +67,61 @@ func ShowSSMParameter(cmd *cobra.Command, name string) error {
 		return fmt.Errorf("create ssm service: %w", err)
 	}
 
+	names, err := resolveGlob(ctx, svc, name)
+	if err != nil {
+		return fmt.Errorf("resolve glob: %w", err)
+	}
+
+	if len(names) == 0 {
+		return fmt.Errorf("no parameters matching: %s", name)
+	}
+
 	// When value-only is set, always decrypt to get the actual value
 	shouldDecrypt := decrypt || valueOnly
-	param, err := svc.GetParameter(ctx, &ascTypes.GetParameterInput{
-		Name:    name,
-		Decrypt: shouldDecrypt,
-	})
-	if err != nil {
-		return fmt.Errorf("get parameter: %w", err)
-	}
 
-	// If value-only flag is set, just print the value and exit
-	if valueOnly {
-		fmt.Println(aws.ToString(param.Value))
-		return nil
-	}
-
-	table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
-		Title:          "Parameter: " + aws.ToString(param.Name),
-		Columns:        2,
-		MaxColumnWidth: 100,
-	})
-
-	// Create field getter that respects decrypt flag
-	fieldGetter := func(fieldName string, instance any) (string, error) {
-		if fieldName == "Value" && decrypt {
-			p := instance.(types.Parameter)
-			return ssm.GetDecryptedValue(p), nil
+	for _, paramName := range names {
+		param, err := svc.GetParameter(ctx, &ascTypes.GetParameterInput{
+			Name:    paramName,
+			Decrypt: shouldDecrypt,
+		})
+		if err != nil {
+			return fmt.Errorf("get parameter %s: %w", paramName, err)
 		}
-		return ssm.GetFieldValue(fieldName, instance)
-	}
 
-	fields, err := tablewriter.PopulateFieldValues(*param, getShowFields(), fieldGetter)
-	if err != nil {
-		return fmt.Errorf("populate field values: %w", err)
-	}
+		// If value-only flag is set, just print the value and exit
+		if valueOnly {
+			fmt.Println(aws.ToString(param.Value))
+			continue
+		}
 
-	// Layout = Horizontal or Grid
-	layout := tablewriter.Horizontal
-	if cmdutil.GetLayout(cmd) == "grid" {
-		layout = tablewriter.Grid
-	}
-	table.AddSections(tablewriter.BuildSections(fields, layout))
+		table := tablewriter.NewDetailTable(tablewriter.AscTableRenderOptions{
+			Title:          "Parameter: " + aws.ToString(param.Name),
+			Columns:        2,
+			MaxColumnWidth: 100,
+		})
 
-	table.Render()
+		// Create field getter that respects decrypt flag
+		fieldGetter := func(fieldName string, instance any) (string, error) {
+			if fieldName == "Value" && decrypt {
+				p := instance.(types.Parameter)
+				return ssm.GetDecryptedValue(p), nil
+			}
+			return ssm.GetFieldValue(fieldName, instance)
+		}
+
+		fields, err := tablewriter.PopulateFieldValues(*param, getShowFields(), fieldGetter)
+		if err != nil {
+			return fmt.Errorf("populate field values: %w", err)
+		}
+
+		// Layout = Horizontal or Grid
+		layout := tablewriter.Horizontal
+		if cmdutil.GetLayout(cmd) == "grid" {
+			layout = tablewriter.Grid
+		}
+		table.AddSections(tablewriter.BuildSections(fields, layout))
+
+		table.Render()
+	}
 	return nil
 }

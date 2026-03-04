@@ -40,14 +40,25 @@ func CatSSMParameter(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create ssm service: %w", err)
 	}
 
-	param, err := svc.GetParameter(ctx, &ascTypes.GetParameterInput{
-		Name:    args[0],
-		Decrypt: catDecrypt,
-	})
+	names, err := resolveGlob(ctx, svc, args[0])
 	if err != nil {
-		return fmt.Errorf("get parameter: %w", err)
+		return fmt.Errorf("resolve glob: %w", err)
 	}
 
-	fmt.Println(aws.ToString(param.Value))
+	if len(names) == 0 {
+		return fmt.Errorf("no parameters matching: %s", args[0])
+	}
+
+	for _, name := range names {
+		param, err := svc.GetParameter(ctx, &ascTypes.GetParameterInput{
+			Name:    name,
+			Decrypt: catDecrypt,
+		})
+		if err != nil {
+			return fmt.Errorf("get parameter %s: %w", name, err)
+		}
+
+		fmt.Println(aws.ToString(param.Value))
+	}
 	return nil
 }

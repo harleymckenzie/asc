@@ -27,6 +27,7 @@ func init() {
 var setCmd = &cobra.Command{
 	Use:   "set <parameter-name> [value]",
 	Short: "Create or update an SSM parameter",
+	Aliases: []string{"add"},
 	Long: `Create or update an SSM parameter.
 
 If the parameter already exists, you will be prompted for confirmation
