@@ -18,6 +18,7 @@ var (
 	showAMI        bool
 	showLaunchTime bool
 	showPrivateIP  bool
+	showSubnet     bool
 
 	sortByID         bool
 	sortByType       bool
@@ -50,7 +51,7 @@ func getListFields() []tablewriter.Field {
 		{Name: "vCPUs", Category: "Instance Details", Visible: false},
 		{Name: "Public IP", Category: "Network", Visible: true},
 		{Name: "Private IP", Category: "Network", Visible: showPrivateIP, SortBy: sortByPrivateIP, SortDirection: tablewriter.Asc},
-		{Name: "Subnet ID", Category: "Network", Visible: false},
+		{Name: "Subnet ID", Category: "Network", Visible: showSubnet},
 		{Name: "VPC ID", Category: "Network", Visible: false},
 		{Name: "Availability Zone", Category: "Network", Visible: false},
 		{Name: "Security Group(s)", Category: "Security", Visible: false},
@@ -81,6 +82,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().BoolVarP(&showAMI, "ami", "A", false, "Show the AMI ID of the instance.")
 	cobraCmd.Flags().BoolVarP(&showLaunchTime, "launch-time", "L", false, "Show the launch time of the instance.")
 	cobraCmd.Flags().BoolVarP(&showPrivateIP, "private-ip", "I", false, "Show the private IP address of the instance.")
+	cobraCmd.Flags().BoolVarP(&showSubnet, "subnet", "S", false, "Show the subnet ID of the instance.")
 	cmdutil.AddTagFlag(cobraCmd)
 
 	// Sorting flags
