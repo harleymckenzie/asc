@@ -320,21 +320,30 @@ func getDBInstanceParameterGroup(instance any) (string, error) {
 // getDBInstancePendingModifications returns pending modifications information
 func getDBInstancePendingModifications(instance any) (string, error) {
 	dbInstance := instance.(types.DBInstance)
-	pending := dbInstance.PendingModifiedValues
 
-	// If no pending modifications, return "None"
-	if pending == nil {
-		return "None", nil
+	var modifications []string
+
+	// Check instance-level pending modifications
+	if dbInstance.PendingModifiedValues != nil {
+		modifications = append(modifications, extractPendingModifications(dbInstance.PendingModifiedValues)...)
 	}
 
-	modifications := extractPendingModifications(pending)
+	// Check parent cluster's pending modifications
+	if dbInstance.DBClusterIdentifier != nil {
+		for _, cluster := range clustersContext {
+			if aws.ToString(cluster.DBClusterIdentifier) == aws.ToString(dbInstance.DBClusterIdentifier) {
+				if cluster.PendingModifiedValues != nil {
+					modifications = append(modifications, extractClusterPendingModifications(cluster.PendingModifiedValues)...)
+				}
+				break
+			}
+		}
+	}
 
-	// If no specific modifications found, return "None"
 	if len(modifications) == 0 {
 		return "None", nil
 	}
 
-	// Return formatted list of modifications
 	return fmt.Sprintf("%d pending: %s", len(modifications), fmt.Sprintf("%v", modifications)), nil
 }
 
@@ -413,6 +422,38 @@ func extractPendingModifications(pending *types.PendingModifiedValues) []string 
 	// Licensing modifications
 	if pending.LicenseModel != nil {
 		modifications = append(modifications, fmt.Sprintf("License Model: %s", *pending.LicenseModel))
+	}
+
+	return modifications
+}
+
+// extractClusterPendingModifications extracts and formats pending modifications from the ClusterPendingModifiedValues struct
+func extractClusterPendingModifications(pending *types.ClusterPendingModifiedValues) []string {
+	var modifications []string
+
+	if pending.AllocatedStorage != nil {
+		modifications = append(modifications, fmt.Sprintf("Cluster Allocated Storage: %d", *pending.AllocatedStorage))
+	}
+	if pending.BackupRetentionPeriod != nil {
+		modifications = append(modifications, fmt.Sprintf("Cluster Backup Retention: %d days", *pending.BackupRetentionPeriod))
+	}
+	if pending.DBClusterIdentifier != nil {
+		modifications = append(modifications, fmt.Sprintf("Cluster ID: %s", *pending.DBClusterIdentifier))
+	}
+	if pending.EngineVersion != nil {
+		modifications = append(modifications, fmt.Sprintf("Cluster Engine Version: %s", *pending.EngineVersion))
+	}
+	if pending.IAMDatabaseAuthenticationEnabled != nil {
+		modifications = append(modifications, fmt.Sprintf("Cluster IAM Auth: %t", *pending.IAMDatabaseAuthenticationEnabled))
+	}
+	if pending.Iops != nil {
+		modifications = append(modifications, fmt.Sprintf("Cluster IOPS: %d", *pending.Iops))
+	}
+	if pending.MasterUserPassword != nil {
+		modifications = append(modifications, "Cluster Master Password: [CHANGED]")
+	}
+	if pending.StorageType != nil {
+		modifications = append(modifications, fmt.Sprintf("Cluster Storage Type: %s", *pending.StorageType))
 	}
 
 	return modifications
