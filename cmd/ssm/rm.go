@@ -73,7 +73,13 @@ func DeleteSSMParameter(cmd *cobra.Command, args []string) error {
 			}
 		}
 	} else {
-		names = args
+		for _, arg := range args {
+			resolved, err := resolveGlob(ctx, svc, arg)
+			if err != nil {
+				return fmt.Errorf("resolve glob %s: %w", arg, err)
+			}
+			names = append(names, resolved...)
+		}
 	}
 
 	if len(names) == 0 {

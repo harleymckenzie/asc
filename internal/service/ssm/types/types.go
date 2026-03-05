@@ -51,3 +51,23 @@ type MoveParameterInput struct {
 	Source string
 	Dest   string
 }
+
+// GetParameterHistoryInput defines input for GetParameterHistory operation.
+type GetParameterHistoryInput struct {
+	Name       string
+	Decrypt    bool
+	MaxResults int
+}
+
+// LabelParameterVersionInput defines input for LabelParameterVersion operation.
+type LabelParameterVersionInput struct {
+	Name    string
+	Version int64
+	Labels  []string
+}
+
+// UnlabelParameterVersionInput defines input for UnlabelParameterVersion operation.
+type UnlabelParameterVersionInput struct {
+	Name   string
+	Labels []string
+}

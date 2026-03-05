@@ -17,6 +17,8 @@ func GetFieldValue(fieldName string, instance any) (string, error) {
 		return getParameterFieldValue(fieldName, v)
 	case types.ParameterMetadata:
 		return getParameterMetadataFieldValue(fieldName, v)
+	case types.ParameterHistory:
+		return getParameterHistoryFieldValue(fieldName, v)
 	default:
 		return "", fmt.Errorf("unsupported instance type: %T", instance)
 	}
