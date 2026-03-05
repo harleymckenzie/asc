@@ -29,13 +29,41 @@ jobs:
           echo "Tag version: $TAG_VERSION"
           echo "App version: $APP_VERSION"
           
-          # Check if APP_VERSION is greater than TAG_VERSION
-          # First, sort them and get the highest
-          sorted_versions=$(printf '%s\n%s\n' "$APP_VERSION" "$TAG_VERSION" | sort -V)
-          lowest_version=$(echo "$sorted_versions" | head -n 1)
+          # Check if APP_VERSION is greater than TAG_VERSION using semver rules.
+          # sort -V does not handle pre-release correctly (it ranks 0.2.0-beta.2
+          # higher than 0.2.0, but semver says pre-releases are lower).
+          # Strategy: compare base versions first, then handle pre-release ordering.
+          TAG_BASE="${TAG_VERSION%%-*}"
+          APP_BASE="${APP_VERSION%%-*}"
+          TAG_PRE="${TAG_VERSION#"$TAG_BASE"}"   # e.g. "-beta.2" or ""
+          APP_PRE="${APP_VERSION#"$APP_BASE"}"   # e.g. "-beta.2" or ""
 
-          if [ "$lowest_version" = "$TAG_VERSION" ] && [ "$APP_VERSION" != "$TAG_VERSION" ]; then
-            echo "APP_VERSION is greater than TAG_VERSION"
+          # Compare base versions using sort -V
+          sorted_bases=$(printf '%s\n%s\n' "$APP_BASE" "$TAG_BASE" | sort -V)
+          lowest_base=$(echo "$sorted_bases" | head -n 1)
+
+          should_bump=false
+
+          if [ "$APP_BASE" != "$TAG_BASE" ] && [ "$lowest_base" = "$TAG_BASE" ]; then
+            # App base version is strictly higher (e.g. 0.3.0 > 0.2.0)
+            should_bump=true
+          elif [ "$APP_BASE" = "$TAG_BASE" ]; then
+            # Same base version - compare pre-release status
+            if [ -n "$TAG_PRE" ] && [ -z "$APP_PRE" ]; then
+              # Tag is pre-release, app is release (e.g. 0.2.0-beta.2 -> 0.2.0)
+              should_bump=true
+            elif [ -n "$TAG_PRE" ] && [ -n "$APP_PRE" ] && [ "$APP_PRE" != "$TAG_PRE" ]; then
+              # Both are pre-releases - use sort -V on full versions (works for same-base pre-releases)
+              sorted_full=$(printf '%s\n%s\n' "$APP_VERSION" "$TAG_VERSION" | sort -V)
+              lowest_full=$(echo "$sorted_full" | head -n 1)
+              if [ "$lowest_full" = "$TAG_VERSION" ]; then
+                should_bump=true
+              fi
+            fi
+          fi
+
+          if [ "$should_bump" = true ]; then
+            echo "APP_VERSION ($APP_VERSION) is greater than TAG_VERSION ($TAG_VERSION)"
             echo "NEW_TAG_VERSION=$APP_VERSION" >> $GITHUB_ENV
           else
             echo "APP_VERSION is not greater than TAG_VERSION (equal or lower)"
