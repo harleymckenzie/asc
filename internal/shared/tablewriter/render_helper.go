@@ -11,6 +11,28 @@ type RenderListOptions struct {
 	GetFieldValue AttributeGetter
 	GetTagValue   TagGetter
 	ReverseSort   bool
+	HideEmpty     bool
+}
+
+// hideEmptyFields sets Visible to false for any visible field where all data values are empty.
+func hideEmptyFields(fields []Field, data []any, getFieldValue AttributeGetter) []Field {
+	for i := range fields {
+		if !fields[i].Visible {
+			continue
+		}
+		allEmpty := true
+		for _, item := range data {
+			val, err := getFieldValue(fields[i].Name, item)
+			if err == nil && val != "" {
+				allEmpty = false
+				break
+			}
+		}
+		if allEmpty {
+			fields[i].Visible = false
+		}
+	}
+	return fields
 }
 
 // SetFieldVisibility sets the visibility of a field by name.
@@ -45,6 +67,9 @@ func RenderList(opts RenderListOptions) {
 	}
 
 	fields := opts.Fields
+	if opts.HideEmpty {
+		fields = hideEmptyFields(fields, opts.Data, opts.GetFieldValue)
+	}
 	if len(opts.Tags) > 0 {
 		fields = AppendTagFields(fields, opts.Tags, opts.Data)
 	}

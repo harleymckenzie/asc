@@ -6,6 +6,7 @@ import (
 	"github.com/harleymckenzie/asc/cmd/ec2"
 	"github.com/harleymckenzie/asc/cmd/elasticache"
 	"github.com/harleymckenzie/asc/cmd/elb"
+	"github.com/harleymckenzie/asc/cmd/profile"
 	"github.com/harleymckenzie/asc/cmd/rds"
 	"github.com/harleymckenzie/asc/cmd/ssm"
 	"github.com/harleymckenzie/asc/cmd/vpc"
@@ -40,6 +41,7 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(elb.NewELBRootCmd())
 	cmd.AddCommand(rds.NewRDSRootCmd())
 	cmd.AddCommand(ssm.NewSSMRootCmd())
+	cmd.AddCommand(profile.NewProfileRootCmd())
 	cmd.AddCommand(vpc.NewVPCRootCmd())
 
 	// Add command groups for better organization
