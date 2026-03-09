@@ -45,12 +45,12 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | CloudFormation | events                       | ✗      | List CloudFormation stack events                                            |
 | CloudFormation | ls                           | ✓      | List CloudFormation stacks                                                  |
 | CloudFormation | rm                           | ✗      | Delete CloudFormation stacks                                                |
-| CloudFormation | show / describe              | ✗      | Show CloudFormation stack details                                           |
+| CloudFormation | show / describe              | ✓      | Show CloudFormation stack details                                           |
 | CloudFormation | parameter ls                 | ✗      | List CloudFormation stack parameters                                        |
 | CloudFormation | parameter edit               | ✗      | Edit CloudFormation stack parameters                                        |
 | EC2            | ls                           | ✓      | List EC2 instances                                                          |
 | EC2            | modify                       | ✗      | Modify EC2 instances                                                        |
-| EC2            | show / describe              | ✗      | Show EC2 instance details                                                   |
+| EC2            | show / describe              | ✓      | Show EC2 instance details                                                   |
 | EC2            | start                        | ✓      | Start EC2 instances                                                         |
 | EC2            | stop                         | ✓      | Stop EC2 instances                                                          |
 | EC2            | restart                      | ✓      | Restart EC2 instances                                                       |
@@ -59,7 +59,6 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | EC2            | ami ls                       | ✓      | List EC2 AMIs                                                               |
 | EC2            | ami rm                       | ✗      | Remove EC2 AMI                                                              |
 | EC2            | ami show                     | ✓      | Show EC2 AMI details                                                        |
-| EC2            | ami rm                       | ✗      | Remove EC2 AMI                                                              |
 | EC2            | security-group add           | ✗      | Add EC2 security group rule                                                 |
 | EC2            | security-group ls            | ✓      | List EC2 security groups                                                    |
 | EC2            | security-group rm            | ✗      | Remove EC2 security group                                                   |
@@ -67,11 +66,11 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | EC2            | security-group rule add      | ✗      | Add EC2 security group rule                                                 |
 | EC2            | security-group rule rm       | ✗      | Remove EC2 security group rule                                              |
 | EC2            | volume create                | ✗      | Create EC2 volume                                                           |
-| EC2            | volume ls                    | ✗      | List EC2 volumes                                                            |
-| EC2            | volume show                  | ✗      | Show EC2 volume details                                                     |
+| EC2            | volume ls                    | ✓      | List EC2 volumes                                                            |
+| EC2            | volume show                  | ✓      | Show EC2 volume details                                                     |
 | EC2            | volume rm                    | ✗      | Remove EC2 volume                                                           |
-| EC2            | snapshot ls                  | ✗      | List EC2 snapshots                                                          |
-| EC2            | snapshot show                | ✗      | Show EC2 snapshot details                                                   |
+| EC2            | snapshot ls                  | ✓      | List EC2 snapshots                                                          |
+| EC2            | snapshot show                | ✓      | Show EC2 snapshot details                                                   |
 | EC2            | snapshot rm                  | ✗      | Remove EC2 snapshot                                                         |
 | ECS            | ls                           | ✗      | List ECS clusters, services, tasks                                          |
 | ECS            | modify                       | ✗      | Modify ECS clusters and services                                            |
@@ -91,11 +90,15 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | ELB            | target-group add             | ✗      | Add target to Elastic Load Balancer target group                            |
 | ELB            | target-group rm              | ✗      | Remove target from Elastic Load Balancer target group                       |
 | ELB            | target-group show            | ✗      | Show Elastic Load Balancer target group details                             |
-| RDS            | ls                           | ✓      | List RDS instances                                                          |
+| Organizations | ls                           | ✓      | List accounts and organizational units                                      |
+| Organizations | show / describe              | ✓      | Show details for the organization, an account, or an OU                     |
+| Profile        | ls                           | ✓      | List AWS CLI profiles and SSO sessions                                      |
+| RDS            | ls                           | ✓      | List RDS clusters and instances                                             |
 | RDS            | modify                       | ✓*     | Modify RDS instances<br><sub>_\* Currently supports instance class and preferred maintenance window only_</sub>                                                        |
-| RDS            | cancel-pending-modifications | ✓     | Cancel pending modifications of an RDS instance                             |
+| RDS            | cancel-pending-modifications | ✓      | Cancel pending modifications of an RDS instance                             |
 | RDS            | rm                           | ✗      | Terminate RDS instances                                                     |
 | RDS            | show / describe              | ✓      | Show RDS instance details                                                   |
+| RDS            | cluster show                 | ✓      | Show RDS cluster details                                                    |
 | Route53        | ls                           | ✗      | List Route53 hosted zones and records                                       |
 | Route53        | modify                       | ✗      | Modify Route53 hosted zones and records                                     |
 | Route53        | rm                           | ✗      | Terminate Route53 hosted zones and records                                  |
@@ -105,18 +108,22 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | S3             | mv                           | ✗      | Move S3 objects                                                             |
 | S3             | rm                           | ✗      | Delete S3 buckets                                                           |
 | S3             | show / describe              | ✗      | Show S3 bucket or object details                                            |
+| SSM            | ls                           | ✓      | List SSM parameters                                                         |
+| SSM            | show                         | ✓      | Show SSM parameter details                                                  |
+| SSM            | cat                          | ✓      | Print the value of an SSM parameter                                         |
+| SSM            | set                          | ✓      | Create or update an SSM parameter                                           |
+| SSM            | edit                         | ✓      | Edit an SSM parameter in your default editor                                |
+| SSM            | cp                           | ✓      | Copy SSM parameters                                                         |
+| SSM            | mv                           | ✓      | Move/rename SSM parameters                                                  |
+| SSM            | rm                           | ✓      | Delete SSM parameters                                                       |
+| SSM            | history                      | ✓      | Show version history of an SSM parameter                                    |
+| SSM            | label                        | ✓      | Add labels to a parameter version                                           |
+| SSM            | unlabel                      | ✓      | Remove labels from a parameter                                              |
+| SSM            | revert                       | ✓      | Revert a parameter to a previous version                                    |
 | SSM            | document ls                  | ✗      | List SSM documents                                                          |
 | SSM            | document run                 | ✗      | Run SSM documents                                                           |
 | SSM            | document rm                  | ✗      | Delete SSM documents                                                        |
 | SSM            | document show                | ✗      | Show SSM document details                                                   |
-| SSM            | parameter add                | ✗      | Add SSM parameters                                                          |
-| SSM            | parameter cp                 | ✗      | Copy SSM parameters, supports wildcards and cross account copying           |
-| SSM            | parameter diff               | ✗      | Diff SSM parameters, supports wildcards and cross account diffing           |
-| SSM            | parameter edit               | ✗      | Edit SSM parameters                                                         |
-| SSM            | parameter ls                 | ✗      | List SSM parameters, supports wildcards                                     |
-| SSM            | parameter mv                 | ✗      | Move SSM parameters, supports wildcards and cross account moving            |
-| SSM            | parameter rm                 | ✗      | Delete SSM parameters, supports wildcards                                   |
-| SSM            | parameter show               | ✗      | Show SSM parameter details                                                  |
 | SSM            | session ls                   | ✗      | List SSM sessions                                                           |
 | SSM            | session start                | ✗      | Start SSM sessions                                                          |
 | SSM            | session stop                 | ✗      | Stop SSM sessions                                                           |
@@ -145,16 +152,13 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | VPC            | route-table ls               | ✓      | List VPC route tables                                                       |
 | VPC            | route-table add              | ✗      | Add VPC route table                                                         |
 | VPC            | route-table rm               | ✗      | Remove VPC route table                                                      |
+| VPC            | route-table show             | ✓      | Show VPC route table details                                                |
+| VPC            | route-table rule add         | ✗      | Add VPC route table rule                                                    |
+| VPC            | route-table rule rm          | ✗      | Remove VPC route table rule                                                 |
 | VPC            | subnet ls                    | ✓      | List VPC subnets                                                            |
 | VPC            | subnet add                   | ✗      | Add VPC subnet                                                              |
 | VPC            | subnet rm                    | ✗      | Remove VPC subnet                                                           |
 | VPC            | subnet show                  | ✓      | Show VPC subnet details                                                     |
-| VPC            | route-table ls               | ✓      | List VPC route tables                                                       |
-| VPC            | route-table add              | ✗      | Add VPC route table                                                         |
-| VPC            | route-table rm               | ✗      | Remove VPC route table                                                      |
-| VPC            | route-table show             | ✓      | Show VPC route table details                                                |
-| VPC            | route-table rule add         | ✗      | Add VPC route table rule                                                    |
-| VPC            | route-table rule rm          | ✗      | Remove VPC route table rule                                                 |
 
 ### Service Implementation: Other Features
 | Description                                                 | Status | Notes / Features                                 |
@@ -166,7 +170,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Optional terminal UI                                        | ✗      |                                                  |
 | Export data to CSV, JSON, or other formats                  | ✗      |                                                  |
 | Service agnostic action commands                            | ✗      |                                                  |
-| AWS Profile management                                      | ✗      |                                                  |
+| AWS Profile management                                      | ✓*     | List profiles and SSO sessions via `asc profile ls`<br><sub>_\* Currently supports listing only_</sub> |
 | 'Select' resources to avoid repeating identifiers           | ✗      |                                                  |
 | Display pricing information on supported resources          | ✗      |                                                  |
 | `watch` command for monitoring resources                    | ✗      |                                                  |
