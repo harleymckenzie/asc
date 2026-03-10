@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.247.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.73.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.4

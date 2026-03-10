@@ -72,7 +72,14 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | EC2            | snapshot ls                  | ✓      | List EC2 snapshots                                                          |
 | EC2            | snapshot show                | ✓      | Show EC2 snapshot details                                                   |
 | EC2            | snapshot rm                  | ✗      | Remove EC2 snapshot                                                         |
-| ECS            | ls                           | ✗      | List ECS clusters, services, tasks                                          |
+| ECS            | cluster ls                   | ✓      | List ECS clusters                                                           |
+| ECS            | cluster show                 | ✓      | Show ECS cluster details                                                    |
+| ECS            | service ls                   | ✓      | List ECS services, supports `--cluster` filter                              |
+| ECS            | service show                 | ✓      | Show ECS service details                                                    |
+| ECS            | task ls                      | ✓      | List ECS tasks, supports `--cluster` and `--service` filters                |
+| ECS            | task show                    | ✓      | Show ECS task details                                                       |
+| ECS            | task-definition ls           | ✓      | List task definition families, or revisions for a specific family            |
+| ECS            | task-definition show         | ✓      | Show ECS task definition details                                            |
 | ECS            | modify                       | ✗      | Modify ECS clusters and services                                            |
 | ECS            | rm / terminate               | ✗      | Terminate ECS tasks                                                         |
 | ECS            | schedule add                 | ✗      | Add schedule to ECS services                                                |
@@ -240,6 +247,48 @@ asc ec2 ls -t
 #### Output EC2 instances in a simple list format
 ```sh
 asc ec2 ls -l
+```
+
+### ECS
+
+#### List all ECS clusters
+```sh
+asc ecs cluster ls
+```
+
+#### Show details for a specific cluster
+```sh
+asc ecs cluster show my-cluster
+```
+
+#### List all ECS services across all clusters
+```sh
+asc ecs service ls
+```
+
+#### List services in a specific cluster
+```sh
+asc ecs service ls --cluster my-cluster
+```
+
+#### List all tasks, filtered by service
+```sh
+asc ecs task ls --cluster my-cluster --service my-service
+```
+
+#### List task definition families
+```sh
+asc ecs task-definition ls
+```
+
+#### List revisions for a specific task definition family
+```sh
+asc ecs task-definition ls my-task-family
+```
+
+#### Show task definition details
+```sh
+asc ecs task-definition show my-task-family:1
 ```
 
 ### Auto Scaling Groups (ASG)

@@ -4,6 +4,7 @@ import (
 	"github.com/harleymckenzie/asc/cmd/asg"
 	"github.com/harleymckenzie/asc/cmd/cloudformation"
 	"github.com/harleymckenzie/asc/cmd/ec2"
+	"github.com/harleymckenzie/asc/cmd/ecs"
 	"github.com/harleymckenzie/asc/cmd/elasticache"
 	"github.com/harleymckenzie/asc/cmd/elb"
 	"github.com/harleymckenzie/asc/cmd/organizations"
@@ -19,7 +20,7 @@ import (
 var (
 	Profile string     // AWS profile to use for authentication
 	Region  string     // AWS region to operate in
-	Version = "0.3.0" // Current version of the application
+	Version = "0.4.0-beta.1" // Current version of the application
 )
 
 // NewRootCmd creates and configures the root command for the AWS Simple CLI
@@ -38,6 +39,7 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(asg.NewASGRootCmd())
 	cmd.AddCommand(cloudformation.NewCloudFormationRootCmd())
 	cmd.AddCommand(ec2.NewEC2RootCmd())
+	cmd.AddCommand(ecs.NewECSRootCmd())
 	cmd.AddCommand(elasticache.NewElasticacheRootCmd())
 	cmd.AddCommand(elb.NewELBRootCmd())
 	cmd.AddCommand(organizations.NewOrganizationsRootCmd())
