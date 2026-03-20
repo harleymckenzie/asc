@@ -109,7 +109,7 @@ func getDBInstanceClusterID(instance any) (string, error) {
 	if dbInstance.DBClusterIdentifier != nil {
 		return aws.ToString(dbInstance.DBClusterIdentifier), nil
 	}
-	return "-", nil
+	return "", nil
 }
 
 // getDBInstanceID returns the database instance identifier

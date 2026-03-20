@@ -115,6 +115,7 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 		GetFieldValue: rds.GetFieldValue,
 		GetTagValue:   rds.GetTagValue,
 		ReverseSort:   reverseSort,
+		HideEmpty:     true,
 	})
 	return nil
 }

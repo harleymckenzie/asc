@@ -31,3 +31,15 @@ type ModifyInstanceInput struct {
 	// Must be at least 30 minutes.
 	PreferredMaintenanceWindow *string
 }
+
+type CreateSnapshotInput struct {
+
+	// The identifier of the DB instance or cluster to snapshot
+	Identifier string
+
+	// The identifier for the snapshot
+	SnapshotIdentifier string
+
+	// Whether the target is a cluster
+	IsCluster bool
+}

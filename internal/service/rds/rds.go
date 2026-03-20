@@ -2,6 +2,8 @@ package rds
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -14,7 +16,11 @@ import (
 type RDSClientAPI interface {
 	DescribeDBInstances(context.Context, *rds.DescribeDBInstancesInput, ...func(*rds.Options)) (*rds.DescribeDBInstancesOutput, error)
 	DescribeDBClusters(context.Context, *rds.DescribeDBClustersInput, ...func(*rds.Options)) (*rds.DescribeDBClustersOutput, error)
+	DescribeDBSnapshots(context.Context, *rds.DescribeDBSnapshotsInput, ...func(*rds.Options)) (*rds.DescribeDBSnapshotsOutput, error)
+	DescribeDBClusterSnapshots(context.Context, *rds.DescribeDBClusterSnapshotsInput, ...func(*rds.Options)) (*rds.DescribeDBClusterSnapshotsOutput, error)
 	ModifyDBInstance(context.Context, *rds.ModifyDBInstanceInput, ...func(*rds.Options)) (*rds.ModifyDBInstanceOutput, error)
+	CreateDBSnapshot(context.Context, *rds.CreateDBSnapshotInput, ...func(*rds.Options)) (*rds.CreateDBSnapshotOutput, error)
+	CreateDBClusterSnapshot(context.Context, *rds.CreateDBClusterSnapshotInput, ...func(*rds.Options)) (*rds.CreateDBClusterSnapshotOutput, error)
 }
 
 // RDSService is the service for the RDS client.
@@ -70,4 +76,44 @@ func (svc *RDSService) ModifyInstance(ctx context.Context, input *ascTypes.Modif
 		PreferredMaintenanceWindow: input.PreferredMaintenanceWindow,
 	})
 	return err
+}
+
+// CreateSnapshot creates a snapshot of an RDS instance or cluster.
+func (svc *RDSService) CreateSnapshot(ctx context.Context, input *ascTypes.CreateSnapshotInput) error {
+	if input.IsCluster {
+		_, err := svc.Client.CreateDBClusterSnapshot(ctx, &rds.CreateDBClusterSnapshotInput{
+			DBClusterIdentifier:         &input.Identifier,
+			DBClusterSnapshotIdentifier: &input.SnapshotIdentifier,
+		})
+		return err
+	}
+
+	_, err := svc.Client.CreateDBSnapshot(ctx, &rds.CreateDBSnapshotInput{
+		DBInstanceIdentifier: &input.Identifier,
+		DBSnapshotIdentifier: &input.SnapshotIdentifier,
+	})
+	return err
+}
+
+// WaitForSnapshot waits for an RDS snapshot to become available.
+func (svc *RDSService) WaitForSnapshot(ctx context.Context, input *ascTypes.CreateSnapshotInput, maxWait time.Duration) error {
+	if input.IsCluster {
+		waiter := rds.NewDBClusterSnapshotAvailableWaiter(svc.Client)
+		err := waiter.Wait(ctx, &rds.DescribeDBClusterSnapshotsInput{
+			DBClusterSnapshotIdentifier: &input.SnapshotIdentifier,
+		}, maxWait)
+		if err != nil {
+			return fmt.Errorf("wait for cluster snapshot: %w", err)
+		}
+		return nil
+	}
+
+	waiter := rds.NewDBSnapshotAvailableWaiter(svc.Client)
+	err := waiter.Wait(ctx, &rds.DescribeDBSnapshotsInput{
+		DBSnapshotIdentifier: &input.SnapshotIdentifier,
+	}, maxWait)
+	if err != nil {
+		return fmt.Errorf("wait for snapshot: %w", err)
+	}
+	return nil
 }
