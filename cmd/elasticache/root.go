@@ -17,6 +17,7 @@ func NewElasticacheRootCmd() *cobra.Command {
 
 	// Add action commands
 	cmd.AddCommand(lsCmd)
+	cmd.AddCommand(waitCmd)
 
 	// Add command groups for better organization
 	cmd.AddGroup(cmdutil.ActionGroups()...)

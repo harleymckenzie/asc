@@ -23,6 +23,7 @@ func NewEC2RootCmd() *cobra.Command {
 	cmd.AddCommand(startCmd)
 	cmd.AddCommand(stopCmd)
 	cmd.AddCommand(terminateCmd)
+	cmd.AddCommand(waitCmd)
 
 	// Subcommands
 	cmd.AddCommand(ami.NewAMIRootCmd())

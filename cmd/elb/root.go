@@ -16,6 +16,7 @@ func NewELBRootCmd() *cobra.Command {
 	
 	// Action commands
 	cmd.AddCommand(lsCmd)
+	cmd.AddCommand(waitCmd)
 	// cmd.AddCommand(addCmd)
 	// cmd.AddCommand(rmCmd)
 	// cmd.AddCommand(modifyCmd)

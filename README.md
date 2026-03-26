@@ -46,6 +46,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | CloudFormation | ls                           | ✓      | List CloudFormation stacks                                                  |
 | CloudFormation | rm                           | ✗      | Delete CloudFormation stacks                                                |
 | CloudFormation | show / describe              | ✓      | Show CloudFormation stack details                                           |
+| CloudFormation | wait                         | ✓      | Wait for a stack to reach a stable state                                    |
 | CloudFormation | parameter ls                 | ✗      | List CloudFormation stack parameters                                        |
 | CloudFormation | parameter edit               | ✗      | Edit CloudFormation stack parameters                                        |
 | EC2            | ls                           | ✓      | List EC2 instances                                                          |
@@ -55,6 +56,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | EC2            | stop                         | ✓      | Stop EC2 instances                                                          |
 | EC2            | restart                      | ✓      | Restart EC2 instances                                                       |
 | EC2            | rm / terminate               | ✓      | Terminate EC2 instances                                                     |
+| EC2            | wait                         | ✓      | Wait for an instance to reach a stable state                                |
 | EC2            | ami cp                       | ✗      | Copy EC2 AMI                                                                |
 | EC2            | ami ls                       | ✓      | List EC2 AMIs                                                               |
 | EC2            | ami rm                       | ✗      | Remove EC2 AMI                                                              |
@@ -78,6 +80,8 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | ECS            | service show                 | ✓      | Show ECS service details                                                    |
 | ECS            | task ls                      | ✓      | List ECS tasks, supports `--cluster` and `--service` filters                |
 | ECS            | task show                    | ✓      | Show ECS task details                                                       |
+| ECS            | task wait                    | ✓      | Wait for an ECS task to reach a stable state, requires `--cluster`          |
+| ECS            | service wait                 | ✓      | Wait for an ECS service to reach a stable state, requires `--cluster`       |
 | ECS            | task-definition ls           | ✓      | List task definition families, or revisions for a specific family            |
 | ECS            | task-definition show         | ✓      | Show ECS task definition details                                            |
 | ECS            | modify                       | ✗      | Modify ECS clusters and services                                            |
@@ -89,7 +93,9 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | ElastiCache    | modify                       | ✗      | Modify ElastiCache clusters                                                 |
 | ElastiCache    | rm / terminate               | ✗      | Terminate ElastiCache clusters                                              |
 | ElastiCache    | show / describe              | ✗      | Show ElastiCache instance details                                           |
+| ElastiCache    | wait                         | ✓      | Wait for a cluster to reach a stable state                                  |
 | ELB            | ls                           | ✓      | List Elastic Load Balancers                                                 |
+| ELB            | wait                         | ✓      | Wait for a load balancer to reach a stable state                            |
 | ELB            | modify                       | ✗      | Modify Elastic Load Balancers                                               |
 | ELB            | rm                           | ✗      | Terminate Elastic Load Balancers                                            |
 | ELB            | show / describe              | ✗      | Show Elastic Load Balancer details                                          |
@@ -105,6 +111,8 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | RDS            | cancel-pending-modifications | ✓      | Cancel pending modifications of an RDS instance                             |
 | RDS            | rm                           | ✗      | Terminate RDS instances                                                     |
 | RDS            | show / describe              | ✓      | Show RDS instance details                                                   |
+| RDS            | snapshot                     | ✓      | Create a manual snapshot of an RDS instance or cluster, supports `--wait`   |
+| RDS            | wait                         | ✓      | Wait for an instance or cluster to reach a stable state                     |
 | RDS            | cluster show                 | ✓      | Show RDS cluster details                                                    |
 | Route53        | ls                           | ✗      | List Route53 hosted zones and records                                       |
 | Route53        | modify                       | ✗      | Modify Route53 hosted zones and records                                     |
@@ -152,6 +160,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | VPC            | nat-gateway add              | ✗      | Add VPC NAT gateway                                                         |
 | VPC            | nat-gateway rm               | ✗      | Remove VPC NAT gateway                                                      |
 | VPC            | nat-gateway show             | ✓      | Show VPC NAT gateway details                                                |
+| VPC            | nat-gateway wait             | ✓      | Wait for a NAT gateway to reach a stable state                              |
 | VPC            | prefix-list ls               | ✓      | List VPC prefix lists                                                       |
 | VPC            | prefix-list add              | ✗      | Add VPC prefix list                                                         |
 | VPC            | prefix-list rm               | ✗      | Remove VPC prefix list                                                      |
@@ -176,7 +185,7 @@ _**\*** Partly implemented. Missing some features that I hope to add in the futu
 | Filesystem-like navigation                                  | ✗      |                                                  |
 | Optional terminal UI                                        | ✗      |                                                  |
 | Export data to CSV, JSON, or other formats                  | ✗      |                                                  |
-| Service agnostic action commands                            | ✗      |                                                  |
+| Service agnostic action commands                            | ✓*     | `asc wait` supports protocol-style URIs (e.g. `rds://my-db`) and prefix auto-detection (e.g. `i-xxx`)<br><sub>_\* Currently supports `wait` only_</sub> |
 | AWS Profile management                                      | ✓*     | List profiles and SSO sessions via `asc profile ls`<br><sub>_\* Currently supports listing only_</sub> |
 | 'Select' resources to avoid repeating identifiers           | ✗      |                                                  |
 | Display pricing information on supported resources          | ✗      |                                                  |
@@ -311,6 +320,53 @@ asc asg ls -i
 #### List instances in a specific Auto Scaling Group
 ```sh
 asc asg ls my-asg-name
+```
+
+### Wait
+
+#### Wait for an EC2 instance using prefix auto-detection
+```sh
+asc wait i-1234567890abcdef0
+```
+
+#### Wait for an RDS instance using protocol syntax
+```sh
+asc wait rds://my-database
+```
+
+#### Wait for a CloudFormation stack
+```sh
+asc wait cf://my-stack
+```
+
+#### Wait for an ECS service
+```sh
+asc wait ecs://service/my-cluster/my-service
+```
+
+#### Wait using per-service subcommands
+```sh
+asc rds wait my-database
+asc ec2 wait i-1234567890abcdef0
+asc cf wait my-stack
+asc ecs service wait my-service --cluster my-cluster
+```
+
+### RDS
+
+#### Create a snapshot of an RDS instance
+```sh
+asc rds snapshot my-instance my-snapshot
+```
+
+#### Create a snapshot and wait for it to complete
+```sh
+asc rds snapshot my-instance my-snapshot --wait
+```
+
+#### Create a cluster snapshot
+```sh
+asc rds snapshot my-cluster my-snapshot --cluster
 ```
 
 ### ASG Schedules

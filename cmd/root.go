@@ -12,6 +12,7 @@ import (
 	"github.com/harleymckenzie/asc/cmd/rds"
 	"github.com/harleymckenzie/asc/cmd/ssm"
 	"github.com/harleymckenzie/asc/cmd/vpc"
+	"github.com/harleymckenzie/asc/cmd/wait"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,7 @@ import (
 var (
 	Profile string     // AWS profile to use for authentication
 	Region  string     // AWS region to operate in
-	Version = "0.5.0"  // Current version of the application
+	Version = "0.6.0-beta.1"  // Current version of the application
 )
 
 // NewRootCmd creates and configures the root command for the AWS Simple CLI
@@ -47,6 +48,9 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(ssm.NewSSMRootCmd())
 	cmd.AddCommand(profile.NewProfileRootCmd())
 	cmd.AddCommand(vpc.NewVPCRootCmd())
+
+	// Add top-level action commands
+	cmd.AddCommand(wait.NewWaitCmd())
 
 	// Add command groups for better organization
 	cmd.AddGroup(

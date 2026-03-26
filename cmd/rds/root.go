@@ -22,6 +22,7 @@ func NewRDSRootCmd() *cobra.Command {
 	cmd.AddCommand(modifyCmd)
 	cmd.AddCommand(cancelPendingModificationsCmd)
 	cmd.AddCommand(snapshotCmd)
+	cmd.AddCommand(waitCmd)
 
 	// Subcommands
 	cmd.AddCommand(cluster.NewClusterRootCmd())

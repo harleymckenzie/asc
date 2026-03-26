@@ -18,6 +18,7 @@ func NewNatGatewayRootCmd() *cobra.Command {
 
 	cmd.AddCommand(lsCmd)
 	cmd.AddCommand(showCmd)
+	cmd.AddCommand(waitCmd)
 
 	cmd.AddGroup(cmdutil.ActionGroups()...)
 	cmd.AddGroup(cmdutil.SubcommandGroups()...)
