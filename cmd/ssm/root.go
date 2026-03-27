@@ -25,6 +25,8 @@ func NewSSMRootCmd() *cobra.Command {
 	cmd.AddCommand(labelCmd)
 	cmd.AddCommand(unlabelCmd)
 	cmd.AddCommand(revertCmd)
+	cmd.AddCommand(exportCmd)
+	cmd.AddCommand(importCmd)
 
 	// Add groups
 	cmd.AddGroup(cmdutil.ActionGroups()...)

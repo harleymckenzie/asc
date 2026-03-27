@@ -18,6 +18,7 @@ var (
 	setDescription string
 	setOverwrite   bool
 	setStdin       bool
+	setDryRun      bool
 )
 
 func init() {
@@ -52,6 +53,7 @@ func newSetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&setDescription, "description", "d", "", "Parameter description")
 	cmd.Flags().BoolVarP(&setOverwrite, "overwrite", "o", false, "Overwrite existing parameter without confirmation")
 	cmd.Flags().BoolVar(&setStdin, "stdin", false, "Read value from stdin")
+	cmd.Flags().BoolVarP(&setDryRun, "dry-run", "n", false, "Show what would be set without making changes")
 }
 
 func SetSSMParameter(cmd *cobra.Command, args []string) error {
@@ -92,6 +94,15 @@ func SetSSMParameter(cmd *cobra.Command, args []string) error {
 	})
 	if err == nil && existingParam != nil {
 		exists = true
+	}
+
+	if setDryRun {
+		if exists {
+			fmt.Printf("Would update: %s (current type: %s)\n", paramName, existingParam.Type)
+		} else {
+			fmt.Printf("Would create: %s (type: %s)\n", paramName, setType)
+		}
+		return nil
 	}
 
 	// Prompt for confirmation if exists and not overwriting

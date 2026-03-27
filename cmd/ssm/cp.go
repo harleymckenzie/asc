@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/harleymckenzie/asc/internal/service/ssm"
 	ascTypes "github.com/harleymckenzie/asc/internal/service/ssm/types"
 	"github.com/harleymckenzie/asc/internal/shared/cmdutil"
@@ -16,6 +17,7 @@ import (
 var (
 	recursive bool
 	overwrite bool
+	cpDryRun  bool
 )
 
 // Init function
@@ -42,6 +44,7 @@ var cpCmd = &cobra.Command{
 func newCpFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&recursive, "recursive", "r", false, "Copy all parameters under the source path.")
 	cmd.Flags().BoolVarP(&overwrite, "overwrite", "o", false, "Overwrite existing parameters at destination.")
+	cmd.Flags().BoolVarP(&cpDryRun, "dry-run", "n", false, "Show what would be copied without making changes.")
 }
 
 // CopySSMParameter copies a parameter or parameters recursively.
@@ -63,6 +66,27 @@ func CopySSMParameter(cmd *cobra.Command, source, dest string) error {
 	}
 
 	if recursive {
+		if cpDryRun {
+			params, err := svc.GetParametersByPath(ctx, &ascTypes.GetParametersByPathInput{
+				Path:      source,
+				Recursive: true,
+				Decrypt:   false,
+			})
+			if err != nil {
+				return fmt.Errorf("get parameters by path: %w", err)
+			}
+			if len(params) == 0 {
+				fmt.Printf("No parameters found under path: %s\n", source)
+				return nil
+			}
+			fmt.Printf("Dry run: %d parameter(s) would be copied:\n", len(params))
+			for _, p := range params {
+				srcName := aws.ToString(p.Name)
+				destName := strings.TrimSuffix(dest, "/") + strings.TrimPrefix(srcName, strings.TrimSuffix(source, "/"))
+				fmt.Printf("  %s -> %s\n", srcName, destName)
+			}
+			return nil
+		}
 		// Recursive copy
 		count, err := svc.CopyParametersRecursive(ctx, source, dest, overwrite)
 		if err != nil {
@@ -78,6 +102,11 @@ func CopySSMParameter(cmd *cobra.Command, source, dest string) error {
 		if strings.HasSuffix(dest, "/") {
 			basename := paramBasename(source)
 			dest = dest + basename
+		}
+
+		if cpDryRun {
+			fmt.Printf("Would copy %s to %s\n", source, dest)
+			return nil
 		}
 
 		// Check if destination exists
