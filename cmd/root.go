@@ -14,6 +14,7 @@ import (
 	"github.com/harleymckenzie/asc/cmd/ssm"
 	"github.com/harleymckenzie/asc/cmd/vpc"
 	"github.com/harleymckenzie/asc/cmd/wait"
+	"github.com/harleymckenzie/asc/internal/shared/awsutil"
 
 	"github.com/spf13/cobra"
 )
@@ -36,6 +37,7 @@ func NewRootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&Profile, "profile", "p", "", "AWS profile to use for authentication")
 	cmd.PersistentFlags().StringVar(&Region, "region", "", "AWS region to operate in")
 	cmd.Version = Version
+	awsutil.Version = Version
 
 	// Add service commands
 	cmd.AddCommand(asg.NewASGRootCmd())
