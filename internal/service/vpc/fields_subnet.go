@@ -13,13 +13,17 @@ type SubnetFieldValueGetter func(instance any) (string, error)
 
 // Subnet field getters
 var subnetFieldValueGetters = map[string]SubnetFieldValueGetter{
-	"Subnet ID":         getSubnetID,
-	"VPC ID":            getSubnetVPCID,
-	"CIDR Block":        getSubnetCIDRBlock,
-	"Availability Zone": getSubnetAvailabilityZone,
-	"State":             getSubnetState,
-	"Available IPs":     getSubnetAvailableIPs,
-	"Default For AZ":    getSubnetDefaultForAZ,
+	"Subnet ID":                       getSubnetID,
+	"VPC ID":                          getSubnetVPCID,
+	"CIDR Block":                      getSubnetCIDRBlock,
+	"IPv4 CIDR":                       getSubnetCIDRBlock,
+	"Availability Zone":               getSubnetAvailabilityZone,
+	"State":                           getSubnetState,
+	"Available IPs":                   getSubnetAvailableIPs,
+	"Default For AZ":                  getSubnetDefaultForAZ,
+	"Default subnet":                  getSubnetDefaultForAZ,
+	"Auto-assign public IPv4 address": getSubnetMapPublicIpOnLaunch,
+	"Owner":                           getSubnetOwner,
 }
 
 // GetSubnetFieldValue returns the value of a field for the given Subnet instance.
@@ -87,4 +91,13 @@ func getSubnetAvailableIPs(instance any) (string, error) {
 func getSubnetDefaultForAZ(instance any) (string, error) {
 	subnet := instance.(types.Subnet)
 	return format.BoolToLabel(subnet.DefaultForAz, "Yes", "No"), nil
+}
+
+func getSubnetMapPublicIpOnLaunch(instance any) (string, error) {
+	subnet := instance.(types.Subnet)
+	return format.BoolToLabel(subnet.MapPublicIpOnLaunch, "Yes", "No"), nil
+}
+
+func getSubnetOwner(instance any) (string, error) {
+	return format.StringOrEmpty(instance.(types.Subnet).OwnerId), nil
 }
