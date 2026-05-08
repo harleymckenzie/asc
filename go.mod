@@ -3,7 +3,7 @@ module github.com/harleymckenzie/asc
 go 1.24.5
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.41.4
+	github.com/aws/aws-sdk-go-v2 v1.41.7
 	github.com/aws/aws-sdk-go-v2/config v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.65.0
@@ -12,10 +12,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.13
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/iam v1.53.10
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.4
 	github.com/aws/aws-sdk-go-v2/service/rds v1.103.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.8
-	github.com/aws/smithy-go v1.24.2
+	github.com/aws/smithy-go v1.25.1
 	github.com/jedib0t/go-pretty/v6 v6.6.8
 	github.com/olebedev/when v1.1.0
 	github.com/spf13/cobra v1.9.1
@@ -26,8 +27,8 @@ require (
 	github.com/AlekSi/pointer v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.7 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.20 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.20 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.23 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.23 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.4 // indirect
