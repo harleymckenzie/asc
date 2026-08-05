@@ -3,6 +3,7 @@ package asg
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
@@ -14,12 +15,21 @@ type FieldValueGetter func(instance any) (string, error)
 
 // AutoScaling Group field getters
 var asgFieldValueGetters = map[string]FieldValueGetter{
-	"Name":      getASGName,
-	"Instances": getASGInstances,
-	"Desired":   getASGDesired,
-	"Min":       getASGMin,
-	"Max":       getASGMax,
-	"ARN":       getASGARN,
+	"Name":                      getASGName,
+	"Instances":                 getASGInstances,
+	"Desired":                   getASGDesired,
+	"Min":                       getASGMin,
+	"Max":                       getASGMax,
+	"ARN":                       getASGARN,
+	"Status":                    getASGStatus,
+	"Created Time":              getASGCreatedTime,
+	"Default Cooldown":          getASGDefaultCooldown,
+	"Health Check Type":         getASGHealthCheckType,
+	"Health Check Grace Period": getASGHealthCheckGracePeriod,
+	"Availability Zones":        getASGAvailabilityZones,
+	"Subnets":                   getASGSubnets,
+	"Launch Template":           getASGLaunchTemplate,
+	"Launch Configuration":      getASGLaunchConfiguration,
 }
 
 // Instance field getters
@@ -134,6 +144,72 @@ func getASGMax(instance any) (string, error) {
 // getASGARN returns the ARN of the Auto Scaling Group
 func getASGARN(instance any) (string, error) {
 	return aws.ToString(instance.(types.AutoScalingGroup).AutoScalingGroupARN), nil
+}
+
+// getASGStatus returns the status of the Auto Scaling Group
+func getASGStatus(instance any) (string, error) {
+	return aws.ToString(instance.(types.AutoScalingGroup).Status), nil
+}
+
+// getASGCreatedTime returns the creation time of the Auto Scaling Group
+func getASGCreatedTime(instance any) (string, error) {
+	return format.TimeToStringOrEmpty(instance.(types.AutoScalingGroup).CreatedTime), nil
+}
+
+// getASGDefaultCooldown returns the default cooldown period (in seconds) of the Auto Scaling Group
+func getASGDefaultCooldown(instance any) (string, error) {
+	return format.Int32ToStringOrEmpty(instance.(types.AutoScalingGroup).DefaultCooldown), nil
+}
+
+// getASGHealthCheckType returns the health check type of the Auto Scaling Group
+func getASGHealthCheckType(instance any) (string, error) {
+	return aws.ToString(instance.(types.AutoScalingGroup).HealthCheckType), nil
+}
+
+// getASGHealthCheckGracePeriod returns the health check grace period (in seconds) of the Auto Scaling Group
+func getASGHealthCheckGracePeriod(instance any) (string, error) {
+	return format.Int32ToStringOrEmpty(instance.(types.AutoScalingGroup).HealthCheckGracePeriod), nil
+}
+
+// getASGAvailabilityZones returns the availability zones of the Auto Scaling Group
+func getASGAvailabilityZones(instance any) (string, error) {
+	return strings.Join(instance.(types.AutoScalingGroup).AvailabilityZones, "\n"), nil
+}
+
+// getASGSubnets returns the subnets (VPC zone identifier) of the Auto Scaling Group
+func getASGSubnets(instance any) (string, error) {
+	vpcZone := aws.ToString(instance.(types.AutoScalingGroup).VPCZoneIdentifier)
+	if vpcZone == "" {
+		return "", nil
+	}
+	return strings.Join(strings.Split(vpcZone, ","), "\n"), nil
+}
+
+// getASGLaunchTemplate returns the launch template name of the Auto Scaling Group
+func getASGLaunchTemplate(instance any) (string, error) {
+	spec := GetLaunchTemplateSpecification(instance.(types.AutoScalingGroup))
+	if spec == nil {
+		return "", nil
+	}
+	return aws.ToString(spec.LaunchTemplateName), nil
+}
+
+// getASGLaunchConfiguration returns the launch configuration name of the Auto Scaling Group
+func getASGLaunchConfiguration(instance any) (string, error) {
+	return aws.ToString(instance.(types.AutoScalingGroup).LaunchConfigurationName), nil
+}
+
+// GetLaunchTemplateSpecification returns the launch template specification for the Auto
+// Scaling Group, resolving it from either a directly attached launch template or a
+// mixed instances policy. It returns nil if the group uses a launch configuration.
+func GetLaunchTemplateSpecification(group types.AutoScalingGroup) *types.LaunchTemplateSpecification {
+	if group.LaunchTemplate != nil {
+		return group.LaunchTemplate
+	}
+	if group.MixedInstancesPolicy != nil && group.MixedInstancesPolicy.LaunchTemplate != nil {
+		return group.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification
+	}
+	return nil
 }
 
 // -----------------------------------------------------------------------------

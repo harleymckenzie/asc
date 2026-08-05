@@ -32,6 +32,8 @@ func GetFieldValueWithService(fieldName string, instance any, svc *EC2Service) (
 		return getSecurityGroupFieldValue(fieldName, v)
 	case types.SecurityGroupRule:
 		return getSecurityGroupRuleFieldValue(fieldName, v)
+	case types.LaunchTemplateVersion:
+		return getLaunchTemplateFieldValue(fieldName, v)
 	default:
 		return "", fmt.Errorf("unsupported instance type: %T", instance)
 	}

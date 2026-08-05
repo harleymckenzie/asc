@@ -76,3 +76,15 @@ type GetSecurityGroupsInput struct {
 	// The IDs of the security groups to get
 	GroupIDs []string
 }
+
+type GetLaunchTemplateVersionsInput struct {
+
+	// The ID of the launch template to get versions for
+	LaunchTemplateID string
+
+	// The name of the launch template to get versions for
+	LaunchTemplateName string
+
+	// The versions to get (e.g. "$Default", "$Latest", or a version number)
+	Versions []string
+}

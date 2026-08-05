@@ -108,6 +108,15 @@ func (m *MockEC2Client) DescribeVolumes(
 	return args.Get(0).(*ec2.DescribeVolumesOutput), args.Error(1)
 }
 
+func (m *MockEC2Client) DescribeLaunchTemplateVersions(
+	ctx context.Context,
+	params *ec2.DescribeLaunchTemplateVersionsInput,
+	optFns ...func(*ec2.Options),
+) (*ec2.DescribeLaunchTemplateVersionsOutput, error) {
+	args := m.Called(ctx, params)
+	return args.Get(0).(*ec2.DescribeLaunchTemplateVersionsOutput), args.Error(1)
+}
+
 // Unit test for GetInstances
 func TestGetInstances(t *testing.T) {
 	mockClient := new(MockEC2Client)

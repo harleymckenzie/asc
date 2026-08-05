@@ -20,6 +20,7 @@ type EC2ClientAPI interface {
 	DescribeSnapshots(ctx context.Context, params *ec2.DescribeSnapshotsInput, optFns ...func(*ec2.Options)) (*ec2.DescribeSnapshotsOutput, error)
 	DescribeImages(ctx context.Context, params *ec2.DescribeImagesInput, optFns ...func(*ec2.Options)) (*ec2.DescribeImagesOutput, error)
 	DescribeSecurityGroups(ctx context.Context, params *ec2.DescribeSecurityGroupsInput, optFns ...func(*ec2.Options)) (*ec2.DescribeSecurityGroupsOutput, error)
+	DescribeLaunchTemplateVersions(ctx context.Context, params *ec2.DescribeLaunchTemplateVersionsInput, optFns ...func(*ec2.Options)) (*ec2.DescribeLaunchTemplateVersionsOutput, error)
 	RebootInstances(ctx context.Context, params *ec2.RebootInstancesInput, optFns ...func(*ec2.Options)) (*ec2.RebootInstancesOutput, error)
 	StartInstances(ctx context.Context, params *ec2.StartInstancesInput, optFns ...func(*ec2.Options)) (*ec2.StartInstancesOutput, error)
 	StopInstances(ctx context.Context, params *ec2.StopInstancesInput, optFns ...func(*ec2.Options)) (*ec2.StopInstancesOutput, error)
@@ -200,6 +201,27 @@ func (svc *EC2Service) GetSecurityGroups(ctx context.Context, input *ascTypes.Ge
 
 	groups := append([]types.SecurityGroup{}, output.SecurityGroups...)
 	return groups, nil
+}
+
+// GetLaunchTemplateVersions fetches launch template versions and returns them directly.
+func (svc *EC2Service) GetLaunchTemplateVersions(ctx context.Context, input *ascTypes.GetLaunchTemplateVersionsInput) ([]types.LaunchTemplateVersion, error) {
+	params := &ec2.DescribeLaunchTemplateVersionsInput{
+		Versions: input.Versions,
+	}
+	// The API accepts either an ID or a name, but not both. Prefer the ID when present.
+	if input.LaunchTemplateID != "" {
+		params.LaunchTemplateId = aws.String(input.LaunchTemplateID)
+	} else if input.LaunchTemplateName != "" {
+		params.LaunchTemplateName = aws.String(input.LaunchTemplateName)
+	}
+
+	output, err := svc.Client.DescribeLaunchTemplateVersions(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	versions := append([]types.LaunchTemplateVersion{}, output.LaunchTemplateVersions...)
+	return versions, nil
 }
 
 // GetImagesWithFilters fetches EC2 images with custom filters and owners.

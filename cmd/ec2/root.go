@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"github.com/harleymckenzie/asc/cmd/ec2/ami"
+	"github.com/harleymckenzie/asc/cmd/ec2/launch_template"
 	"github.com/harleymckenzie/asc/cmd/ec2/security_group"
 	"github.com/harleymckenzie/asc/cmd/ec2/snapshot"
 	"github.com/harleymckenzie/asc/cmd/ec2/volume"
@@ -27,6 +28,7 @@ func NewEC2RootCmd() *cobra.Command {
 
 	// Subcommands
 	cmd.AddCommand(ami.NewAMIRootCmd())
+	cmd.AddCommand(launch_template.NewLaunchTemplateRootCmd())
 	cmd.AddCommand(security_group.NewSecurityGroupRootCmd())
 	cmd.AddCommand(snapshot.NewSnapshotRootCmd())
 	cmd.AddCommand(volume.NewVolumeRootCmd())
