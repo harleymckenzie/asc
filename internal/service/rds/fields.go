@@ -69,6 +69,8 @@ func GetFieldValue(fieldName string, instance any) (string, error) {
 		return getDBSnapshotFieldValue(fieldName, v)
 	case types.DBClusterSnapshot:
 		return getDBClusterSnapshotFieldValue(fieldName, v)
+	case ClusterEndpointRow:
+		return getClusterEndpointRowFieldValue(fieldName, v)
 	default:
 		return "", fmt.Errorf("unsupported instance type: %T", instance)
 	}
@@ -109,6 +111,9 @@ func GetTagValue(tagKey string, instance any) (string, error) {
 				return aws.ToString(tag.Value), nil
 			}
 		}
+	case ClusterEndpointRow:
+		// Synthetic endpoint rows have no tags.
+		return "", nil
 	default:
 		return "", fmt.Errorf("unsupported instance type for tags: %T", instance)
 	}

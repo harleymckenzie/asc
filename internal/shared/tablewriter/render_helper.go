@@ -12,6 +12,10 @@ type RenderListOptions struct {
 	GetTagValue   TagGetter
 	ReverseSort   bool
 	HideEmpty     bool
+
+	// PreserveOrder renders rows in the order provided, skipping sorting. Auto-merge
+	// column configuration is still applied. Use when Data is already ordered.
+	PreserveOrder bool
 }
 
 // hideEmptyFields sets Visible to false for any visible field where all data values are empty.
@@ -76,6 +80,10 @@ func RenderList(opts RenderListOptions) {
 
 	table.AppendHeader(BuildHeaderRow(fields))
 	table.AppendRows(BuildRows(opts.Data, fields, opts.GetFieldValue, opts.GetTagValue))
-	table.SetFieldConfigs(fields, opts.ReverseSort)
+	if opts.PreserveOrder {
+		table.SetMergeConfigs(fields)
+	} else {
+		table.SetFieldConfigs(fields, opts.ReverseSort)
+	}
 	table.Render()
 }

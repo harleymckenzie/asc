@@ -105,17 +105,30 @@ func ListRDSClusters(cmd *cobra.Command, args []string) error {
 	// Set clusters context for role calculation
 	rds.SetClustersContext(clusters)
 
+	// When showing endpoints, surface each Aurora cluster's writer/reader endpoints as
+	// grouped rows. This pre-orders the rows, so sorting is disabled (PreserveOrder) to
+	// keep the endpoint rows pinned to the top of their cluster group.
+	data := utils.SlicesToAny(instances)
+	preserveOrder := false
+	if showEndpoint {
+		if enriched, ok := rds.BuildEndpointListData(instances, clusters); ok {
+			data = enriched
+			preserveOrder = true
+		}
+	}
+
 	tablewriter.RenderList(tablewriter.RenderListOptions{
 		Title:         "Databases",
 		Style:         "rounded-separated",
 		PlainStyle:    list,
 		Fields:        getListFields(),
 		Tags:          cmdutil.Tags,
-		Data:          utils.SlicesToAny(instances),
+		Data:          data,
 		GetFieldValue: rds.GetFieldValue,
 		GetTagValue:   rds.GetTagValue,
 		ReverseSort:   reverseSort,
 		HideEmpty:     true,
+		PreserveOrder: preserveOrder,
 	})
 	return nil
 }

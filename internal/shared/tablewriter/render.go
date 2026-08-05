@@ -23,6 +23,7 @@ type AscWriter interface {
 	SetStyle(style string)
 	SetRenderStyle(style string)
 	SetFieldConfigs(fields []Field, reverse bool)
+	SetMergeConfigs(fields []Field)
 }
 
 // AscTable is the implementation of the AscWriter interface.
@@ -134,6 +135,17 @@ func (at *AscTable) SetFieldConfigs(fields []Field, reverse bool) {
 	if reverse {
 		for i := 0; i < len(at.sortByFields); i++ {
 			at.sortByFields[i].SortDirection = reverseSortDirection(at.sortByFields[i].SortDirection)
+		}
+	}
+}
+
+// SetMergeConfigs applies only the auto-merge column configuration for fields marked
+// as Merge, without configuring any sort. This preserves the caller's row order, which
+// is required when rows are pre-ordered (e.g. cluster-grouped endpoint rows).
+func (at *AscTable) SetMergeConfigs(fields []Field) {
+	for _, field := range fields {
+		if field.Merge {
+			at.renderOptions.ColumnConfigs = append(at.renderOptions.ColumnConfigs, table.ColumnConfig{Name: field.Name, AutoMerge: true})
 		}
 	}
 }
