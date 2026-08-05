@@ -66,6 +66,7 @@ func ListElasticacheClusters(cmd *cobra.Command, args []string) error {
 		Title:         "Elasticache Clusters",
 		PlainStyle:    list,
 		Fields:        getListFields(),
+		Tags:          cmdutil.Tags,
 		Data:          utils.SlicesToAny(instances),
 		GetFieldValue: elasticache.GetFieldValue,
 		GetTagValue:   elasticache.GetTagValue,
@@ -79,6 +80,7 @@ func newLsFlags(cobraCmd *cobra.Command) {
 	// Add flags - Output
 	cobraCmd.Flags().BoolVarP(&list, "list", "l", false, "Outputs Elasticache clusters in list format.")
 	cobraCmd.Flags().BoolVarP(&showEndpoint, "endpoint", "e", false, "Show the endpoint of the cluster")
+	cmdutil.AddTagFlag(cobraCmd)
 
 	// Add flags - Sorting
 	cobraCmd.Flags().BoolVarP(&sortType, "sort-type", "T", false, "Sort by descending Elasticache cluster type.")

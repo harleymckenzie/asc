@@ -13,6 +13,13 @@ import (
 
 type ElasticacheClientAPI interface {
 	DescribeCacheClusters(context.Context, *elasticache.DescribeCacheClustersInput, ...func(*elasticache.Options)) (*elasticache.DescribeCacheClustersOutput, error)
+	ListTagsForResource(context.Context, *elasticache.ListTagsForResourceInput, ...func(*elasticache.Options)) (*elasticache.ListTagsForResourceOutput, error)
+}
+
+// CacheClusterWithTags wraps a CacheCluster with its tags.
+type CacheClusterWithTags struct {
+	types.CacheCluster
+	Tags []types.Tag
 }
 
 // ElasticacheService is a struct that holds the Elasticache client.
@@ -34,7 +41,7 @@ func NewElasticacheService(ctx context.Context, profile string, region string) (
 	return &ElasticacheService{Client: client}, nil
 }
 
-func (svc *ElasticacheService) GetInstances(ctx context.Context) ([]types.CacheCluster, error) {
+func (svc *ElasticacheService) GetInstances(ctx context.Context) ([]CacheClusterWithTags, error) {
 	output, err := svc.Client.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
 		ShowCacheNodeInfo: aws.Bool(true),
 	})
@@ -42,7 +49,18 @@ func (svc *ElasticacheService) GetInstances(ctx context.Context) ([]types.CacheC
 		return nil, err
 	}
 
-	var instances []types.CacheCluster
-	instances = append(instances, output.CacheClusters...)
+	var instances []CacheClusterWithTags
+	for _, cluster := range output.CacheClusters {
+		tagged := CacheClusterWithTags{CacheCluster: cluster}
+		if cluster.ARN != nil {
+			tagOutput, err := svc.Client.ListTagsForResource(ctx, &elasticache.ListTagsForResourceInput{
+				ResourceName: cluster.ARN,
+			})
+			if err == nil {
+				tagged.Tags = tagOutput.TagList
+			}
+		}
+		instances = append(instances, tagged)
+	}
 	return instances, nil
 }
