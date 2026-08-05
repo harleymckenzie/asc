@@ -65,6 +65,10 @@ func GetFieldValue(fieldName string, instance any) (string, error) {
 		return getDBInstanceFieldValue(fieldName, v)
 	case types.DBCluster:
 		return getDBClusterFieldValue(fieldName, v)
+	case types.DBSnapshot:
+		return getDBSnapshotFieldValue(fieldName, v)
+	case types.DBClusterSnapshot:
+		return getDBClusterSnapshotFieldValue(fieldName, v)
 	default:
 		return "", fmt.Errorf("unsupported instance type: %T", instance)
 	}
@@ -88,6 +92,18 @@ func GetTagValue(tagKey string, instance any) (string, error) {
 			}
 		}
 	case types.DBCluster:
+		for _, tag := range v.TagList {
+			if aws.ToString(tag.Key) == tagKey {
+				return aws.ToString(tag.Value), nil
+			}
+		}
+	case types.DBSnapshot:
+		for _, tag := range v.TagList {
+			if aws.ToString(tag.Key) == tagKey {
+				return aws.ToString(tag.Value), nil
+			}
+		}
+	case types.DBClusterSnapshot:
 		for _, tag := range v.TagList {
 			if aws.ToString(tag.Key) == tagKey {
 				return aws.ToString(tag.Value), nil

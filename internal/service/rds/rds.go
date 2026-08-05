@@ -21,6 +21,8 @@ type RDSClientAPI interface {
 	ModifyDBInstance(context.Context, *rds.ModifyDBInstanceInput, ...func(*rds.Options)) (*rds.ModifyDBInstanceOutput, error)
 	CreateDBSnapshot(context.Context, *rds.CreateDBSnapshotInput, ...func(*rds.Options)) (*rds.CreateDBSnapshotOutput, error)
 	CreateDBClusterSnapshot(context.Context, *rds.CreateDBClusterSnapshotInput, ...func(*rds.Options)) (*rds.CreateDBClusterSnapshotOutput, error)
+	DeleteDBSnapshot(context.Context, *rds.DeleteDBSnapshotInput, ...func(*rds.Options)) (*rds.DeleteDBSnapshotOutput, error)
+	DeleteDBClusterSnapshot(context.Context, *rds.DeleteDBClusterSnapshotInput, ...func(*rds.Options)) (*rds.DeleteDBClusterSnapshotOutput, error)
 }
 
 // RDSService is the service for the RDS client.
@@ -90,6 +92,63 @@ func (svc *RDSService) CreateSnapshot(ctx context.Context, input *ascTypes.Creat
 
 	_, err := svc.Client.CreateDBSnapshot(ctx, &rds.CreateDBSnapshotInput{
 		DBInstanceIdentifier: &input.Identifier,
+		DBSnapshotIdentifier: &input.SnapshotIdentifier,
+	})
+	return err
+}
+
+// GetSnapshots gets RDS DB instance snapshots, optionally filtered by source instance
+// or a specific snapshot identifier.
+func (svc *RDSService) GetSnapshots(ctx context.Context, input *ascTypes.GetSnapshotsInput) ([]types.DBSnapshot, error) {
+	params := &rds.DescribeDBSnapshotsInput{}
+	if input.Identifier != "" {
+		params.DBInstanceIdentifier = &input.Identifier
+	}
+	if input.SnapshotIdentifier != "" {
+		params.DBSnapshotIdentifier = &input.SnapshotIdentifier
+	}
+
+	output, err := svc.Client.DescribeDBSnapshots(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var snapshots []types.DBSnapshot
+	snapshots = append(snapshots, output.DBSnapshots...)
+	return snapshots, nil
+}
+
+// GetClusterSnapshots gets RDS DB cluster snapshots, optionally filtered by source
+// cluster or a specific snapshot identifier.
+func (svc *RDSService) GetClusterSnapshots(ctx context.Context, input *ascTypes.GetSnapshotsInput) ([]types.DBClusterSnapshot, error) {
+	params := &rds.DescribeDBClusterSnapshotsInput{}
+	if input.Identifier != "" {
+		params.DBClusterIdentifier = &input.Identifier
+	}
+	if input.SnapshotIdentifier != "" {
+		params.DBClusterSnapshotIdentifier = &input.SnapshotIdentifier
+	}
+
+	output, err := svc.Client.DescribeDBClusterSnapshots(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var snapshots []types.DBClusterSnapshot
+	snapshots = append(snapshots, output.DBClusterSnapshots...)
+	return snapshots, nil
+}
+
+// DeleteSnapshot deletes an RDS DB instance or cluster snapshot.
+func (svc *RDSService) DeleteSnapshot(ctx context.Context, input *ascTypes.DeleteSnapshotInput) error {
+	if input.IsCluster {
+		_, err := svc.Client.DeleteDBClusterSnapshot(ctx, &rds.DeleteDBClusterSnapshotInput{
+			DBClusterSnapshotIdentifier: &input.SnapshotIdentifier,
+		})
+		return err
+	}
+
+	_, err := svc.Client.DeleteDBSnapshot(ctx, &rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: &input.SnapshotIdentifier,
 	})
 	return err

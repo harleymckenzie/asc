@@ -43,3 +43,21 @@ type CreateSnapshotInput struct {
 	// Whether the target is a cluster
 	IsCluster bool
 }
+
+type GetSnapshotsInput struct {
+
+	// The identifier of the source DB instance or cluster to filter snapshots by (optional)
+	Identifier string
+
+	// The identifier of a specific snapshot to get (optional)
+	SnapshotIdentifier string
+}
+
+type DeleteSnapshotInput struct {
+
+	// The identifier of the snapshot to delete
+	SnapshotIdentifier string
+
+	// Whether the snapshot is a cluster snapshot
+	IsCluster bool
+}

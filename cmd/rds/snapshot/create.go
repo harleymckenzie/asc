@@ -1,6 +1,6 @@
-// The snapshot command creates a snapshot of an RDS instance or cluster.
+// create.go creates a snapshot of an RDS instance or cluster.
 
-package rds
+package snapshot
 
 import (
 	"fmt"
@@ -14,32 +14,33 @@ import (
 
 // Variables
 var (
-	snapshotWait    bool
-	snapshotCluster bool
+	createWait    bool
+	createCluster bool
 )
 
 // Init function
 func init() {
-	newSnapshotFlags(snapshotCmd)
+	newCreateFlags(createCmd)
 }
 
 // Flag function
-func newSnapshotFlags(cobraCmd *cobra.Command) {
+func newCreateFlags(cobraCmd *cobra.Command) {
 	cobraCmd.Flags().SortFlags = false
-	cobraCmd.Flags().BoolVarP(&snapshotWait, "wait", "w", false, "Wait for the snapshot to complete")
-	cobraCmd.Flags().BoolVarP(&snapshotCluster, "cluster", "c", false, "Snapshot a cluster instead of an instance")
+	cobraCmd.Flags().BoolVarP(&createWait, "wait", "w", false, "Wait for the snapshot to complete")
+	cobraCmd.Flags().BoolVarP(&createCluster, "cluster", "c", false, "Snapshot a cluster instead of an instance")
 }
 
 // Command variable
-var snapshotCmd = &cobra.Command{
-	Use:     "snapshot <identifier> <snapshot-name>",
+var createCmd = &cobra.Command{
+	Use:     "create <identifier> <snapshot-name>",
 	Short:   "Create a snapshot of an RDS instance or cluster",
 	Long:    "Create a manual snapshot of an RDS instance or cluster. Use --cluster for cluster snapshots.",
+	Aliases: []string{"add"},
 	Args:    cobra.ExactArgs(2),
 	GroupID: "actions",
-	Example: `  asc rds snapshot my-instance my-snapshot               # Snapshot an instance
-  asc rds snapshot my-cluster my-snapshot --cluster       # Snapshot a cluster
-  asc rds snapshot my-instance my-snapshot --wait         # Snapshot and wait for completion`,
+	Example: `  asc rds snapshot create my-instance my-snapshot            # Snapshot an instance
+  asc rds snapshot create my-cluster my-snapshot --cluster   # Snapshot a cluster
+  asc rds snapshot create my-instance my-snapshot --wait     # Snapshot and wait for completion`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.DefaultErrorHandler(CreateRDSSnapshot(cmd, args))
 	},
@@ -55,7 +56,7 @@ func CreateRDSSnapshot(cmd *cobra.Command, args []string) error {
 	input := &ascTypes.CreateSnapshotInput{
 		Identifier:         args[0],
 		SnapshotIdentifier: args[1],
-		IsCluster:          snapshotCluster,
+		IsCluster:          createCluster,
 	}
 
 	err = svc.CreateSnapshot(cmd.Context(), input)
@@ -64,12 +65,12 @@ func CreateRDSSnapshot(cmd *cobra.Command, args []string) error {
 	}
 
 	resourceType := "instance"
-	if snapshotCluster {
+	if createCluster {
 		resourceType = "cluster"
 	}
 	fmt.Printf("Snapshot %s created for %s %s\n", args[1], resourceType, args[0])
 
-	if snapshotWait {
+	if createWait {
 		fmt.Printf("Waiting for snapshot to become available...\n")
 		err = svc.WaitForSnapshot(cmd.Context(), input, 30*time.Minute)
 		if err != nil {
